@@ -191,6 +191,7 @@ function installMercurial {
 	pip install hg-git brotli ipaddress
 }
 
+# fantastic CLI UI for Git
 function installLazygit {
 	curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v0.23.7/lazygit_0.23.7_Linux_x86_64.tar.gz" \
 		| tar -C /usr/bin -xz lazygit
@@ -209,10 +210,12 @@ function installDocker {
 	usermod -aG docker "$username"
 }
 
+# Virtual Machines
 function installQemu {
 	apt install -y qemu-system-x86
 }
 
+# CLI filesystem navigator
 function installLf {
 	curl -fsSL https://github.com/gokcehan/lf/releases/download/r19/lf-linux-amd64.tar.gz \
 		| tar -C /usr/bin/ -xzf -
@@ -222,7 +225,6 @@ function installGraphicalEnvironment {
 	# - dunst implements desktop notifications
 	# - rofi is an application launcher
 	# - xwallpaper might not be always required (once hautomo-client can set wallpapers without it)
-	# - autorandr so each time a monitor disconnects the monitor configuration doesn't get lost
 	# - xfce4-clipman is a clipboard manager, to be able to copy from programs we close before pasting
 	# - ttf-ancient-fonts because emojis didn't render (https://www.omgubuntu.co.uk/2014/11/see-install-use-emoji-symbols-ubuntu-linux)
 	apt install -y \
@@ -243,6 +245,7 @@ function installGraphicalEnvironment {
 		fonts-powerline
 }
 
+# a screen recorder (.gif, .mp4, ..)
 function installPeek {
 	apt install -y peek
 
@@ -251,6 +254,7 @@ function installPeek {
 	su "$username" -c "dconf write /com/uploadedlobster/peek/recording-framerate 24"
 }
 
+# When monitors connect/disconnects, set appropriate screen configuration automatically
 function installAutorandr {
 	apt install -y autorandr
 }
@@ -262,6 +266,7 @@ function installGraphicalSessionManager {
 	apt install -y lightdm
 }
 
+# tiling window manager, gaps fork for prettier visuals
 function installI3Gaps {
 	# status bar for i3
 	apt install -y i3status
@@ -272,6 +277,7 @@ function installI3Gaps {
 	apt install -y i3-gaps
 }
 
+# Text editor
 function installSublimeText {
 	# instructions from https://www.sublimetext.com/docs/3/linux_repositories.html
 
@@ -291,10 +297,12 @@ function installFirefox {
 	apt install -y firefox libavcodec-extra
 }
 
+# "Excel and Word"
 function installLibreoffice {
 	apt install -y libreoffice-calc libreoffice-writer
 }
 
+# P2P file transfer program, it's really magical! Go-port of "Magic Wormhole"
 function installCroc {
 	(
 		local tempInstallDir="/tmp/croc-install"
@@ -306,24 +314,29 @@ function installCroc {
 	)
 }
 
+# Centralized file storage
 function installVarasto {
 	downloadAndInstallSingleBinaryProgram /usr/bin/sto "https://github.com/function61/varasto/releases/download/20200626_1423_4cd3ecf8/sto_linux-amd64"
 }
 
+# Integrate home automation to my PC
 function installHautomoClient {
 	# downloadAndInstallSingleBinaryProgram /usr/bin/hautomo-client "https://github.com/function61/hautomo/releases/download/..."
 
 	return 0
 }
 
+# Development environment/build tool
 function installTurboBob {
 	downloadAndInstallSingleBinaryProgram /usr/bin/bob "https://github.com/function61/turbobob/releases/download/20200910_1241_90ec91c9/bob_linux-amd64"
 }
 
+# Docker cluster management etc.
 function installJames {
 	downloadAndInstallSingleBinaryProgram /usr/bin/james "https://bintray.com/function61/dl/download_file?file_path=james%2F20190628_1117_a7803323%2Fjames_linux-amd64"
 }
 
+# Podcast, Youtube etc. hoarding
 function installAllTheBits {
 	# downloadAndInstallSingleBinaryProgram /usr/bin/atb "https://bintray.com/joonas-fi/atb/..."
 
