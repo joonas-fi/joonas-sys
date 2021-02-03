@@ -5,8 +5,6 @@ username="joonas"
 # for how to generate https://askubuntu.com/a/667842
 passwordHash='TODO'
 
-timezone="Europe/Helsinki"
-
 repodir="/tmp/repo"
 
 
