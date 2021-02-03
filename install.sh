@@ -10,7 +10,7 @@ timezone="Europe/Helsinki"
 repodir="/tmp/repo"
 
 
-# This installation process was much shaped by:
+# This installation process outline was shaped by:
 # 	https://help.ubuntu.com/community/Installation/FromLinux#Debootstrap
 
 
@@ -49,18 +49,10 @@ function setupNetwork {
 	# for some reason the network configuration daemon is not up by default
 	systemctl enable systemd-networkd
 
-	# mkdir -p /etc/network
-
-	# echo -e "auto eth0\niface eth0 inet dhcp" > /etc/network/interfaces
-	# echo -e "auto enp2s0\niface enp0s2 inet dhcp" > /etc/network/interfaces
+	# we could do this with /etc/network but I guess systemd-networkd has advantages?
 }
 
-function configureTimezoneAndLocale {
-	rm /etc/localtime
-	ln -s "/usr/share/zoneinfo/$timezone" /etc/localtime
-
-	echo "$timezone" > /etc/timezone
-
+function reconfigureTzdata {
 	# I don't know what this does and if it needs to be done, but it was mentioned in
 	# https://help.ubuntu.com/community/Installation/FromLinux#Debootstrap
 	dpkg-reconfigure -f noninteractive tzdata
@@ -198,11 +190,6 @@ function installLazygit {
 }
 
 function installDocker {
-	# persist Docker data outside of our special copy-on-write root tree
-	# mkdir -p /persist/docker-data
-
-	ln -s /persist/docker-data /var/lib/docker
-
 	apt install -y docker.io docker-compose
 
 	# add user to Docker group, so we don't need to "$ sudo ..."
@@ -385,7 +372,7 @@ function installationProcess {
 
 	step overlayOverrides
 
-	step configureTimezoneAndLocale
+	step reconfigureTzdata
 
 	# step installSnapd
 
