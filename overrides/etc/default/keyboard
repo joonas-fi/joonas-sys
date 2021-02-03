@@ -1,0 +1,13 @@
+# KEYBOARD CONFIGURATION FILE
+
+# https://askubuntu.com/questions/135305/how-can-i-programmatically-change-the-keyboard-layout
+# (more complex solution https://askubuntu.com/a/1010501)
+
+# Consult the keyboard(5) manual page.
+
+XKBMODEL="pc105"
+XKBLAYOUT="fi"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+BACKSPACE="guess"

@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# TODO: document stages of initramfs execution (i.e. what does "init-bottom" mean)
+# original: https://github.com/chesty/overlayroot/blob/master/init-bottom-overlay
+
+PREREQ=""
+prereqs()
+{
+   echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+   prereqs
+   exit 0
+   ;;
+esac
+
+# exports "$rootmnt" etc.
+. /scripts/functions
+
+# TODO: remove debug portion
+log_begin_msg "Setting up root overlay rootmnt=${rootmnt}"
+log_end_msg
+
+# it's important to realize we're NOT creating this tree under the actual root (which is temporarily
+# under "$rootmnt"). this is an in-memory tree inside the ramdisk
+mkdir -p /persist
+
+# search fs to use for the persist partition
+persistDev=`blkid --label=persist`
+
+if [ ! -z "${persistDev}" ]; then
+	# _checkfs_once "$persistDev" /persist >> /log.txt 2>&1 ||  \
+	mount "$persistDev" /persist
+else
+	log_begin_msg "partition with label=persist not found"
+	log_end_msg
+	exit 1
+fi
+
+sysId=$(cat "${rootmnt}/etc/sys-id")
+
+treeCurrentRom="/persist/sys-current-rom"
+treeDiff="/persist/sys-${sysId}-diff"
+treeWork="/persist/.sys-${sysId}-work"
+
+# make mount points for readonly root, diff and workdir. (these are persisted on the actual persisted partition)
+# usually these already exist, but let's be friendly to the user if she's starting from empty data partition
+mkdir -p \
+	"$treeCurrentRom" \
+	"$treeDiff" \
+	"$treeWork"
+
+# make the readonly root (TODO: who makes it readonly?) available
+mount --no-mtab -o move "$rootmnt" "$treeCurrentRom"
+
+# TODO: I think we now have two mounts for "$rootmnt", is that ok?
+mount -t overlay overlay \
+	"-olowerdir=${treeCurrentRom},upperdir=${treeDiff},workdir=${treeWork}" \
+	"$rootmnt"
+
+# now move the purely-in-RAM mount point under the actual root mount
+mkdir -p "${rootmnt}/persist"
+
+# rbind means recursive
+mount --no-mtab -o rbind /persist "${rootmnt}/persist"
+
+# root was like this:
+# 	/dev/sda / ext4  errors=remount-ro 0 1
+# make it look like this:
+# 	overlay / overlay rw,relative,lowerdir=/persist/sys-current-rom,upperdir=/persist/sys-a-diff,workdir=/persist/.sys-a-work 0 0
+
+# TODO: what's this do exactly? it's not just a backup, since it's used by AWK
+cp "${rootmnt}/etc/fstab" "${rootmnt}/etc/fstab.orig"
+
+awk '$2 != "/" {print $0}' "${rootmnt}/etc/fstab.orig" > "${rootmnt}/etc/fstab"
+awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> "${rootmnt}/etc/fstab"

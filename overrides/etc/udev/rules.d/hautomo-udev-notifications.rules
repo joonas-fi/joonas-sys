@@ -1,0 +1,3 @@
+ACTION=="add",    RUN+="/home/joonas/work/hautomo-client/cmd/hautomo-client/hautomo-client udev add    --device '%p' --bus-num '$attr{busnum}' --dev-num '$attr{devnum}'"
+ACTION=="remove", RUN+="/home/joonas/work/hautomo-client/cmd/hautomo-client/hautomo-client udev remove --device '%p' --bus-num '$attr{busnum}' --dev-num '$attr{devnum}'"
+

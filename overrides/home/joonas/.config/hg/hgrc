@@ -1,0 +1,7 @@
+[ui]
+username = Joonas Loppi <joonas@joonas.fi>
+
+[extensions]
+hggit =
+record =
+

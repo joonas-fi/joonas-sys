@@ -1,0 +1,8 @@
+{
+	"enable_prompt_customization": true,
+	"dev_ingress_settings": {
+		"domain": "dev.fn61.net",
+		"network": "fn61"
+	}
+}
+
