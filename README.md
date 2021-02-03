@@ -25,6 +25,7 @@ Contents:
 - [Why this approach?](#why-this-approach)
   * [Intermingled state](#intermingled-state)
   * [Advantages of storing system state in a VCS](#advantages-of-storing-system-state-in-a-vcs)
+  * [Unused software gets removed automatically](#unused-software-gets-removed-automatically)
 - [Long-term goals](#long-term-goals)
 - [How to use](#how-to-use)
   * [Process](#process)
@@ -240,6 +241,16 @@ Now I get some kickass
 
 As an additional bonus, now I can be more intentional on the system state changes: it's harder to
 accidentally commit a change than just testing some config change traditionally and forgetting it there.
+
+
+### Unused software gets removed automatically
+
+Because each week you start with a fresh system with your previous uncommitted changes removed, and
+there's no remnants from complicated update processes that try to keep a
+[system running for decades](https://www.youtube.com/watch?v=t0rCTZ_3TQ4), there's no more anxiety
+around thinking if a re-install would fix your problems!
+
+You're always at most a week away from what amounts to 100 % legit fresh install.
 
 
 Long-term goals
