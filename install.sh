@@ -318,8 +318,6 @@ function installHautomoClient {
 
 function installTurboBob {
 	downloadAndInstallSingleBinaryProgram /usr/bin/bob "https://github.com/function61/turbobob/releases/download/20200910_1241_90ec91c9/bob_linux-amd64"
-
-	joonas-os-ram-image
 }
 
 function installJames {
