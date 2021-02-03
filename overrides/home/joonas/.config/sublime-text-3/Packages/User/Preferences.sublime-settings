@@ -1,6 +1,8 @@
 {
 	"font_face": "Fira Code",
 	"font_size": 10,
+	// defaults to "auto" which does not wrap for code but wraps for markdown etc.
+	"word_wrap": false,
 	"ignored_packages":
 	[
 		"Vintage"
