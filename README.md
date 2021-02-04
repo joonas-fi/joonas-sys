@@ -111,8 +111,8 @@ Second most interesting directory tree is [overrides/](overrides/), which contai
 files I want to be present in the image:
 
 - Some software runs with its default configuration (no overrides needed)
-- For some software I need to override their files (or provide additional ones)
-	* [Firefox is one such example](overrides/usr/lib/firefox/)
+- For some software I want to override their files (or provide additional ones)
+	* [Firefox is one such example](overrides/usr/lib/firefox/) (disable auto-updates & customize settings)
 	* [overrides/home/joonas/.config/](overrides/home/joonas/.config/) pretty much is my "dotfiles"
 
 The `Dockerfile` is mainly about getting this to build anywhere (think: build this Debian-based image
@@ -135,11 +135,13 @@ There are roughly three categories of data:
 
 There's one special case for secret files, like your SSH private keys or other sensitive data, which
 basically is rarely-changing data (therefore could be stored in repo), but for security reasons
-shouldn't be stored in the repo. In this case I can make the file in  `/home/joonas/.ssh/id_rsa` be
-a symlink to `/persist/ssh/id_rsa`
-([see example](https://github.com/joonas-fi/joonas-sys/blob/ab68d9e47612ffb8984c37343e21f091e1599445/overrides/home/joonas/.ssh/id_rsa)),
-so I can manage the state outside of the repo without having to configure the software to look for the
-file from my special location.
+shouldn't be stored in the repo.
+In this case I can make the file
+[/home/joonas/.ssh/id_rsa](https://github.com/joonas-fi/joonas-sys/blob/ab68d9e47612ffb8984c37343e21f091e1599445/overrides/home/joonas/.ssh/id_rsa)
+be a symlink ("redirect") to `/persist/ssh/id_rsa`, so:
+
+- I can manage the state outside of the repo
+- and not have to configure the software to look for the file in my special location.
 
 
 Why this approach?
@@ -239,7 +241,7 @@ Now I get some kickass
 [visibility into my system](https://github.com/joonas-fi/joonas-sys/commit/5c82245c04a42b8e9bd6353d7eb098700d0f558f)
 & how it's evolved.
 
-As an additional bonus, now I can be more intentional on the system state changes: it's harder to
+As an additional bonus, now I can be more intentional on the system's state changes: it's harder to
 accidentally commit a change than just testing some config change traditionally and forgetting it there.
 
 
@@ -275,6 +277,8 @@ How I use these tools to manage my system.
 
 
 ### Process
+
+I do this weekly:
 
 ![](docs/process.png)
 
