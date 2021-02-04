@@ -131,9 +131,9 @@ There are roughly three categories of data:
 |--------------|--------|-----------|---------|
 | Static file installed by an application | OS package manager | System image | Executable or config file that you didn't change |
 | File that only needs to be changed rarely | This repository | System image | Application's config file that you customized, like [Firefox customizations](overrides/usr/lib/firefox/browser/defaults/preferences/user.js) |
-| Persistent data, state that changes often | User generated important data | `/persist` partition | Application's state directories (example: [Docker](overrides/var/lib/docker)) & files, photographs you took etc. |
+| Persistent data, state that changes often | User generated | `/persist` partition | Application's state directories (example: [Docker](overrides/var/lib/docker)) & files, work files, photographs you took etc. |
 
-There's one special case for secret files, like your SSH private keys or other sensitive data, which
+There's one special case: secret files - like your SSH private keys or other sensitive data, which
 basically is rarely-changing data (therefore could be stored in repo), but for security reasons
 shouldn't be stored in the repo.
 In this case I can make the file
@@ -167,15 +167,15 @@ with Windows it's common wisdom to
 the system has just accumulated too much crud.
 
 As a Windows user I used to obsess over how the data was laid out in my `C:` and `D:` drives. I used
-to get angry and anxious if some badly behaving software wrote its data or log files to the root of
-the partition or make a folder directly under the root:
+to get angry and anxious if some badly behaving software wrote its data/log files/directories to the
+root of the partition:
 
 ![](docs/windows-c-drive-unnecessary-crap.png)
 
-The above doesn't exactly scream well-organized system. I especially like
+The above doesn't exactly scream "this is a well-organized system". I especially like
 [good old 6749525315573233238](https://www.reddit.com/r/Amd/comments/8pzm63/what_is_the_purpose_of_c6749525315573233238/).
 
-Linux is not immune to this. Here's how my freshly installed system looks:
+Linux is not immune to this. Here's how my freshly installed home directory looks:
 
 ```
 /home/joonas/
@@ -208,8 +208,8 @@ Linux is not immune to this. Here's how my freshly installed system looks:
 └── work -> /persist/work
 ```
 
-The only entries I placed there myself was `.config/`, `.ssh/` and `work/`. Most of `./config/` is also
-filled up with stuff I didn't put there.
+The only entries I placed there were `.config/`, `.ssh/` and `work/`. Most of `./config/` is also
+filled up with stuff I didn't choose to put there.
 
 Without the drastic approach I'm taking, I don't think there is other way to manage one's system
 state in a way that doesn't leave you with dread on data loss ("did I backup everything I care about?").
@@ -220,6 +220,10 @@ if there were interesting files to recover before deleting the backups of your l
 
 Would you say identifying interesting state would be easier to do now (or at most a week after the state
 was created), than to leave it for you do do ten years from now?
+
+Now my backup strategy is easy: back up everything under `/persist`. That's it. All other state
+(applications to install & their configuration) is defined by this repository, and I consider Git (a
+distributed VCS) a sufficient backup - if GitHub loses my data, I still have a local copy (and vice versa).
 
 [Graham Christensen](https://grahamc.com/blog/erase-your-darlings) put it eloquently:
 
@@ -234,6 +238,7 @@ was created), than to leave it for you do do ten years from now?
 >
 > Each of these quick fixes leaves you doomed to repeat history in three years when you’re finally
 > doing that dreaded RHEL 7 to RHEL 8 upgrade.
+
 
 ### Advantages of storing system state in a VCS
 
