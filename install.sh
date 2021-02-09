@@ -330,6 +330,14 @@ function installTurboBob {
 	downloadAndInstallSingleBinaryProgram /usr/bin/bob "https://github.com/function61/turbobob/releases/download/20200910_1241_90ec91c9/bob_linux-amd64"
 }
 
+# easy provisioning of development SSL certs
+function installMkcert {
+	# dependency of mkcert
+	apt install -y libnss3-tools
+
+	downloadAndInstallSingleBinaryProgram /usr/bin/mkcert "https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64"
+}
+
 # Docker cluster management etc.
 function installJames {
 	downloadAndInstallSingleBinaryProgram /usr/bin/james "https://bintray.com/function61/dl/download_file?file_path=james%2F20190628_1117_a7803323%2Fjames_linux-amd64"
@@ -439,6 +447,8 @@ function installationProcess {
 	step installHautomoClient
 
 	step installTurboBob
+
+	step installMkcert
 
 	step installJames
 
