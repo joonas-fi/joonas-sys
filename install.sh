@@ -394,7 +394,7 @@ function installationProcess {
 
 	step reconfigureTzdata
 
-	# step installSnapd
+	step installSnapd
 
 	# needs to be installed before kernel (LVM modules need to be present in initrd I guess)
 	# we don't use it right yet, but better have it ready
