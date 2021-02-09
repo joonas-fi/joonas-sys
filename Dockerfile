@@ -16,5 +16,5 @@ RUN mkdir /debootstrap-cache && . /etc/os-release && debootstrap "$VERSION_CODEN
 CMD /repo/bin/bootstrap-and-install.sh
 
 ADD bin/bootstrap-and-install.sh /repo/bin/bootstrap-and-install.sh
-ADD install.sh /repo/
+ADD install.sh secrets.env /repo/
 ADD overrides/ /repo/overrides/

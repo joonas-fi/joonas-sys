@@ -1,12 +1,13 @@
 #!/bin/bash -eu
 
+repodir="/tmp/repo"
+
+source "${repodir}/secrets.env"
+
 username="joonas"
 
 # for how to generate https://askubuntu.com/a/667842
-passwordHash='TODO'
-
-repodir="/tmp/repo"
-
+userPasswordHash="$USER_PASSWORD_HASH" # from secrets.env
 
 # This installation process outline was shaped by:
 # 	https://help.ubuntu.com/community/Installation/FromLinux#Debootstrap
@@ -110,7 +111,7 @@ function createUser {
 	# order of "GECOS" (AKA comment) field: https://askubuntu.com/a/94067
 	useradd \
 		--create-home \
-		--password "$passwordHash" \
+		--password "$userPasswordHash" \
 		--shell /bin/bash \
 		--comment "Joonas" \
 		"$username"
