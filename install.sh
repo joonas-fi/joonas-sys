@@ -306,6 +306,10 @@ function installCroc {
 	)
 }
 
+function installWireguard {
+	apt install -y wireguard
+}
+
 # Centralized file storage
 function installVarasto {
 	downloadAndInstallSingleBinaryProgram /usr/bin/sto "https://github.com/function61/varasto/releases/download/20200626_1423_4cd3ecf8/sto_linux-amd64"
@@ -424,6 +428,8 @@ function installationProcess {
 	step installLibreoffice
 
 	step installCroc
+
+	step installWireguard
 
 	step installVarasto
 
