@@ -1,2 +1,5 @@
 disableStartupPopups: true
 
+# whether 'esc' will quit when there is nothing to cancel/close
+quitOnTopLevelReturn: false
+
