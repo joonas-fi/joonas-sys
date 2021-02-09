@@ -89,8 +89,12 @@ function installKernelAndBootloader {
 	mkdir -p /boot/efi
 }
 
+# programmatic steps related to having / be overlayfs that redirects writes to /persist/sys_N_diffs
+#
+# most of the important things are already done in scripts in our overrides/etc/initramfs-tools/
 function setupRootOverlay {
 	# instruct pre-boot environment to have overlay kernel module loaded
+	# we could have this as static file, but then upstream changes would get overwritten
 	echo "overlay" >> /etc/initramfs-tools/modules
 
 	# update needed after we modified the contents (later steps probably do this, but it'd be dirty to rely on it)
@@ -190,8 +194,7 @@ function installLazygit {
 function installDocker {
 	apt install -y docker.io docker-compose
 
-	# add user to Docker group, so we don't need to "$ sudo ..."
-	# all docker commands
+	# add user to Docker group, so we don't need to "$ sudo ..." all docker commands
 	usermod -aG docker "$username"
 }
 
@@ -251,14 +254,14 @@ function installAutorandr {
 	apt install -y autorandr
 }
 
-# graphical session manager = root user displaying GUI for user to login
+# graphical session manager = GUI for logging in to your desktop
 function installGraphicalSessionManager {
 	# for some reason if we install this alongside with xfce4 et al., (it yells about which to use,
 	# gdm3 vs lightdm, even though gdm3 isn't installed by default if we don't ask for lightdm)
 	apt install -y lightdm
 }
 
-# tiling window manager, gaps fork for prettier visuals
+# tiling window manager (gaps fork for prettier visuals)
 function installI3Gaps {
 	# status bar for i3
 	apt install -y i3status
