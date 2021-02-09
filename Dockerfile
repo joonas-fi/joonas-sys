@@ -13,7 +13,8 @@ RUN mkdir /debootstrap-cache && . /etc/os-release && debootstrap "$VERSION_CODEN
 
 # - copies debootstrap-cache into target tree
 # - begins installation by calling install.sh inside chroot
-CMD /repo/bootstrap.sh
+CMD /repo/bin/bootstrap-and-install.sh
 
-ADD install.sh bootstrap.sh /repo/
+ADD bin/bootstrap-and-install.sh /repo/bin/bootstrap-and-install.sh
+ADD install.sh /repo/
 ADD overrides/ /repo/overrides/

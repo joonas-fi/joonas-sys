@@ -118,9 +118,9 @@ files I want to be present in the image:
 The `Dockerfile` is mainly about getting this to build anywhere (think: build this Debian-based image
 from e.g. Arch Linux) with minimal dependencies.
 
-`bootstrap.sh` mainly bootstraps Debian installation environment and pivots the chroot inside the
- to our system tree that we're building and calls `install.sh` where the actual installation can
- begin after having a working package manager.
+`bin/bootstrap-and-install.sh` mainly bootstraps Debian installation environment and pivots the chroot
+inside to our system tree that we're building and calls `install.sh` where the actual installation
+can begin now that we have a working package manager.
 
 
 ### Handling state
