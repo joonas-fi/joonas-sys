@@ -73,6 +73,8 @@ function installLanguagePack {
 	apt install -y language-pack-en-base
 }
 
+# LVM is used for overlaying virtual block devices on top of physical disks to achieve encryption,
+# extending disks dynamically etc.
 function installLvm {
 	apt install -y lvm2
 }
@@ -133,6 +135,12 @@ function overlayOverrides() {
 	apt install -y rsync
 
 	rsync -a "${repodir}/overrides/" /
+
+	# any file we wrote under user's home dir, we wrote as root
+	chown -R "$username:$username" "/home/$username"
+
+	# for some reason root ends up with other:write. was it because rsync?
+	chmod o-w /
 }
 
 # snap/snapcraft is Docker-like but mainly focused for GUI apps
@@ -350,14 +358,6 @@ function installAllTheBits {
 	return 0
 }
 
-function fixPermissions {
-	# for some reason root ends up with other:write. TODO: find out why
-	chmod o-w /
-
-	# any file we wrote, we wrote as root
-	chown -R "$username:$username" "/home/$username"
-}
-
 function step {
 	local name="$1"
 
@@ -453,8 +453,6 @@ function installationProcess {
 	step installJames
 
 	step installAllTheBits
-
-	step fixPermissions
 }
 
 installationProcess
