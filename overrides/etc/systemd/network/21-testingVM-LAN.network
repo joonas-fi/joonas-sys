@@ -1,0 +1,6 @@
+# this is the default NIC in QEMU
+[Match]
+Name=enp0s2
+
+[Network]
+DHCP=yes

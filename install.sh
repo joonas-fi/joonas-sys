@@ -36,18 +36,12 @@ function configureFilesystemTable {
 function setupNetwork {
 	echo "work" > /etc/hostname
 
+	# the .network files were specified in overrides/
+	# we could do network config with /etc/network but I guess systemd-networkd has advantages?
+
 	# https://wiki.archlinux.org/index.php/systemd-networkd
-
-	# for my actual machine
-	echo -e "[Match]\nName=enp3s0\n\n[Network]\nDHCP=yes\n" > /etc/systemd/network/20-enp3s0.network
-
-	# for testing in VM
-	echo -e "[Match]\nName=enp0s2\n\n[Network]\nDHCP=yes\n" > /etc/systemd/network/21-enp0s2.network
-
 	# for some reason the network configuration daemon is not up by default
 	systemctl enable systemd-networkd
-
-	# we could do this with /etc/network but I guess systemd-networkd has advantages?
 }
 
 function reconfigureTzdata {
