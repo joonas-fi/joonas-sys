@@ -323,10 +323,13 @@ The above build process should work on pretty much any distro, you only need Doc
 Road to memory safety
 ---------------------
 
-In the graphical stack:
+Here's the most essential components of the stack:
 
 | Component | Memory safe | Program | Notes |
 |-----------|-------------|---------|-------|
+| Bootloader | | rEFInd | Investigate [u-root/systemboot](https://github.com/u-root/u-root#systemboot) |
+| Kernel | | Linux kernel | |
+| Init system | | systemd | |
 | Display server | | Xorg | |
 | Display manager | | LightDM | |
 | Greeter | | lightdm-gtk-greeter | |
@@ -334,12 +337,14 @@ In the graphical stack:
 | Compositor |  | compton | |
 | Screensaver |  | xfce4-screensaver | |
 | Screenshot app |  | xfce4-screenshooter | |
+| Screen recorder |  | Peek | |
 | Notification daemon |  | dunst | |
 | Clipboard manager | | xfce4-clipman | |
 | Terminal | ✓ | Alacritty | |
 | Program launcher | | rofi | |
 | Display settings manager | ✓ | autorandr | |
 | Media player control | ✓ | Hautomo's playerctl | |
+| VPN / mesh connectivity | ✓ | Tailscale | |
 
 
 Additional reading
