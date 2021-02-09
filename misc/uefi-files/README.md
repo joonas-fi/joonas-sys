@@ -1,9 +1,8 @@
-esp-template-disk-512M.gz.img
+esp-template-disk-512M.img.gz
 -----------------------------
 
 Is a disk image with GPT partitioning. It has one 512 MB partition - an empty ESP partition.
-
-Was made with commands:
+It was built with commands:
 
 ```console
 $ truncate -s 512M esp.img
@@ -19,5 +18,5 @@ $ losetup --find --partscan esp.img
 
 $ mkfs.fat -F32 -n ESP /dev/loop1p1
 
-$ cat /dev/loop1 | gzip > esp-template-disk-512M.gz.img
+$ cat /dev/loop1 | gzip > esp-template-disk-512M.img.gz
 ```
