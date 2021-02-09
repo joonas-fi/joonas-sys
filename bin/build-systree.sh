@@ -27,7 +27,12 @@ else
 	mountInRamFilesystem
 fi
 
-docker build -t j-os-builder .
+docker build -t joonas-sys-builder .
 
 # for "slave", see https://docs.docker.com/storage/bind-mounts/#configure-bind-propagation
-docker run --rm -v "${treeLocation}:${treeLocation}:slave" --privileged j-os-builder
+if docker run --rm -v "${treeLocation}:${treeLocation}:slave" --privileged joonas-sys-builder ; then
+	exit 0
+else
+	echo -e "Build failed. For interactive debugging:\n    $ docker run --rm -it -v \"${treeLocation}:${treeLocation}:slave\" --privileged joonas-sys-builder"
+	exit 1
+fi
