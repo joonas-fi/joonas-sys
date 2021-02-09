@@ -216,7 +216,6 @@ function installGraphicalEnvironment {
 		xfce4 \
 		xfce4-clipman \
 		xfce4-screensaver \
-		xfce4-terminal \
 		xfce4-screenshooter \
 		alsa \
 		dunst \
@@ -228,6 +227,14 @@ function installGraphicalEnvironment {
 		fonts-firacode \
 		fonts-hack \
 		fonts-powerline
+}
+
+function installTerminalEmulator {
+	# for alacritty
+	add-apt-repository ppa:aslatter/ppa
+
+	# xfce4-terminal for a migration period
+	apt install -y alacritty xfce4-terminal
 }
 
 # a screen recorder (.gif, .mp4, ..)
@@ -399,6 +406,8 @@ function installationProcess {
 	step installLf
 
 	step installGraphicalEnvironment
+
+	step installTerminalEmulator
 
 	step installPeek
 

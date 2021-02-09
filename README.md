@@ -336,9 +336,9 @@ In the graphical stack:
 | Screenshot app |  | xfce4-screenshooter | |
 | Notification daemon |  | dunst | |
 | Clipboard manager | | xfce4-clipman | |
-| Terminal | | xfce4-terminal (switch to alacritty?) | |
+| Terminal | ✓ | Alacritty | |
 | Program launcher | | rofi | |
-| Display settings manager | python? | autorandr | |
+| Display settings manager | ✓ | autorandr | |
 | Media player control | ✓ | Hautomo's playerctl | |
 
 
