@@ -5,5 +5,5 @@
 		"network": "fn61"
 	},
 	"code_editor":  {"cmd": ["subl", "--new-window", "$PROJECT_ROOT"]},
-	"file_browser": {"cmd": ["thunar"]}
+	"file_browser": {"cmd": ["thunar", "$DIRECTORY"]}
 }
