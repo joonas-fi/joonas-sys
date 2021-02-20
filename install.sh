@@ -181,7 +181,7 @@ function installMercurial {
 		local tempInstallDir="/tmp/pip-install"
 
 		mkdir -p "$tempInstallDir" && cd "$tempInstallDir"
-		curl https://bootstrap.pypa.io/2.7/get-pip.py --output get-pip.py
+		curl -fsSL https://bootstrap.pypa.io/2.7/get-pip.py --output get-pip.py
 		python2 get-pip.py
 		rm -rf "$tempInstallDir"
 	)
@@ -198,7 +198,10 @@ function installLazygit {
 }
 
 function installDocker {
-	apt install -y docker.io docker-compose
+	# don't install recommends, because it installs "Ubuntu fan". bring in most of recommended manually
+	apt install --no-install-recommends -y docker.io git cgroupfs-mount pigz xz-utils
+
+	apt install -y docker-compose
 
 	# add user to Docker group, so we don't need to "$ sudo ..." all docker commands
 	usermod -aG docker "$username"
