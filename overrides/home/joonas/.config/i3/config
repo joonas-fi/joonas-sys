@@ -26,7 +26,9 @@ for_window [window_role="pop-up"] floating enable, border normal
 for_window [window_role="task_dialog"] floating enable, border normal
 # for_window [class=".*" window_role="pop-up"] floating enable, border normal
 
+# convenience "const"
 set $alt Mod1
+
 # Mod4 = win
 set $mod Mod4
 
@@ -230,8 +232,9 @@ bindsym XF86Calculator exec thunar /media/joonas/Windows/Users/Joonas/Desktop/Sa
 # print => select screenshot area now
 # shift+print => ask what to do ("custom", so you select between window/fullscreen etc.)
 # super+print => screen recorder (video as gif/mp4/...)
-bindsym Print exec xfce4-screenshooter --region
-bindsym Shift+Print exec xfce4-screenshooter
+
+bindsym Print exec flameshot gui # region selector
+bindsym Shift+Print exec flameshot launcher # select between fullscreen and region
 bindsym $mod+Print exec peek
 
 gaps inner 15

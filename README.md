@@ -336,7 +336,7 @@ Here's the most essential components of the stack:
 | Window manager |  | i3 | [Investigate memory safe alternatives](https://users.rust-lang.org/t/is-there-a-tiling-window-manager-for-linux-that-is-written-and-configurable-in-rust/4407) |
 | Compositor |  | compton | |
 | Screensaver |  | xfce4-screensaver | |
-| Screenshot app |  | xfce4-screenshooter | |
+| Screenshot app |  | Flameshot | |
 | Screen recorder |  | Peek | |
 | Notification daemon |  | dunst | |
 | Clipboard manager | ✓ | Clipcat | |

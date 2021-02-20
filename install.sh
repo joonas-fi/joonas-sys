@@ -233,7 +233,6 @@ function installGraphicalEnvironment {
 	apt install -y \
 		xfce4 \
 		xfce4-screensaver \
-		xfce4-screenshooter \
 		alsa \
 		dunst \
 		compton \
@@ -258,6 +257,11 @@ function installTerminalEmulator {
 
 	# xfce4-terminal for a migration period
 	apt install -y alacritty xfce4-terminal
+}
+
+# screenshots with annotation support (= draw arrows etc.)
+function installFlameshot {
+	apt install -y flameshot
 }
 
 # a screen recorder (.gif, .mp4, ..)
@@ -461,6 +465,8 @@ function installationProcess {
 	step installPrinterDriver
 
 	step installTerminalEmulator
+
+	step installFlameshot
 
 	step installPeek
 
