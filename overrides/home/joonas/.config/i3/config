@@ -7,9 +7,6 @@
 # when monitors get connected/disconnect, restore appropriate config
 exec --no-startup-id autorandr --change
 
-# notifier daemon
-exec --no-startup-id dunst
-
 # screensaver
 exec --no-startup-id xfce4-screensaver
 

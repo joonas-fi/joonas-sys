@@ -225,16 +225,22 @@ function installLf {
 }
 
 function installGraphicalEnvironment {
-	# - dunst implements desktop notifications
+	# (why "noninteractive"? read rant about gdm3 below)
+	#
+	# unless we specify slick-greeter, it's going to default to unity-greeter which pulls in
+	# parts of Unity also
+
+	# - lightdm is a display manager (= GUI for logging in to your desktop)
 	# - rofi is an application launcher
 	# - xwallpaper might not be always required (once hautomo-client can set wallpapers without it)
-	# - xfce4-clipman is a clipboard manager, to be able to copy from programs we close before pasting
 	# - ttf-ancient-fonts because emojis didn't render (https://www.omgubuntu.co.uk/2014/11/see-install-use-emoji-symbols-ubuntu-linux)
-	apt install -y \
+	DEBIAN_FRONTEND=noninteractive apt install -y \
 		xfce4 \
 		xfce4-screensaver \
+		xfce4-notifyd \
+		lightdm \
+		slick-greeter \
 		alsa \
-		dunst \
 		compton \
 		xwallpaper \
 		rofi \
@@ -243,6 +249,18 @@ function installGraphicalEnvironment {
 		fonts-firacode \
 		fonts-hack \
 		fonts-powerline
+
+	# before for some reason lightdm had to be installed in a separate "$ apt" call, otherwise gdm3
+	# would get pulled in. now after I removed something from here it gets pulled in anyway. JFC I
+	# tried to research which package pulls it, I couldn't figure it out and now we have conflict
+	# because we have 2 managers, and now we've to fix it. UGH!
+
+	echo /usr/bin/lightdm > /etc/X11/default-display-manager
+
+	rm /etc/systemd/system/display-manager.service
+
+	ln -s /lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+}
 
 # a clipboard manager is required if you don't want clipboard to empty when the program exits where
 # you copied the data from
@@ -278,22 +296,18 @@ function installAutorandr {
 	apt install -y autorandr
 }
 
-# graphical session manager = GUI for logging in to your desktop
-function installGraphicalSessionManager {
-	# for some reason if we install this alongside with xfce4 et al., (it yells about which to use,
-	# gdm3 vs lightdm, even though gdm3 isn't installed by default if we don't ask for lightdm)
-	apt install -y lightdm
-}
-
 # tiling window manager (gaps fork for prettier visuals)
 function installI3Gaps {
-	# status bar for i3
-	apt install -y i3status
+	# status bar for i3. recommended would install dzen2 and i3-wm
+	# apt install --no-install-recommends -y i3status
 
 	# i3-gaps (a fork of i3 with gaps support) exists in speed-ricer repo
 	add-apt-repository -y ppa:kgilmer/speed-ricer
 
-	apt install -y i3-gaps
+	# recommended would install dunst.
+	# suckless-tools = dmenu (used for workspace renaming)
+	# session means setting file so the i3 session shows up in greeter
+	apt install --no-install-recommends -y i3-gaps-wm i3-gaps-session i3status suckless-tools
 }
 
 # Text editor
@@ -471,8 +485,6 @@ function installationProcess {
 	step installPeek
 
 	step installAutorandr
-
-	step installGraphicalSessionManager
 
 	step installI3Gaps
 
