@@ -147,6 +147,7 @@ function installFavouriteBaseUtils {
 	# bsdmainutils = hexdump
 	# usbutils = lsusb
 	# pciutils = lspci
+	# dnsutils = nslookup, dig
 	apt install -y \
 		htop \
 		curl \
@@ -160,6 +161,8 @@ function installFavouriteBaseUtils {
 		pciutils \
 		usbutils \
 		bsdmainutils \
+		dnsutils \
+		nmap \
 		exiftool \
 		tree
 }
