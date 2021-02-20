@@ -232,7 +232,6 @@ function installGraphicalEnvironment {
 	# - ttf-ancient-fonts because emojis didn't render (https://www.omgubuntu.co.uk/2014/11/see-install-use-emoji-symbols-ubuntu-linux)
 	apt install -y \
 		xfce4 \
-		xfce4-clipman \
 		xfce4-screensaver \
 		xfce4-screenshooter \
 		alsa \
@@ -245,6 +244,12 @@ function installGraphicalEnvironment {
 		fonts-firacode \
 		fonts-hack \
 		fonts-powerline
+
+# a clipboard manager is required if you don't want clipboard to empty when the program exits where
+# you copied the data from
+function installClipboardManager {
+	curl -fsSL "https://github.com/xrelkd/clipcat/releases/download/v0.5.0/clipcat-v0.5.0-x86_64-unknown-linux-gnu.tar.gz" \
+		| tar -xz -C /usr/bin -f - clipcat-menu clipcat-notify clipcatctl clipcatd
 }
 
 function installTerminalEmulator {
@@ -450,6 +455,8 @@ function installationProcess {
 	step installLf
 
 	step installGraphicalEnvironment
+
+	step installClipboardManager
 
 	step installPrinterDriver
 

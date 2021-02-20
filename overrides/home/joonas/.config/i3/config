@@ -14,7 +14,7 @@ exec --no-startup-id dunst
 exec --no-startup-id xfce4-screensaver
 
 # clipboard manager
-exec --no-startup-id xfce4-clipman &
+exec --no-startup-id clipcatd &
 
 # compositor for transparent terminal windows
 exec --no-startup-id compton &

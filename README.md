@@ -339,7 +339,7 @@ Here's the most essential components of the stack:
 | Screenshot app |  | xfce4-screenshooter | |
 | Screen recorder |  | Peek | |
 | Notification daemon |  | dunst | |
-| Clipboard manager | | xfce4-clipman | |
+| Clipboard manager | ✓ | Clipcat | |
 | Terminal | ✓ | Alacritty | |
 | Program launcher | | rofi | |
 | Display settings manager | ✓ | autorandr | |
