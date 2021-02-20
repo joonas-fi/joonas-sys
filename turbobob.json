@@ -1,0 +1,20 @@
+{
+	"for_description_of_this_file_see": "https://github.com/function61/turbobob",
+	"version_major": 1,
+	"project_name": "joonas-sys",
+	"builders": [
+		{
+			"name": "default",
+			"uses": "docker://fn61/buildkit-golang:20210208_0951_8496e47f",
+			"commands": {
+				"build": ["bin/build.sh"],
+				"dev": ["bash"]
+			},
+			"mount_destination": "/workspace",
+			"workdir": "/workspace"
+		}
+	],
+	"os_arches": {
+		"linux-amd64": true
+	}
+}
