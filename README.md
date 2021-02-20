@@ -1,4 +1,4 @@
-My personal system installation (Ubuntu + programs & conf I use) as a code. You might be
+My personal system installation (Ubuntu + programs & conf I use) as code. You might be
 familiar with "dotfiles" - this is a bit further. :) (Because I'm a giant nerd.)
 
 This is not a generic operating system ("distro") that could help you - it's my personalized system,
