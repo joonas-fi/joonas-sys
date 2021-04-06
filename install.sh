@@ -214,6 +214,10 @@ function installDocker {
 
 	# add user to Docker group, so we don't need to "$ sudo ..." all docker commands
 	usermod -aG docker "$username"
+
+	# Docker is not enabled by default.
+	# (instead it is socket-activated, i.e. "$ docker ps" would start "always-up" services)
+	systemctl enable docker
 }
 
 # Virtual Machines
