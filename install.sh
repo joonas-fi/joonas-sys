@@ -187,7 +187,7 @@ function installMercurial {
 		local tempInstallDir="/tmp/pip-install"
 
 		mkdir -p "$tempInstallDir" && cd "$tempInstallDir"
-		curl -fsSL https://bootstrap.pypa.io/2.7/get-pip.py --output get-pip.py
+		curl -fsSL https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 		python2 get-pip.py
 		rm -rf "$tempInstallDir"
 	)
