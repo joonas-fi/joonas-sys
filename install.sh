@@ -150,6 +150,7 @@ function installFavouriteBaseUtils {
 	# dnsutils = nslookup, dig
 	apt install -y \
 		htop \
+		iotop \
 		curl \
 		wget \
 		unzip \
