@@ -5,6 +5,13 @@
 		"domain": "dev.fn61.net",
 		"network": "fn61"
 	},
+	"project_quality": {
+		"files_that_should_exist": [
+			"README.md",
+			"LICENSE",
+			"docs/security.md"
+		]
+	},
 	"code_editor":  {"cmd": ["subl", "--new-window", "$PROJECT_ROOT"]},
 	"file_browser": {"cmd": ["thunar", "$DIRECTORY"]}
 }
