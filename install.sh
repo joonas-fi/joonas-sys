@@ -248,6 +248,7 @@ function installGraphicalEnvironment {
 		xwallpaper \
 		rofi \
 		mousepad \
+		vlc \
 		ttf-ancient-fonts \
 		fonts-firacode \
 		fonts-hack \
