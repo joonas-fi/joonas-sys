@@ -276,8 +276,7 @@ function installTerminalEmulator {
 	# for alacritty
 	add-apt-repository ppa:aslatter/ppa
 
-	# xfce4-terminal for a migration period
-	apt install -y alacritty xfce4-terminal
+	apt install -y alacritty
 }
 
 # screenshots with annotation support (= draw arrows etc.)
