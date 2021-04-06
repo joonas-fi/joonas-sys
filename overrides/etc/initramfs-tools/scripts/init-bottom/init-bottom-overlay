@@ -37,9 +37,9 @@ fi
 
 sysId=$(cat "${rootmnt}/etc/sys-id")
 
-treeCurrentRom="/persist/sys-current-rom"
-treeDiff="/persist/sys-${sysId}-diff"
-treeWork="/persist/.sys-${sysId}-work"
+treeCurrentRom="/mnt/sys-current-rom"
+treeDiff="/persist/apps/SYSTEM_nobackup/sys-${sysId}-diff"
+treeWork="/persist/apps/SYSTEM_nobackup/sys-${sysId}-work"
 
 # make mount points for readonly root, diff and workdir. (these are persisted on the actual persisted partition)
 # usually these already exist, but let's be friendly to the user if she's starting from empty data partition
@@ -48,13 +48,16 @@ mkdir -p \
 	"$treeDiff" \
 	"$treeWork"
 
-# make the readonly root (TODO: who makes it readonly?) available
+# make the readonly root (TODO: who makes it readonly?) available bypassing the overlayfs
 mount --no-mtab -o move "$rootmnt" "$treeCurrentRom" || panic "failed mounting $treeCurrentRom"
 
 # TODO: I think we now have two mounts for "$rootmnt", is that ok?
 mount -t overlay overlay \
 	"-olowerdir=${treeCurrentRom},upperdir=${treeDiff},workdir=${treeWork}" \
 	"$rootmnt" || panic "failed mounting / overlay"
+
+# /mnt/sys-current-rom -> /root/mnt/sys-current-rom
+mount --no-mtab -o move "$treeCurrentRom" "${rootmnt}${treeCurrentRom}" || panic "failed moving $treeCurrentRom"
 
 # now move the purely-in-RAM mount point under the actual root mount
 mkdir -p "${rootmnt}/persist" || panic "failed making /persist dir"
