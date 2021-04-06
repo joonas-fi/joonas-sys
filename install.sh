@@ -359,6 +359,11 @@ function installWireguard {
 	fi
 }
 
+function installWireshark {
+	# it asks "Should non-superusers be able to capture packets?"
+	DEBIAN_FRONTEND=noninteractive apt install -y wireshark
+}
+
 # Centralized file storage
 function installVarasto {
 	downloadAndInstallSingleBinaryProgram /usr/bin/sto "https://github.com/function61/varasto/releases/download/20200626_1423_4cd3ecf8/sto_linux-amd64"
@@ -499,6 +504,8 @@ function installationProcess {
 	step installCroc
 
 	step installWireguard
+
+	step installWireshark
 
 	step installVarasto
 
