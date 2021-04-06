@@ -13,3 +13,5 @@ pref('trailhead.firstrun.didSeeAboutWelcome', true);
 // disable nag when entering about:config
 pref('browser.aboutConfig.showWarning', false);
 
+// https://stackoverflow.com/a/47353456
+pref('datareporting.policy.firstRunURL', '');
