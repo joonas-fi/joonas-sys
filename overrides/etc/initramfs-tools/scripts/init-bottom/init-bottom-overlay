@@ -19,9 +19,7 @@ esac
 # exports "$rootmnt" etc.
 . /scripts/functions
 
-# TODO: remove debug portion
 log_begin_msg "Setting up root overlay rootmnt=${rootmnt}"
-log_end_msg
 
 # it's important to realize we're NOT creating this tree under the actual root (which is temporarily
 # under "$rootmnt"). this is an in-memory tree inside the ramdisk
@@ -32,11 +30,9 @@ persistDev=`blkid --label=persist`
 
 if [ ! -z "${persistDev}" ]; then
 	# _checkfs_once "$persistDev" /persist >> /log.txt 2>&1 ||  \
-	mount "$persistDev" /persist
+	mount "$persistDev" /persist || panic "failed mounting /persist"
 else
-	log_begin_msg "partition with label=persist not found"
-	log_end_msg
-	exit 1
+	panic "partition with label=persist not found"
 fi
 
 sysId=$(cat "${rootmnt}/etc/sys-id")
@@ -53,18 +49,18 @@ mkdir -p \
 	"$treeWork"
 
 # make the readonly root (TODO: who makes it readonly?) available
-mount --no-mtab -o move "$rootmnt" "$treeCurrentRom"
+mount --no-mtab -o move "$rootmnt" "$treeCurrentRom" || panic "failed mounting $treeCurrentRom"
 
 # TODO: I think we now have two mounts for "$rootmnt", is that ok?
 mount -t overlay overlay \
 	"-olowerdir=${treeCurrentRom},upperdir=${treeDiff},workdir=${treeWork}" \
-	"$rootmnt"
+	"$rootmnt" || panic "failed mounting / overlay"
 
 # now move the purely-in-RAM mount point under the actual root mount
-mkdir -p "${rootmnt}/persist"
+mkdir -p "${rootmnt}/persist" || panic "failed making /persist dir"
 
 # rbind means recursive
-mount --no-mtab -o rbind /persist "${rootmnt}/persist"
+mount --no-mtab -o rbind /persist "${rootmnt}/persist" || panic "failed binding in-RAM /persist to rootfs /persist"
 
 # root was like this:
 # 	/dev/sda / ext4  errors=remount-ro 0 1
@@ -76,3 +72,5 @@ cp "${rootmnt}/etc/fstab" "${rootmnt}/etc/fstab.orig"
 
 awk '$2 != "/" {print $0}' "${rootmnt}/etc/fstab.orig" > "${rootmnt}/etc/fstab"
 awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> "${rootmnt}/etc/fstab"
+
+log_end_msg
