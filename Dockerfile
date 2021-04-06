@@ -1,6 +1,9 @@
-# TODO: add version here
-FROM ubuntu
+# https://wiki.ubuntu.com/Releases
+FROM ubuntu:focal
 
+# debootstrap bootstraps (= minimal base with APT so you can build from there) another
+# file tree for installing Ubuntu inside it. Basically from an existing Ubuntu installation you can
+# "bootstrap" /example-installation and install a working system there inside a chroot.
 RUN apt update && apt install -y debootstrap
 
 # cache tree bootstrap, so we benefit from Docker's cache if we have to run this process multiple
@@ -13,8 +16,10 @@ RUN mkdir /debootstrap-cache && . /etc/os-release && debootstrap "$VERSION_CODEN
 
 # - copies debootstrap-cache into target tree
 # - begins installation by calling install.sh inside chroot
-CMD /repo/bin/bootstrap-and-install.sh
+ENTRYPOINT ["/repo/bin/run-step-in-container.sh"]
 
-ADD bin/bootstrap-and-install.sh /repo/bin/bootstrap-and-install.sh
-ADD install.sh secrets.env /repo/
-ADD overrides/ /repo/overrides/
+WORKDIR /repo/install-steps
+
+# ADD bin/run-step-in-container.sh /repo/bin/run-step-in-container.sh
+# ADD overrides/ /repo/overrides/
+# ADD install-steps/ /repo/install-steps/
