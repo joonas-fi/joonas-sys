@@ -378,7 +378,7 @@ function installHautomoClient {
 
 # Development environment/build tool
 function installTurboBob {
-	downloadAndInstallSingleBinaryProgram /usr/bin/bob "https://github.com/function61/turbobob/releases/download/20200910_1241_90ec91c9/bob_linux-amd64"
+	downloadAndInstallSingleBinaryProgram /usr/bin/bob "https://function61.com/go/turbobob-latest-linux-amd64"
 }
 
 # easy provisioning of development SSL certs
