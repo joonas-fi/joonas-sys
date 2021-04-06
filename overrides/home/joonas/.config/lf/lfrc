@@ -3,3 +3,6 @@ set drawbox
 
 set hidden
 
+# dot -> toggle hidden files
+map . set hidden!
+
