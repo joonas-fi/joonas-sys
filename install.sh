@@ -237,6 +237,7 @@ function installGraphicalEnvironment {
 	# - rofi is an application launcher
 	# - xwallpaper might not be always required (once hautomo-client can set wallpapers without it)
 	# - ttf-ancient-fonts because emojis didn't render (https://www.omgubuntu.co.uk/2014/11/see-install-use-emoji-symbols-ubuntu-linux)
+	# - fonts-noto-color-emoji to get colored emojis for i3 workspace symbols
 	DEBIAN_FRONTEND=noninteractive apt install -y \
 		xfce4 \
 		xfce4-screensaver \
@@ -251,6 +252,7 @@ function installGraphicalEnvironment {
 		vlc \
 		ttf-ancient-fonts \
 		fonts-firacode \
+		fonts-noto-color-emoji \
 		fonts-hack \
 		fonts-powerline
 

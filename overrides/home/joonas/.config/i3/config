@@ -191,6 +191,8 @@ bar {
 	# need to override the default to enable transparency (via RGBA colors)
 	i3bar_command i3bar --transparency
 
+	font pango:monospace 11, pango:Noto Color Emoji 11
+
 	colors {
 		background #000000a0
 	}
