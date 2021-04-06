@@ -148,6 +148,7 @@ function installFavouriteBaseUtils {
 	# usbutils = lsusb
 	# pciutils = lspci
 	# dnsutils = nslookup, dig
+	# imagemagick = convert
 	apt install -y \
 		htop \
 		iotop \
@@ -157,6 +158,7 @@ function installFavouriteBaseUtils {
 		jq \
 		pv \
 		ncdu \
+		imagemagick \
 		vim \
 		strace \
 		pciutils \
