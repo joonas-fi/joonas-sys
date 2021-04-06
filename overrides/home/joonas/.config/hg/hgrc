@@ -4,4 +4,9 @@ username = Joonas Loppi <joonas@joonas.fi>
 [extensions]
 hggit =
 record =
+# automv =
+
+# see https://fossies.org/linux/mercurial/hgext/automv.py for similarity pro-tips
+[automv]
+similarity = 75
 
