@@ -197,7 +197,7 @@ bar {
 		background #000000a0
 	}
 
-	position bottom
+	position top
 
 	separator_symbol " | "
 
