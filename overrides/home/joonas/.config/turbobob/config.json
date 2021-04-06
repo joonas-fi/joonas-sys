@@ -1,5 +1,6 @@
 {
 	"enable_prompt_customization": true,
+	"windowmanager_show_project_emoji_icons": true,
 	"dev_ingress_settings": {
 		"domain": "dev.fn61.net",
 		"network": "fn61"
