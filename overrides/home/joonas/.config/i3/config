@@ -210,7 +210,7 @@ bindsym XF86AudioPause exec --no-startup-id hautomo-client playerctl play-pause
 
 # TODO: honor default browser https://askubuntu.com/q/8252
 bindsym XF86HomePage exec firefox --browser
-# bindsym XF86HomePage exec brave --new-window
+bindsym Shift+XF86HomePage exec firefox --private-window
 
 bindsym XF86Mail exec thunar
 
