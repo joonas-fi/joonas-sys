@@ -7,8 +7,9 @@ source common.sh
 # noninteractive because GRUB complains about bootsector
 # DEBIAN_FRONTEND=noninteractive apt install -y grub-pc linux-image-generic
 
-# hmm maybe we don't need GRUB
-DEBIAN_FRONTEND=noninteractive apt install -y linux-image-generic
+# kexec-tools for fast reboots
+
+DEBIAN_FRONTEND=noninteractive apt install -y linux-image-generic kexec-tools
 
 # have mount point ready for ESP
 mkdir -p /boot/efi
