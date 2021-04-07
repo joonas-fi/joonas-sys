@@ -105,7 +105,8 @@ As a result:
 
 ### Installation, configuration, repository file layout
 
-The most interesting file is [install.sh](install.sh). It specifies all the packages to install.
+The most interesting location is [install-steps/](install-steps/).
+The scripts are run in order and most often use the package manager to install software and/or run custom commands.
 
 Second most interesting directory tree is [overrides/](overrides/), which contains all customized
 files I want to be present in the image:
@@ -327,11 +328,12 @@ Here's the most essential components of the stack:
 
 | Component | Memory safe | Program | Notes |
 |-----------|-------------|---------|-------|
-| Bootloader | | rEFInd | Investigate [u-root/systemboot](https://github.com/u-root/u-root#systemboot) |
+| EFI bootloader | | rEFInd | Investigate [u-root/systemboot](https://github.com/u-root/u-root#systemboot) |
 | Kernel | | Linux kernel | |
+| Early userspace | | Ubuntu initramfs | [Garbage](https://twitter.com/joonas_fi/status/1368276201643577347) |
 | Init system | | systemd | |
-| Display server | | Xorg | |
-| Display manager | | LightDM | |
+| Display server | | Xorg | [Waiting for Wayland to mature](https://twitter.com/dave_universetf/status/1357825910674657282) |
+| Display manager | | LightDM | [Info about display mangers](https://wiki.archlinux.org/index.php/display_manager) |
 | Greeter | | lightdm-gtk-greeter | |
 | Window manager |  | i3 | [Investigate memory safe alternatives](https://users.rust-lang.org/t/is-there-a-tiling-window-manager-for-linux-that-is-written-and-configurable-in-rust/4407) |
 | Compositor |  | compton | |
