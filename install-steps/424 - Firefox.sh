@@ -7,4 +7,5 @@ source common.sh
 #   https://askubuntu.com/questions/1035661/playing-videos-in-firefox
 apt install -y firefox libavcodec-extra
 
+# https://askubuntu.com/questions/16621/how-to-set-the-default-browser-from-the-command-line
 xdg-settings set default-web-browser firefox.desktop
