@@ -10,6 +10,3 @@ source common.sh
 # kexec-tools for fast reboots
 
 DEBIAN_FRONTEND=noninteractive apt install -y linux-image-generic kexec-tools
-
-# have mount point ready for ESP
-mkdir -p /boot/efi
