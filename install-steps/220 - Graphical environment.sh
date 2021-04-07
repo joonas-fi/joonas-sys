@@ -22,9 +22,6 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
 	alsa \
 	compton \
 	xwallpaper \
-	rofi \
-	mousepad \
-	vlc \
 	ttf-ancient-fonts \
 	fonts-firacode \
 	fonts-noto-color-emoji \
