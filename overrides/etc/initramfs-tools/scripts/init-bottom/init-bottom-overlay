@@ -35,11 +35,17 @@ else
 	panic "partition with label=persist not found"
 fi
 
-sysId=$(cat "${rootmnt}/etc/sys-id")
+# "\\EFI\systemb\vmlinuz root=LABEL=system_b ro initrd=\EFI\systemb\initrd.img" -> "system_b"
+# (busybox grep behaves differently than GNU grep, so we'll use "$ cut" instead of capture group)
+sysId="$(grep -oE 'root=LABEL=[^ ]+' /proc/cmdline | cut -d = -f 3)"
+
+if [ -z "$sysId" ]; then
+	panic "failed to resolve sysId"
+fi
 
 treeCurrentRom="/mnt/sys-current-rom"
-treeDiff="/persist/apps/SYSTEM_nobackup/sys-${sysId}-diff"
-treeWork="/persist/apps/SYSTEM_nobackup/sys-${sysId}-work"
+treeDiff="/persist/apps/SYSTEM_nobackup/${sysId}-diff"
+treeWork="/persist/apps/SYSTEM_nobackup/${sysId}-work"
 
 # make mount points for readonly root, diff and workdir. (these are persisted on the actual persisted partition)
 # usually these already exist, but let's be friendly to the user if she's starting from empty data partition

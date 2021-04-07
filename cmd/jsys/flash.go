@@ -78,10 +78,6 @@ func flashToInRamDisk(ctx context.Context, system systemSpec) error {
 		return fmt.Errorf("copySystree: %w", err)
 	}
 
-	if err := stampSysId(system); err != nil {
-		return fmt.Errorf("stampSysId: %w", err)
-	}
-
 	if err := mountEsp(system); err != nil {
 		return fmt.Errorf("mountEsp: %w", err)
 	}
@@ -127,15 +123,6 @@ func copySystree(paths systemSpec) error {
 	rsync.Stderr = os.Stderr
 
 	return rsync.Run()
-}
-
-// stamps the system partition with a /etc/sys-id file so it knows which system instance we booted
-// TODO: since we're already passing a kernel label for partition name, could we deduce it from that?
-func stampSysId(system systemSpec) error {
-	return ioutil.WriteFile(
-		filepath.Join(tmpMountpointSystem, "/etc/sys-id"),
-		[]byte(system.sysId),
-		osutil.FileMode(osutil.OwnerRW, osutil.GroupRW, osutil.OtherR))
 }
 
 func copyKernelAndInitrdToEsp(system systemSpec) error {
