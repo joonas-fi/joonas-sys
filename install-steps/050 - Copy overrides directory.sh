@@ -6,7 +6,7 @@ source common.sh
 apt install -y rsync
 
 # .empty_dir b/c Git can't track empty directories (without placing dummy file in it), but sometimes
-# an actual empty directory is important (like mount points), so we
+# an actual empty directory is important (like mount points), so this exclude gets rsync to make empty dirs
 rsync --exclude=.empty_dir -a "${repodir}/overrides/" /
 
 # any file we wrote under user's home dir, we wrote as root
