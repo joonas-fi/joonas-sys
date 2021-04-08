@@ -11,3 +11,5 @@ mkdir "$tempInstallDir" && cd "$tempInstallDir"
 curl -fsSL -o croc.deb https://github.com/schollz/croc/releases/download/v8.6.7/croc_8.6.7_Linux-64bit.deb
 dpkg -i croc.deb
 rm -rf "$tempInstallDir"
+
+#versioncommand: croc --version

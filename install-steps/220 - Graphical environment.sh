@@ -38,3 +38,5 @@ echo /usr/bin/lightdm > /etc/X11/default-display-manager
 rm /etc/systemd/system/display-manager.service
 
 ln -s /lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+
+#versioncommand: lightdm --version

@@ -27,3 +27,5 @@ apt install -y \
 	nmap \
 	exiftool \
 	tree
+
+#versioncommand: curl --version | head -1 | cut -d ' ' -f 2

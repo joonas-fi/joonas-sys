@@ -7,3 +7,5 @@ source common.sh
 # you copied the data from
 curl -fsSL "https://github.com/xrelkd/clipcat/releases/download/v0.5.0/clipcat-v0.5.0-x86_64-unknown-linux-gnu.tar.gz" \
 	| tar -xz -C /usr/bin -f - clipcat-menu clipcat-notify clipcatctl clipcatd
+
+#versioncommand: clipcatd --version

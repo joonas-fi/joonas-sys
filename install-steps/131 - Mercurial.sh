@@ -20,3 +20,5 @@ apt install -y mercurial
 # https://pypi.org/project/hg-git/
 # (clone from github didn't work without these additional modules)
 pip install hg-git brotli ipaddress
+
+#versioncommand: hg --version

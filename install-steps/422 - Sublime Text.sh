@@ -14,5 +14,7 @@ wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | apt-key add -
 
 apt update && apt install -y sublime-text
 
+#versioncommand: subl --version
+
 # alternate way with Snap:
 # snap install --classic sublime-text

@@ -8,3 +8,5 @@ source common.sh
 downloadAndInstallSingleBinaryProgram \
 	/usr/bin/bob \
 	"https://function61.com/go/turbobob-latest-linux-amd64"
+
+#versioncommand: bob --version

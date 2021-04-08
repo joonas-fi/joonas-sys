@@ -19,6 +19,7 @@ func main() {
 	app.AddCommand(testInVmEntrypoint())
 	app.AddCommand(diffEntrypoint())
 	app.AddCommand(espEntrypoint())
+	app.AddCommand(versionReportEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }

@@ -14,3 +14,5 @@ usermod -aG docker "$username"
 # Docker is not enabled by default.
 # (instead it is socket-activated, i.e. "$ docker ps" would start "always-up" services)
 systemctl enable docker
+
+#versioncommand: docker --version
