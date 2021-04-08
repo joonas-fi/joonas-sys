@@ -16,3 +16,6 @@ systemctl disable motd-news.timer
 # https://askubuntu.com/questions/1038923/do-i-really-need-apt-daily-service-and-apt-daily-upgrade-service
 systemctl disable apt-daily.timer
 systemctl disable apt-daily-upgrade.timer
+
+# https://help.ubuntu.com/community/AutomaticSecurityUpdates , https://wiki.debian.org/UnattendedUpgrades
+apt remove -y unattended-upgrades
