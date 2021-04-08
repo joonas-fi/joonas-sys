@@ -8,6 +8,7 @@ source common.sh
 # pciutils = lspci
 # dnsutils = nslookup, dig
 # imagemagick = convert
+# psmisc = killall/pstree
 apt install -y \
 	htop \
 	iotop \
@@ -25,6 +26,7 @@ apt install -y \
 	bsdmainutils \
 	dnsutils \
 	nmap \
+	psmisc \
 	exiftool \
 	tree
 
