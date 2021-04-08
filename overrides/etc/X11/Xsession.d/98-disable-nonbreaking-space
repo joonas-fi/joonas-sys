@@ -1,0 +1,4 @@
+
+# https://askubuntu.com/a/623746
+setxkbmap -option "nbsp:none"
+
