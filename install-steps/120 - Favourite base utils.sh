@@ -9,6 +9,7 @@ source common.sh
 # dnsutils = nslookup, dig
 # imagemagick = convert
 # psmisc = killall/pstree
+# binutils = strings
 apt install -y \
 	htop \
 	iotop \
@@ -22,6 +23,7 @@ apt install -y \
 	vim \
 	strace \
 	pciutils \
+	binutils \
 	usbutils \
 	bsdmainutils \
 	dnsutils \
