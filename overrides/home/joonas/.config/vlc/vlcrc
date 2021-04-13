@@ -1,0 +1,26 @@
+﻿###
+###  vlc 3.0.9.2
+###
+
+[qt]
+# do not show the "can we connect to internet for metadata" (controls 'metadata-network-access') popup.
+# curiously, if you don't give permission, it keeps 'metadata-network-access' commented out (perhaps because it's at default value).
+# so that's why we only need to define not to ask the privacy question.
+qt-privacy-ask=0
+
+[prefetch] # Stream prefetch filter
+
+# Buffer size (integer)
+prefetch-buffer-size=1048576
+
+# Read size (integer)
+#
+# needs override because: https://trac.videolan.org/vlc/ticket/22909
+# JFC, why does a video player need builtin Samba client (and not the OS provide it),
+# and why did they change the setting to break video-over-Samba on Linux?
+prefetch-read-size=1048576
+
+# Seek threshold (integer)
+prefetch-seek-threshold=1048576
+
+
