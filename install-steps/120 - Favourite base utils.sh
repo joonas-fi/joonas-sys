@@ -9,7 +9,6 @@ source common.sh
 apt install -y \
 	curl \
 	wget \
-	unzip \
 	jq \
 	pv \
 	vim \
