@@ -15,6 +15,9 @@ useradd \
 	--comment "Joonas" \
 	"$username"
 
+# allow use of (modems?) Zigbee USB stick
+usermod -a -G dialout "$username"
+
 # add as sudoer
 gpasswd --add "$username" sudo
 
