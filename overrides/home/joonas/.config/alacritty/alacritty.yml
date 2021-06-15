@@ -260,9 +260,19 @@ mouse:
   # If this is `true`, the cursor is temporarily hidden when typing.
   hide_when_typing: true
 
-  url:
-    # only allow URL opening via mouse click when ..
-    modifiers: Control
+# Regex hints
+#
+# Terminal hints can be used to find text in the visible part of the terminal
+# and pipe it to other applications.
+hints:
+  enabled:
+  - regex: "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)\
+            [^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
+    command: xdg-open
+    post_processing: true
+    mouse:
+      enabled: true
+      mods: Control
 
 # Mouse bindings
 #
