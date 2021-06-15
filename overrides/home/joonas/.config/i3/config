@@ -209,6 +209,7 @@ bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
 # bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle
 bindsym XF86AudioMute exec --no-startup-id amixer -D pulse set Master 1+ toggle
+bindsym Shift+XF86AudioMute exec --no-startup-id hautomo-client audioctl toggle-between-speakers-and-headphones
 
 # Media player controls (https://superuser.com/a/1407379 for play/pause problems)
 bindsym XF86AudioPause exec --no-startup-id hautomo-client playerctl play-pause
