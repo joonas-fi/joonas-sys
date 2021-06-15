@@ -1,0 +1,10 @@
+[Unit]
+Description=Run backup-rsync
+
+[Timer]
+OnBootSec=3h
+OnUnitActiveSec=3h
+
+[Install]
+WantedBy=timers.target
+

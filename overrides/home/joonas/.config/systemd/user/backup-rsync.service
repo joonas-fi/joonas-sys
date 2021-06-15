@@ -1,0 +1,8 @@
+[Unit]
+Description=rsync backups
+OnFailure=failure-notification@%n
+
+[Service]
+Type=oneshot
+ExecStart=/persist/apps/rsync-run.sh
+
