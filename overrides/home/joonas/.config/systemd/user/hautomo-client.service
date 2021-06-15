@@ -1,0 +1,10 @@
+[Unit]
+Description=Hautomo client
+
+[Install]
+WantedBy=default.target
+
+[Service]
+ExecStart=/usr/bin/hautomo-client server
+Restart=always
+RestartSec=10s
