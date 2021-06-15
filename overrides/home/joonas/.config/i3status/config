@@ -45,11 +45,11 @@ battery 0 {
 # }
 
 tztime local {
-        format = "⏰ %d.%m %H:%M"
+        format = "📅 %d.%m ⏰ %H:%M"
 }
 
 load {
-        format = "%5min"
+        format = "⚡ %1min"
 }
 
 cpu_temperature 0 {
@@ -58,9 +58,8 @@ cpu_temperature 0 {
 }
 
 memory {
-        format = "%used"
+        format = "🍫 %available"
         threshold_degraded = "10%"
-        format_degraded = "MEMORY: %free"
 }
 
 disk "/persist" {
