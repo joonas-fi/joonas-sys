@@ -10,6 +10,6 @@ apt install -y libnss3-tools
 
 downloadAndInstallSingleBinaryProgram \
 	/usr/bin/mkcert \
-	"https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64"
+	https://function61.com/app-dl/api/github.com/FiloSottile/mkcert/latest_releases_asset/mkcert-%2A-linux-amd64
 
 #versioncommand: mkcert --version

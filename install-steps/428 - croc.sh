@@ -8,7 +8,8 @@ source common.sh
 tempInstallDir="/tmp/croc-install"
 
 mkdir "$tempInstallDir" && cd "$tempInstallDir"
-curl -fsSL -o croc.deb https://github.com/schollz/croc/releases/download/v8.6.7/croc_8.6.7_Linux-64bit.deb
+curl -fsSL -o croc.deb \
+	https://function61.com/app-dl/api/github.com/schollz/croc/latest_releases_asset/croc_%2A_Linux-64bit.deb
 dpkg -i croc.deb
 rm -rf "$tempInstallDir"
 

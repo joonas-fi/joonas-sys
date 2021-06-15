@@ -6,6 +6,6 @@ source common.sh
 # Centralized file storage
 downloadAndInstallSingleBinaryProgram \
 	/usr/bin/sto \
-	"https://github.com/function61/varasto/releases/download/20200626_1423_4cd3ecf8/sto_linux-amd64"
+	https://function61.com/app-dl/api/github.com/function61/varasto/latest_releases_asset/sto_linux-amd64
 
 #versioncommand: sto --version
