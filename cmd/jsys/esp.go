@@ -105,7 +105,7 @@ func copyEspTemplateToEsp(ctx context.Context) error {
 func createEmptyInRamEspDevice(ctx context.Context, system systemSpec) error {
 	volatileEspBackingFile := "/dev/shm/esp-staging.img"
 
-	if err := truncate(volatileEspBackingFile, 512*mb); err != nil {
+	if err := createAndTruncateFile(volatileEspBackingFile, 512*mb); err != nil {
 		return err
 	}
 
@@ -133,11 +133,10 @@ func createEmptyInRamEspDevice(ctx context.Context, system systemSpec) error {
 	return waitForFileAvailable(ctx, system.espDevice)
 }
 
-// todo: rename to createAndTruncateFile() ?
-func truncate(path string, size int64) error {
+func createAndTruncateFile(path string, size int64) error {
 	exists, err := osutil.Exists(path)
 	if err != nil {
-		return fmt.Errorf("truncate: %w", err)
+		return fmt.Errorf("createAndTruncateFile: %w", err)
 	}
 
 	if !exists { // file needs to exist before we can call truncate

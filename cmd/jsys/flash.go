@@ -66,7 +66,7 @@ func flash(ctx context.Context, sysLabel string) error {
 		if system.systemDeviceCanCreateIfNotFound {
 			log.Println("RAM device doesn't exist - creating & formatting")
 
-			if err := truncate(system.systemDevice, 10*gb); err != nil {
+			if err := createAndTruncateFile(system.systemDevice, 10*gb); err != nil {
 				return err
 			}
 

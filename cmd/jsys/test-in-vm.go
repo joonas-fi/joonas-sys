@@ -19,19 +19,24 @@ const (
 
 func testInVmEntrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "test-in-vm",
-		Short: "Tests in-RAM systree in a VM",
-		Args:  cobra.NoArgs,
+		Use:   "test-in-vm [system]",
+		Short: "Tests systree in a VM",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(testInVm(
 				osutil.CancelOnInterruptOrTerminate(nil),
-				sysInRam))
+				args[0]))
 		},
 	}
 }
 
-func testInVm(ctx context.Context, sys systemSpec) error {
+func testInVm(ctx context.Context, sysLabel string) error {
 	if err := requireRoot(); err != nil {
+		return err
+	}
+
+	sys, err := getSystemNotCurrent(sysLabel)
+	if err != nil {
 		return err
 	}
 
@@ -53,7 +58,7 @@ func testInVm(ctx context.Context, sys systemSpec) error {
 
 	// the various OVMF_VARS files decide which system we'll boot automatically (UEFI vars remembering
 	// last selected boot option)
-	uefiVars := fmt.Sprintf("misc/uefi-files/OVMF_VARS-boot-system-%s.fd", sys.sysId)
+	uefiVars := fmt.Sprintf("misc/uefi-files/OVMF_VARS-boot-%s.fd", sys.lieAboutLabelIfVirtualMachine())
 
 	// RNG device supposedly speeds up Ubuntu boot
 
@@ -75,6 +80,15 @@ func testInVm(ctx context.Context, sys systemSpec) error {
 
 // requires root
 func qemuCreatePseudoReadonlyDisk(realDevice string, cowFile string) error {
+	exists, err := osutil.Exists(realDevice)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return fmt.Errorf("realDevice does not exist: %s", realDevice)
+	}
+
 	// remove existing, so we start with empty diff disk
 	if err := removeIfExists(cowFile); err != nil {
 		return err
@@ -89,19 +103,13 @@ func qemuCreatePseudoReadonlyDisk(realDevice string, cowFile string) error {
 }
 
 func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
-	volatilePersistPartition := fmt.Sprintf("/dev/shm/sys-%s-persist-volatile", sys.sysId)
+	volatilePersistPartition := fmt.Sprintf("/dev/shm/%s-persist-volatile", sys.label)
 
 	if err := removeIfExists(volatilePersistPartition); err != nil {
 		return "", err
 	}
 
-	// Truncate() needs file to exist
-	if err := createEmptyFile(volatilePersistPartition); err != nil {
-		return "", err
-	}
-
-	// creates sparse file (i.e. will only take space for blocks that are actually used)
-	if err := os.Truncate(volatilePersistPartition, 4*gb); err != nil {
+	if err := createAndTruncateFile(volatilePersistPartition, 4*gb); err != nil {
 		return "", err
 	}
 
