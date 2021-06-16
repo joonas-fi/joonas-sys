@@ -20,6 +20,7 @@ func main() {
 	app.AddCommand(diffEntrypoint())
 	app.AddCommand(espEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
+	app.AddCommand(rsyncServerEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
