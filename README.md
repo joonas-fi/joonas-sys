@@ -15,6 +15,12 @@ images and use an utility in the USB stick to write the image partitions to the 
 system exactly the way I'm used to using it!
 
 
+Further documentation
+---------------------
+
+- [Installing on a new system](docs/installing-on-a-new-system.md)
+
+
 How does it work
 ----------------
 
