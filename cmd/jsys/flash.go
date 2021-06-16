@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -22,76 +23,108 @@ const (
 	tmpMountpointSystem = "/tmp/jsys-system"
 )
 
-var (
-	sysInRam = systemSpec{
-		sysId: "a", // in-RAM system is always known as system A
-
-		systemDevice: "/dev/shm/joonas-os-ram-image",
-
-		espDevice: "/dev/disk/by-label/ESP-VM",
-	}
-)
-
-type systemSpec struct {
-	sysId string
-
-	systemDevice string
-
-	espDevice string
-}
-
-func (s systemSpec) espDeviceLabel() (string, error) {
-	diskByLabelPrefix := "/dev/disk/by-label/"
-
-	if strings.HasPrefix(s.espDevice, diskByLabelPrefix) {
-		return strings.TrimPrefix(s.espDevice, diskByLabelPrefix), nil
-	}
-
-	return "", fmt.Errorf(
-		"ESP device does not start with '"+diskByLabelPrefix+"', cannot deduce label for %s",
-		s.espDevice)
-}
-
 func flashEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "flash-to-ram",
-		Short: "Flashes systree to RAM",
-		Args:  cobra.NoArgs,
+	cmd := &cobra.Command{
+		Use:   "flash [system]",
+		Short: "Flashes systree to storage",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(flashToInRamDisk(
+			osutil.ExitIfError(flash(
 				osutil.CancelOnInterruptOrTerminate(nil),
-				sysInRam))
+				args[0]))
 		},
 	}
+
+	return cmd
 }
 
-func flashToInRamDisk(ctx context.Context, system systemSpec) error {
+func flash(ctx context.Context, sysLabel string) error {
 	if err := requireRoot(); err != nil {
 		return err
+	}
+
+	system, err := getSystemNotCurrent(sysLabel)
+	if err != nil {
+		return err
+	}
+
+	exists, err := osutil.Exists(system.systemDevice)
+	if err != nil {
+		return err
+	}
+
+	diffTreeExists, err := osutil.Exists(system.diffPath())
+	if err != nil {
+		return err
+	}
+
+	if diffTreeExists {
+		return errors.New("safety: bailing out because diff tree exists! (safely) remove diff tree first")
+	}
+
+	if !exists {
+		if system.systemDeviceCanCreateIfNotFound {
+			log.Println("RAM device doesn't exist - creating & formatting")
+
+			if err := truncate(system.systemDevice, 10*gb); err != nil {
+				return err
+			}
+
+			if err := exec.Command("mkfs.ext4", "-L", system.lieAboutLabelIfVirtualMachine(), system.systemDevice).Run(); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("system partition not found: %s", system.systemDevice)
+		}
 	}
 
 	if err := mountSystem(system); err != nil {
 		return fmt.Errorf("mountSystem: %w", err)
 	}
+	defer func() {
+		if err := unmount(tmpMountpointSystem); err != nil {
+			log.Printf("unmount system: %v", err)
+		}
+	}()
 
-	if err := copySystree(system); err != nil {
+	copySystreeFrom := func() string {
+		if remote := os.Getenv("REMOTE"); remote != "" {
+			return remote
+		} else {
+			return treeLocation + "/"
+		}
+	}()
+
+	if err := copySystree(copySystreeFrom, system); err != nil {
 		return fmt.Errorf("copySystree: %w", err)
+	}
+
+	if system.espDeviceCanCreateIfNotFound {
+		espDeviceExists, err := osutil.Exists(system.espDevice)
+		if err != nil {
+			return err
+		}
+
+		if !espDeviceExists {
+			log.Println("ESP doesn't exist and we are allowed to create it - creating")
+
+			if err := espFormatInternal(ctx, system); err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := mountEsp(system); err != nil {
 		return fmt.Errorf("mountEsp: %w", err)
 	}
+	defer func() {
+		if err := unmount(tmpMountpointEsp); err != nil {
+			log.Printf("unmount ESP: %v", err)
+		}
+	}()
 
 	if err := copyKernelAndInitrdToEsp(system); err != nil {
 		return fmt.Errorf("copyKernelAndInitrdToEsp: %w", err)
-	}
-
-	if err := unmount(tmpMountpointEsp); err != nil {
-		return fmt.Errorf("unmount ESP: %w", err)
-	}
-
-	if err := unmount(tmpMountpointSystem); err != nil {
-		return fmt.Errorf("unmount system: %w", err)
 	}
 
 	return nil
@@ -110,13 +143,13 @@ func unmount(mountpoint string) error {
 	return exec.Command("umount", mountpoint).Run()
 }
 
-func copySystree(paths systemSpec) error {
+func copySystree(from string, paths systemSpec) error {
 	rsync := exec.Command(
 		"rsync",
 		"-ah",
 		"--delete",
 		"--info=progress2",
-		"/mnt/j-os-inmem-staging/",
+		from,
 		tmpMountpointSystem,
 	)
 	rsync.Stdout = os.Stdout
@@ -130,7 +163,12 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 		return filepath.Join(tmpMountpointSystem, file)
 	}
 	uefiAppDir := func(file string) string { // shorthand
-		return filepath.Join(tmpMountpointEsp, "EFI", "system"+system.sysId, file)
+		return filepath.Join(tmpMountpointEsp, "EFI", system.lieAboutLabelIfVirtualMachine(), file)
+	}
+
+	dummyPerms := osutil.FileMode(osutil.OwnerRWX, osutil.GroupRWX, osutil.OtherNone) // ESP partition doesn't support perms
+	if err := os.MkdirAll(uefiAppDir(""), dummyPerms); err != nil {
+		return err
 	}
 
 	if err := copyFile(sys("/boot/vmlinuz"), uefiAppDir("/vmlinuz")); err != nil {
@@ -139,6 +177,42 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 
 	if err := copyFile(sys("/boot/initrd.img"), uefiAppDir("/initrd.img")); err != nil {
 		return err
+	}
+
+	/* Production EFI dir will look like this:
+
+	EFI
+	├── refind
+	├── system_a
+	├── system_b
+	└── tools
+
+	However our EFI template tree doesn't contain system + ("a" | "b") so we've to manually sync
+	the template items while so the system<SYSID> ones won't get deleted (b/c --delete flag)
+	*/
+
+	efiTemplateSubdirs, err := ioutil.ReadDir("misc/esp/EFI")
+	if err != nil {
+		return err
+	}
+
+	for _, efiTemplateSubdir := range efiTemplateSubdirs {
+		// TODO: this is not robust, if we'd soon want to specify VM with id "in-ram"
+		//       instead of "system_" prefix
+		if strings.HasPrefix(efiTemplateSubdir.Name(), "system_") {
+			continue
+		}
+
+		// can't use -a flag because it would try to copy permissions, which FAT doesn't support
+		if err := exec.Command("rsync",
+			"-h",
+			"--recursive",
+			"--delete",
+			"misc/esp/EFI/"+efiTemplateSubdir.Name()+"/",
+			filepath.Join(tmpMountpointEsp, "EFI", efiTemplateSubdir.Name()),
+		).Run(); err != nil {
+			return err
+		}
 	}
 
 	return nil
