@@ -77,12 +77,9 @@ bindcode --release 133 exec "rofi -show combi -combi-modi run,ssh -disable-histo
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 
 # change focus
-bindsym $mod+j focus left
-bindsym $mod+k focus down
-bindsym $mod+l focus up
-bindsym $mod+semicolon focus right
+bindsym $mod+l exec i3lock -i /persist/apps/SYSTEM_nobackup/background.png
 
-# alternatively, you can use the cursor keys:
+# change focus with arrow keys
 bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up

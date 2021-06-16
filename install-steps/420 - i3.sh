@@ -16,6 +16,6 @@ add-apt-repository -y ppa:kgilmer/speed-ricer
 # suckless-tools = dmenu (used for workspace renaming)
 # session means setting file so the i3 session shows up in greeter
 apt install --no-install-recommends -y \
-	i3-gaps-wm i3-gaps-session i3status suckless-tools
+	i3-gaps-wm i3-gaps-session i3status i3lock suckless-tools
 
 #versioncommand: i3 --version
