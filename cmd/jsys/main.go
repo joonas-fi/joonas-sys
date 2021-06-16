@@ -15,12 +15,16 @@ func main() {
 		Version: dynversion.Version,
 	}
 
+	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEntrypoint())
 	app.AddCommand(testInVmEntrypoint())
 	app.AddCommand(diffEntrypoint())
+	app.AddCommand(diffOneEntrypoint())
+	app.AddCommand(revertEntrypoint())
 	app.AddCommand(espEntrypoint())
 	app.AddCommand(restartPrepareEntrypoint())
 	app.AddCommand(restartPrepareCurrentEntrypoint())
+	app.AddCommand(currentSysIdEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 
