@@ -314,7 +314,7 @@ Here's the most essential components of the stack:
 | Init system | | systemd | |
 | Display server | | Xorg | [Waiting for Wayland to mature](https://twitter.com/dave_universetf/status/1357825910674657282) |
 | Display manager | | LightDM | [Info about display mangers](https://wiki.archlinux.org/index.php/display_manager) |
-| Greeter | | lightdm-gtk-greeter | |
+| Greeter | | [slick-greeter](https://github.com/linuxmint/slick-greeter) | |
 | Window manager |  | i3 | [Investigate memory safe alternatives](https://users.rust-lang.org/t/is-there-a-tiling-window-manager-for-linux-that-is-written-and-configurable-in-rust/4407) |
 | Compositor |  | compton | |
 | Screensaver |  | xfce4-screensaver | |
