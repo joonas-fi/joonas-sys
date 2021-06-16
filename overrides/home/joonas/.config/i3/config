@@ -4,6 +4,8 @@
 
 # TODO: --no-startup-id to dmenu-run ?
 
+exec --no-startup-id xwallpaper --zoom /persist/apps/SYSTEM_nobackup/background.png
+
 # when monitors get connected/disconnect, restore appropriate config
 exec --no-startup-id autorandr --change
 
