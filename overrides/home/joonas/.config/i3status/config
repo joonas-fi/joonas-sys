@@ -8,6 +8,7 @@ general {
 
 # order += "ipv6"
 order += "battery 0"
+order += "wireless wlp1s0"
 order += "disk /"
 # order += "run_watch DHCP"
 # order += "path_exists VPN"
@@ -42,6 +43,11 @@ battery 0 {
 #         # path exists when a VPN tunnel launched by nmcli/nm-applet is active
 #         path = "/proc/sys/net/ipv4/conf/tun0"
 # }
+
+wireless wlp1s0 {
+        format_up = "📶 %quality %essid"
+        format_down = ""
+}
 
 tztime local {
         format = "📅 %d.%m ⏰ %H:%M"
