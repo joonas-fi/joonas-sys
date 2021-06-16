@@ -12,9 +12,9 @@ order += "disk /"
 # order += "path_exists VPN"
 order += "ethernet enp3s0"
 # order += "battery 0"
-order += "cpu_temperature 0"
 order += "memory"
 order += "load"
+order += "cpu_temperature 0"
 order += "tztime local"
 
 ethernet enp3s0 {
@@ -48,7 +48,7 @@ tztime local {
 }
 
 load {
-        format = "⚡ %1min"
+        format = "💪 %1min"
 }
 
 cpu_temperature 0 {
