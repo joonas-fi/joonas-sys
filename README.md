@@ -18,6 +18,7 @@ system exactly the way I'm used to using it!
 Further documentation
 ---------------------
 
+- [Manual steps to do after updates](docs/manual-steps.md)
 - [Installing on a new system](docs/installing-on-a-new-system.md)
 
 
