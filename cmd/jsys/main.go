@@ -19,6 +19,8 @@ func main() {
 	app.AddCommand(testInVmEntrypoint())
 	app.AddCommand(diffEntrypoint())
 	app.AddCommand(espEntrypoint())
+	app.AddCommand(restartPrepareEntrypoint())
+	app.AddCommand(restartPrepareCurrentEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 
