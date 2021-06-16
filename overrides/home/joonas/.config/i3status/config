@@ -7,7 +7,6 @@ general {
 }
 
 # order += "ipv6"
-order += "disk /persist"
 order += "disk /"
 # order += "run_watch DHCP"
 # order += "path_exists VPN"
@@ -60,10 +59,6 @@ cpu_temperature 0 {
 memory {
         format = "🍫 %available"
         threshold_degraded = "10%"
-}
-
-disk "/persist" {
-        format = "💽 %free"
 }
 
 disk "/" {
