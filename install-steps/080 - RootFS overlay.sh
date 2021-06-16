@@ -12,5 +12,5 @@ source common.sh
 # we could have this as static file, but then upstream changes would get overwritten
 echo "overlay" >> /etc/initramfs-tools/modules
 
-# update needed after we modified the contents (later steps probably do this, but it'd be dirty to rely on it)
-update-initramfs -u -k all
+# we should run "$ update-initramfs ..." here, but as an optimization we have disabled it
+# (so multiple steps don't trigger it) and we'll only run it once at the end of the process.
