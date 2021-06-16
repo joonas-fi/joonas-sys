@@ -91,4 +91,7 @@ A quick `$ poweroff` later and you should be able to boot into the new computer.
 Persist partition finishing touches
 -----------------------------------
 
-Set wallpaper at /persist/apps/SYSTEM_nobackup/background.png
+Set wallpaper at `/persist/apps/SYSTEM_nobackup/background.png`
+
+Symlink `/persist/apps/SYSTEM_nobackup/cpu_temp` to `/sys/class/hwmon/hwmon<NUM>temp<NUM>_input`
+that represents your CPU temp.

@@ -53,7 +53,7 @@ load {
 
 cpu_temperature 0 {
         format = "🌡 %degrees °C"
-        path = "/sys/class/hwmon/hwmon1/temp2_input"
+        path = "/persist/apps/SYSTEM_nobackup/cpu_temp"
 }
 
 memory {
