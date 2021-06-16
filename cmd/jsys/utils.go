@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/function61/gokit/app/retry"
 	"github.com/function61/gokit/os/osutil"
@@ -83,4 +85,35 @@ func requireRoot() error {
 	}
 
 	return nil
+}
+
+func removeDirectoryChildren(directory string) error {
+	dentries, err := ioutil.ReadDir(directory)
+	if err != nil {
+		return err
+	}
+
+	for _, dentry := range dentries {
+		if err := os.RemoveAll(filepath.Join(directory, dentry.Name())); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }

@@ -16,13 +16,13 @@ import (
 
 func espEntrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "esp-create-in-ram",
-		Short: "Creates ESP partition",
-		Args:  cobra.NoArgs,
+		Use:   "esp-create-template [system]",
+		Short: "Creates ESP partition template structure",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(espCreate(
+			osutil.ExitIfError(espFormat(
 				osutil.CancelOnInterruptOrTerminate(nil),
-				sysInRam))
+				args[0]))
 		},
 	}
 }
@@ -32,21 +32,44 @@ const (
 	gb = 1024 * mb
 )
 
-func espCreate(ctx context.Context, sys systemSpec) error {
+func espFormat(ctx context.Context, sysLabel string) error {
 	if err := requireRoot(); err != nil {
 		return err
 	}
 
+	sys, err := getSystemNotCurrent(sysLabel)
+	if err != nil {
+		return err
+	}
+
+	return espFormatInternal(ctx, sys)
+}
+
+func espFormatInternal(ctx context.Context, sys systemSpec) error {
 	exists, err := osutil.Exists(sys.espDevice)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		log.Println("ESP device doesn't exist - creating")
+		if sys.espDeviceCanCreateIfNotFound {
+			log.Println("ESP device doesn't exist - creating")
 
-		if err := createEmptyInRamEspDevice(ctx, sys); err != nil {
-			return err
+			if err := createEmptyInRamEspDevice(ctx, sys); err != nil {
+				return err
+			}
+		} else {
+			/*	You can make one with:
+
+				(warn: fat32 labels are limited to 11 chars & mkfs.fat doesn't warn about it 🤦)
+
+				$ gdisk /dev/sdX
+
+					https://wiki.archlinux.org/index.php/EFI_system_partition#GPT_partitioned_disks
+
+				$ mkfs.fat -F 32 -n ESP-USB-DT /dev/sdX1
+			*/
+			return fmt.Errorf("ESP device not found: %s", sys.espDevice)
 		}
 	}
 
@@ -82,12 +105,7 @@ func copyEspTemplateToEsp(ctx context.Context) error {
 func createEmptyInRamEspDevice(ctx context.Context, system systemSpec) error {
 	volatileEspBackingFile := "/dev/shm/esp-staging.img"
 
-	// file needs to exist before we can call truncate
-	if err := createEmptyFile(volatileEspBackingFile); err != nil {
-		return err
-	}
-
-	if err := os.Truncate(volatileEspBackingFile, 512*mb); err != nil {
+	if err := truncate(volatileEspBackingFile, 512*mb); err != nil {
 		return err
 	}
 
@@ -113,4 +131,20 @@ func createEmptyInRamEspDevice(ctx context.Context, system systemSpec) error {
 	defer cancel()
 
 	return waitForFileAvailable(ctx, system.espDevice)
+}
+
+// todo: rename to createAndTruncateFile() ?
+func truncate(path string, size int64) error {
+	exists, err := osutil.Exists(path)
+	if err != nil {
+		return fmt.Errorf("truncate: %w", err)
+	}
+
+	if !exists { // file needs to exist before we can call truncate
+		if err := createEmptyFile(path); err != nil {
+			return err
+		}
+	}
+
+	return os.Truncate(path, size)
 }
