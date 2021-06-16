@@ -1,5 +1,11 @@
 #!/bin/bash -eu
 
+# This is a small "proxy script" because there's quite a lot of ceremony in setting up
+# mounts and chroot
+
+# install-steps/<file>
+installStepToRun="$1"
+
 # bootstrap work prepares us being able to chroot to here
 chrootLocation="/mnt/j-os-inmem-staging"
 
@@ -30,8 +36,9 @@ mount --bind /repo "${chrootLocation}/tmp/repo"
 
 # if we're interactive, just get a shell inside the chroot (aids in debugging problems & iterating faster)
 if [ -t 0 ]; then
-	echo "Dropping you to interactive chroot. Tip: run $ /tmp/repo/install.sh"
+	echo "Dropping you to interactive chroot."
 	chroot "$chrootLocation" bash
 else
-	chroot "$chrootLocation" /tmp/repo/install.sh
+	# chroot sets workdir to (new) root, so we need "$ cd" to give steps the correct perspective
+	chroot "$chrootLocation" sh -c "cd /tmp/repo/install-steps && ./'$installStepToRun'"
 fi
