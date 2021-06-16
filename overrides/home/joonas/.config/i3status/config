@@ -7,11 +7,11 @@ general {
 }
 
 # order += "ipv6"
+order += "battery 0"
 order += "disk /"
 # order += "run_watch DHCP"
 # order += "path_exists VPN"
 order += "ethernet enp3s0"
-# order += "battery 0"
 order += "memory"
 order += "load"
 order += "cpu_temperature 0"
@@ -24,11 +24,11 @@ ethernet enp3s0 {
 }
 
 battery 0 {
-        format = "%status %percentage %remaining %emptytime"
-        format_down = "No battery"
-        status_chr = "⚡ CHR"
-        status_bat = "🔋 BAT"
-        status_unk = "? UNK"
+        format = "%status %percentage %remaining"
+        format_down = ""
+        status_chr = "⚡"
+        status_bat = "🔋"
+        status_unk = "?"
         status_full = "☻ FULL"
         path = "/sys/class/power_supply/BAT%d/uevent"
         low_threshold = 10
