@@ -15,26 +15,6 @@ images and use an utility in the USB stick to write the image partitions to the 
 system exactly the way I'm used to using it!
 
 
-Contents:
-
-- [How does it work](#how-does-it-work)
-  * [Partitioning](#partitioning)
-  * [No updates to the system](#no-updates-to-the-system)
-  * [Installation, configuration, repository file layout](#installation-configuration-repository-file-layout)
-  * [Handling state](#handling-state)
-- [Why this approach?](#why-this-approach)
-  * [Intermingled state](#intermingled-state)
-  * [Advantages of storing system state in a VCS](#advantages-of-storing-system-state-in-a-vcs)
-  * [Unused software gets removed automatically](#unused-software-gets-removed-automatically)
-- [Long-term goals](#long-term-goals)
-- [How to use](#how-to-use)
-  * [Process](#process)
-  * [Scripts](#scripts)
-  * [Build environment portability](#build-environment-portability)
-- [Road to memory safety](#road-to-memory-safety)
-- [Additional reading](#additional-reading)
-
-
 How does it work
 ----------------
 
