@@ -18,6 +18,9 @@ useradd \
 # allow use of (modems?) Zigbee USB stick
 usermod -a -G dialout "$username"
 
+# allow reading journals
+usermod -a -G systemd-journal "$username"
+
 # add as sudoer
 gpasswd --add "$username" sudo
 
