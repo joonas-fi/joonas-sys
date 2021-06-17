@@ -54,6 +54,14 @@ mkdir -p \
 	"$treeDiff" \
 	"$treeWork"
 
+activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
+
+# verify that we're booting the intended system id.
+# it can be catastrophic if we're booting the wrong one.
+if [ ! "$sysId" = "$activeSysId" ]; then
+	panic "activeSysId != sys ID you're booting now. edit /persist/apps/SYSTEM_nobackup/active_sys_id if you really want to boot $sysId"
+fi
+
 # make the readonly root (TODO: who makes it readonly?) available bypassing the overlayfs
 mount --no-mtab -o move "$rootmnt" "$treeCurrentRom" || panic "failed mounting $treeCurrentRom"
 

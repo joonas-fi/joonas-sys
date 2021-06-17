@@ -141,6 +141,10 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		return nil
 	}
 
+	if err := writeFile("apps/SYSTEM_nobackup/active_sys_id", sys.lieAboutLabelIfVirtualMachine()); err != nil {
+		return "", err
+	}
+
 	if err := writeFile("apps/SYSTEM_nobackup/hostname", "j-sys-test-vm"); err != nil {
 		return "", err
 	}
