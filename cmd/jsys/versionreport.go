@@ -47,7 +47,7 @@ func versionReport() error {
 		}
 
 		// use shell to run it
-		versionOutputRaw, err := exec.Command("sh", "-c", matches[1]).CombinedOutput()
+		versionOutputRaw, err := exec.Command("sh", "-c", matches[1]).Output()
 		if err != nil {
 			return fmt.Errorf("%s: %s: %w: %s", step.FriendlyName, matches[1], err, versionOutputRaw)
 		}
