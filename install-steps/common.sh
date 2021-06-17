@@ -21,6 +21,15 @@ source "${repodir}/secrets.env"
 
 # shared utilities
 
+function aptUpdateOnlyOneSourceList {
+	local listFile="$1"
+
+	# https://askubuntu.com/a/65250
+	apt update \
+	    -o Dir::Etc::sourceparts="-" \
+	    -o APT::Get::List-Cleanup="0" \
+		-o Dir::Etc::sourcelist="sources.list.d/$listFile"
+}
 
 function downloadAndInstallSingleBinaryProgram { # Go 😍
 	local destination="$1"
