@@ -57,7 +57,7 @@ mkdir -p \
 activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
 
 # verify that we're booting the intended system id.
-# it can be catastrophic if we're booting the wrong one.
+# it can be catastrophic if user accidentally boots the wrong one and continues working for a long time.
 if [ ! "$sysId" = "$activeSysId" ]; then
 	panic "activeSysId != sys ID you're booting now. edit /persist/apps/SYSTEM_nobackup/active_sys_id if you really want to boot $sysId"
 fi
