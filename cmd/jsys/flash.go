@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -58,7 +57,9 @@ func flash(ctx context.Context, sysLabel string) error {
 	}
 
 	if diffTreeExists {
-		return errors.New("safety: bailing out because diff tree exists! (safely) remove diff tree first")
+		return fmt.Errorf(
+			"safety: bailing out because diff tree exists!\n(safely do this first:) $ rm -rf %s",
+			system.diffPath())
 	}
 
 	if !exists {
