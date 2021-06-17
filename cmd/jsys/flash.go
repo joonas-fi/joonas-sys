@@ -6,12 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/prometheus/procfs"
@@ -19,8 +17,9 @@ import (
 )
 
 const (
-	tmpMountpointEsp    = "/tmp/jsys-esp"
-	tmpMountpointSystem = "/tmp/jsys-system"
+	tmpMountpointEsp     = "/tmp/jsys-esp"
+	tmpMountpointSystem  = "/tmp/jsys-system"
+	tmpMountpointPersist = "/tmp/jsys-persist"
 )
 
 func flashEntrypoint() *cobra.Command {
@@ -179,54 +178,40 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 		return err
 	}
 
+	if err := copyBackgroundFromCurrentSystemIfExistsTo(filepath.Join(tmpMountpointEsp, "EFI", "background.png")); err != nil {
+		return err
+	}
+
 	/* Production EFI dir will look like this:
 
 	EFI
 	├── refind
 	├── system_a
 	├── system_b
+	├── background.png
 	└── tools
 
-	However our EFI template tree doesn't contain system + ("a" | "b") so we've to manually sync
-	the template items while so the system<SYSID> ones won't get deleted (b/c --delete flag)
+	However our EFI template tree doesn't contain system_ + ("a" | "b") or background so we've to
+	exclude them from rsync so they won't get deleted (b/c --delete flag)
 	*/
 
-	efiTemplateSubdirs, err := ioutil.ReadDir("misc/esp/EFI")
-	if err != nil {
-		return err
-	}
-
-	for _, efiTemplateSubdir := range efiTemplateSubdirs {
-		// TODO: this is not robust, if we'd soon want to specify VM with id "in-ram"
-		//       instead of "system_" prefix
-		if strings.HasPrefix(efiTemplateSubdir.Name(), "system_") {
-			continue
-		}
-
-		// can't use -a flag because it would try to copy permissions, which FAT doesn't support
-		if err := exec.Command("rsync",
-			"-h",
-			"--recursive",
-			"--delete",
-			"misc/esp/EFI/"+efiTemplateSubdir.Name()+"/",
-			filepath.Join(tmpMountpointEsp, "EFI", efiTemplateSubdir.Name()),
-		).Run(); err != nil {
-			return err
-		}
+	// can't use -a flag because it would try to copy permissions, which FAT doesn't support
+	if err := exec.Command("rsync",
+		"-h",
+		"--recursive",
+		"--delete",
+		"--exclude=system_*",
+		"--exclude=background.png",
+		"misc/esp/EFI/",
+		filepath.Join(tmpMountpointEsp, "EFI"),
+	).Run(); err != nil {
+		return fmt.Errorf("rsync: %v", err)
 	}
 
 	return nil
 }
 
 func mountIfNeeded(device string, mountpoint string) error {
-	if exists, err := osutil.Exists(device); !exists || err != nil {
-		return fmt.Errorf("mount source %s does not exist: %w", device, err)
-	}
-
-	if err := os.MkdirAll(mountpoint, osutil.FileMode(osutil.OwnerRWX, osutil.GroupRWX, osutil.OtherNone)); err != nil {
-		return err
-	}
-
 	if is, err := isMounted(mountpoint); is || err != nil { // already mounted?
 		if err != nil {
 			return err
@@ -234,6 +219,18 @@ func mountIfNeeded(device string, mountpoint string) error {
 			log.Printf("already mounted: %s", mountpoint)
 			return nil
 		}
+	}
+
+	return mount(device, mountpoint)
+}
+
+func mount(device string, mountpoint string) error {
+	if exists, err := osutil.Exists(device); !exists || err != nil {
+		return fmt.Errorf("mount source %s does not exist: %w", device, err)
+	}
+
+	if err := os.MkdirAll(mountpoint, osutil.FileMode(osutil.OwnerRWX, osutil.GroupRWX, osutil.OtherNone)); err != nil {
+		return err
 	}
 
 	// TODO: does it work without -o loop?
@@ -262,4 +259,21 @@ func isMounted(mountpoint string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
+	backgroundFromCurrentSystem := "/persist/apps/SYSTEM_nobackup/background.png"
+
+	backgroundExists, err := osutil.Exists(backgroundFromCurrentSystem)
+	if err != nil {
+		return err
+	}
+
+	if backgroundExists {
+		if err := copyFile(backgroundFromCurrentSystem, to); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/spf13/cobra"
@@ -114,6 +115,43 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 	}
 
 	if err := exec.Command("mkfs.ext4", "-L", "persist", volatilePersistPartition).Run(); err != nil {
+		return "", err
+	}
+
+	if err := mount(volatilePersistPartition, tmpMountpointPersist); err != nil {
+		return "", err
+	}
+	defer func() {
+		if err := unmount(tmpMountpointPersist); err != nil {
+			panic(err)
+		}
+	}()
+
+	writeFile := func(path string, content string) error {
+		pathInPersist := filepath.Join(tmpMountpointPersist, path)
+
+		if err := os.MkdirAll(filepath.Dir(pathInPersist), 0775); err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(pathInPersist, []byte(content), 0660); err != nil {
+			return fmt.Errorf("write %s: %v", path, err)
+		}
+
+		return nil
+	}
+
+	if err := writeFile("apps/SYSTEM_nobackup/hostname", "j-sys-test-vm"); err != nil {
+		return "", err
+	}
+
+	if err := copyBackgroundFromCurrentSystemIfExistsTo(filepath.Join(tmpMountpointPersist, "apps/SYSTEM_nobackup/background.png")); err != nil {
+		return "", err
+	}
+
+	_ = os.Chmod("apps/SYSTEM_nobackup/background.png", 0661)
+
+	if err := os.MkdirAll(filepath.Join(tmpMountpointPersist, "apps/docker/data_nobackup"), 0770); err != nil {
 		return "", err
 	}
 
