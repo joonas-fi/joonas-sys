@@ -47,6 +47,7 @@ battery 0 {
 wireless wlp1s0 {
         format_up = "📶 %quality %essid"
         format_down = ""
+        color_good = "#FFFFFF"
 }
 
 tztime local {
