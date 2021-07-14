@@ -14,6 +14,7 @@ source common.sh
 # - ttf-ancient-fonts because emojis didn't render (https://www.omgubuntu.co.uk/2014/11/see-install-use-emoji-symbols-ubuntu-linux)
 # - fonts-noto-color-emoji to get colored emojis for i3 workspace symbols
 # - gvfs-backends = Samba working in thunar
+# - gvfs-fuse = GVFS files to work in non-GIO (= POSIX) programs
 DEBIAN_FRONTEND=noninteractive apt install -y \
 	xfce4 \
 	xfce4-screensaver \
@@ -21,6 +22,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
 	lightdm \
 	slick-greeter \
 	gvfs-backends \
+	gvfs-fuse \
 	alsa \
 	compton \
 	xwallpaper \
