@@ -1,0 +1,2 @@
+# AKAI Professional MPK Mini MK3
+KERNEL=="midi[0-9]*", SUBSYSTEM=="sound", ATTRS{idVendor}=="09e8", ATTRS{idProduct}=="0049", SYMLINK+="akaimidi"
