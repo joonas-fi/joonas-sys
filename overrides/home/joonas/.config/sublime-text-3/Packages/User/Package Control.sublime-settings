@@ -1,0 +1,14 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"Dockerfile Syntax Highlighting",
+		"Emmet",
+		"MiniPy",
+		"Package Control",
+		"Terraform",
+	],
+}
