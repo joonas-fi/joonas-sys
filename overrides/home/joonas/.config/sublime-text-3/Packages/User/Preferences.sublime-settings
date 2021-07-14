@@ -11,4 +11,6 @@
 	[
 		100
 	],
+	// joonas-sys makes this unnecessary
+	"update_check": false,
 }
