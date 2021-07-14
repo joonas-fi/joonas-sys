@@ -14,4 +14,7 @@
 	// joonas-sys makes this unnecessary
 	"update_check": false,
 	"detect_indentation": false,
+	// '$ sublime_text --crawl' takes a LOT of CPU, I guess it has an infinite loop when a symlink
+	// points to outside of repo and it finds the repo again.
+	"index_files": false,
 }
