@@ -23,7 +23,7 @@ func rsyncServerEntrypoint() *cobra.Command {
 
 func rsyncServer(ctx context.Context) error {
 	// after starting this, the remote computer can be flashed with:
-	//   $ REMOTE=rsync://192.168.1.123/jsys/ ./jsys_linux-amd64 flash system_b,sysdev=/dev/disk/by-label/system_b,espdev=/dev/disk/by-label/ESP-USB-FIT
+	//   $ REMOTE=rsync://192.168.1.123/ ./jsys_linux-amd64 flash system_b
 
 	// reading some files in the systree require root access
 	if err := requireRoot(); err != nil {
@@ -44,7 +44,11 @@ gid = 0
 
 [jsys]
 path = /mnt/j-os-inmem-staging
-comment = joonas-sys staging
+read only = true
+timeout = 300
+
+[EFI]
+path = misc/esp/EFI
 read only = true
 timeout = 300
 

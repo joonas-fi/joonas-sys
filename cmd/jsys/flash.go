@@ -195,6 +195,13 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 	However our EFI template tree doesn't contain system_ + ("a" | "b") or background so we've to
 	exclude them from rsync so they won't get deleted (b/c --delete flag)
 	*/
+	copyESPFrom := func() string {
+		if remote := os.Getenv("REMOTE"); remote != "" {
+			return remote + "EFI/"
+		} else {
+			return "misc/esp/EFI/"
+		}
+	}()
 
 	// can't use -a flag because it would try to copy permissions, which FAT doesn't support
 	if err := exec.Command("rsync",
@@ -203,7 +210,7 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 		"--delete",
 		"--exclude=system_*",
 		"--exclude=background.png",
-		"misc/esp/EFI/",
+		copyESPFrom,
 		filepath.Join(tmpMountpointEsp, "EFI"),
 	).Run(); err != nil {
 		return fmt.Errorf("rsync: %v", err)
