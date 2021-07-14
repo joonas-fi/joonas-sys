@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -19,7 +20,7 @@ var (
 
 			systemDevice: "/dev/disk/by-label/system_a",
 
-			espDevice: "/dev/disk/by-label/ESP-USB-DT", // b/c current partition too smol
+			espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
 		},
 		{
 			label: "system_b",
@@ -28,10 +29,11 @@ var (
 
 			systemDevice: "/dev/disk/by-label/system_b",
 
-			espDevice: "/dev/disk/by-label/ESP-USB-DT", // b/c current partition too smol
+			espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
 		},
 		{
-			label: "in-ram",
+			label:       "in-ram",
+			labelActual: "system_a", // if testing in a VM, we internally refer to it as system_a
 
 			warnIfNotRunningIn: "", // no warnings
 
@@ -45,7 +47,8 @@ var (
 )
 
 type systemSpec struct {
-	label string
+	label       string
+	labelActual string
 
 	warnIfNotRunningIn string
 
@@ -57,8 +60,8 @@ type systemSpec struct {
 }
 
 func (s systemSpec) lieAboutLabelIfVirtualMachine() string {
-	if s.label == "in-ram" {
-		return "system_a"
+	if s.labelActual != "" {
+		return s.labelActual
 	} else {
 		return s.label
 	}
@@ -83,21 +86,56 @@ func (s systemSpec) espDeviceLabel() (string, error) {
 var inlineSystemSpecRe = regexp.MustCompile(`^([^,]+),sysdev=([^,]+),espdev=([^,]+)$`)
 
 func getSystemNoEditCheck(label string) (systemSpec, error) {
-	if matches := inlineSystemSpecRe.FindStringSubmatch(label); matches != nil {
-		return systemSpec{
-			label:        matches[1],
-			systemDevice: matches[2],
-			espDevice:    matches[3],
-		}, nil
-	}
-
-	for _, system := range systemRegistry {
-		if system.label == label {
-			return system, nil
+	sys, err := func() (systemSpec, error) {
+		if matches := inlineSystemSpecRe.FindStringSubmatch(label); matches != nil {
+			return systemSpec{
+				label:        matches[1],
+				systemDevice: matches[2],
+				espDevice:    matches[3],
+			}, nil
 		}
+
+		for _, system := range systemRegistry {
+			if system.label == label {
+				return system, nil
+			}
+		}
+
+		return systemSpec{}, fmt.Errorf("system not found: %s", label)
+	}()
+	if err != nil {
+		return sys, err
 	}
 
-	return systemSpec{}, fmt.Errorf("system not found: %s", label)
+	if sys.espDevice == "_AUTODETECT_" {
+		labels, err := os.ReadDir("/dev/disk/by-label")
+		if err != nil {
+			return sys, err
+		}
+
+		candidates := []string{}
+
+		for _, label := range labels {
+			if strings.HasPrefix(label.Name(), "ESP") && label.Name() != "ESP-VM" {
+				candidates = append(candidates, "/dev/disk/by-label/"+label.Name())
+			}
+		}
+
+		candidate, err := func() (string, error) {
+			if len(candidates) == 1 {
+				return candidates[0], nil
+			} else {
+				return "", fmt.Errorf("autodetect used but got %d candidates", len(candidates))
+			}
+		}()
+		if err != nil {
+			return sys, err
+		}
+
+		sys.espDevice = candidate
+	}
+
+	return sys, nil
 }
 
 func getSystemNotCurrent(label string) (systemSpec, error) {
