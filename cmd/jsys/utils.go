@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,31 +12,6 @@ import (
 	"github.com/function61/gokit/app/retry"
 	"github.com/function61/gokit/os/osutil"
 )
-
-// TODO: move to gokit/os/osutil
-func copyFile(sourcePath string, destinationPath string) error {
-	source, err := os.Open(sourcePath)
-	if err != nil {
-		return err
-	}
-	defer source.Close() // double close intentional
-
-	destination, err := os.Create(destinationPath)
-	if err != nil {
-		return err
-	}
-	defer destination.Close() // double close intentional
-
-	if _, err := io.Copy(destination, source); err != nil {
-		return err
-	}
-
-	if err := destination.Close(); err != nil {
-		return err
-	}
-
-	return source.Close()
-}
 
 func waitForFileAvailable(ctx context.Context, file string) error {
 	return retry.Retry(ctx, func(ctx context.Context) error {

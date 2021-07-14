@@ -50,6 +50,10 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/function61/gokit v0.0.0-20210207144405-1f1e50ad6dcc h1:SgKEz27PTwOQZm7pOd7E9DPCUq8f+UEGnk21IIPPCTE=
 github.com/function61/gokit v0.0.0-20210207144405-1f1e50ad6dcc/go.mod h1:zoPwlTF/LeWbdcLYJbaZdHiXAbhhQnaDP336tJ4uG3o=
+github.com/function61/gokit v0.0.0-20210702104928-d82199d64092 h1:bl8ArJB6IF42CHR2CQUVoSlvP9i9GeHb9ipwC93QPRg=
+github.com/function61/gokit v0.0.0-20210702104928-d82199d64092/go.mod h1:nfJiV01CxBDMlVDv35jnAACc7vOBFGXlAZRILvTnD0E=
+github.com/function61/gokit v0.0.0-20210714081557-f1bb54bf98ee h1:6/hzIMHchs4+37VI45U9Lyjr7aTMWL7EPO223c5GaD8=
+github.com/function61/gokit v0.0.0-20210714081557-f1bb54bf98ee/go.mod h1:nfJiV01CxBDMlVDv35jnAACc7vOBFGXlAZRILvTnD0E=
 github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdko=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.2.0 h1:vSyEgKwraXPSOkvCk7IwOSyX+Pv3V2cV9CikJMXg4U4=

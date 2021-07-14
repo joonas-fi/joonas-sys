@@ -171,11 +171,11 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 		return err
 	}
 
-	if err := copyFile(sys("/boot/vmlinuz"), uefiAppDir("/vmlinuz")); err != nil {
+	if err := osutil.CopyFile(sys("/boot/vmlinuz"), uefiAppDir("/vmlinuz")); err != nil {
 		return err
 	}
 
-	if err := copyFile(sys("/boot/initrd.img"), uefiAppDir("/initrd.img")); err != nil {
+	if err := osutil.CopyFile(sys("/boot/initrd.img"), uefiAppDir("/initrd.img")); err != nil {
 		return err
 	}
 
@@ -271,7 +271,7 @@ func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
 	}
 
 	if backgroundExists {
-		if err := copyFile(backgroundFromCurrentSystem, to); err != nil {
+		if err := osutil.CopyFile(backgroundFromCurrentSystem, to); err != nil {
 			return err
 		}
 	}
