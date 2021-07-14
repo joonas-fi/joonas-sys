@@ -22,6 +22,8 @@ const (
 )
 
 func flashEntrypoint() *cobra.Command {
+	ignoreWarnings := false
+
 	cmd := &cobra.Command{
 		Use:   "flash [system]",
 		Short: "Flashes systree to storage",
@@ -29,14 +31,17 @@ func flashEntrypoint() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(flash(
 				osutil.CancelOnInterruptOrTerminate(nil),
-				args[0]))
+				args[0],
+				ignoreWarnings))
 		},
 	}
+
+	cmd.Flags().BoolVarP(&ignoreWarnings, "ignore-warnings", "", ignoreWarnings, "Ignore any warnings")
 
 	return cmd
 }
 
-func flash(ctx context.Context, sysLabel string) error {
+func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 	if err := requireRoot(); err != nil {
 		return err
 	}
@@ -56,7 +61,7 @@ func flash(ctx context.Context, sysLabel string) error {
 		return err
 	}
 
-	if diffTreeExists {
+	if diffTreeExists && !ignoreWarnings {
 		return fmt.Errorf(
 			"safety: bailing out because diff tree exists!\n(safely do this first:) $ rm -rf %s",
 			system.diffPath())
