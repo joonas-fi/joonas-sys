@@ -68,6 +68,10 @@ type diffReport struct {
 	totallyNewFiles int
 }
 
+func (d *diffReport) Deleted(entryPathCanonical string) {
+	fmt.Fprintf(d.output, " D %s\n", entryPathCanonical)
+}
+
 func (d *diffReport) TotallyNewFile(entryPathCanonical string) {
 	d.totallyNewFiles++
 
@@ -161,31 +165,35 @@ func diff(maxDiffFilesFind int) error {
 					continue
 				}
 
-				overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
-				if err != nil {
-					return err
-				}
-
-				imageExists, err := osutil.Exists(entryPath.Image())
-				if err != nil {
-					return err
-				}
-
-				if overrideExists {
-					equal, err := compareFiles(entryPath.Diff(), entryPath.OverridesWorkdir())
+				if (entry.Mode() & os.ModeCharDevice) != 0 { // assuming whiteout file (= deleted marker)
+					report.Deleted(entryPath.Canonical())
+				} else {
+					overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
 					if err != nil {
 						return err
 					}
 
-					if equal {
-						report.OverrideEqual(entryPath.Canonical())
-					} else {
-						report.OverrideOutOfDate(entryPath.Canonical())
+					imageExists, err := osutil.Exists(entryPath.Image())
+					if err != nil {
+						return err
 					}
-				} else if imageExists {
-					report.ModifiedFromImage(entryPath.Canonical())
-				} else {
-					report.TotallyNewFile(entryPath.Canonical())
+
+					if overrideExists {
+						equal, err := compareFiles(entryPath.Diff(), entryPath.OverridesWorkdir())
+						if err != nil {
+							return err
+						}
+
+						if equal {
+							report.OverrideEqual(entryPath.Canonical())
+						} else {
+							report.OverrideOutOfDate(entryPath.Canonical())
+						}
+					} else if imageExists {
+						report.ModifiedFromImage(entryPath.Canonical())
+					} else {
+						report.TotallyNewFile(entryPath.Canonical())
+					}
 				}
 			}
 		}
