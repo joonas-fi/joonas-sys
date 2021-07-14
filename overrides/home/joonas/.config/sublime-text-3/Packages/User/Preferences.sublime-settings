@@ -13,4 +13,5 @@
 	],
 	// joonas-sys makes this unnecessary
 	"update_check": false,
+	"detect_indentation": false,
 }
