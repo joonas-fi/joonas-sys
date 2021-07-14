@@ -5,10 +5,10 @@
 	"word_wrap": false,
 	"ignored_packages":
 	[
-		"Vintage"
+		"Vintage",
 	],
 	"rulers":
 	[
 		100
-	]
+	],
 }
