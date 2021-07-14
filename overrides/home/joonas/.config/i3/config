@@ -29,6 +29,7 @@ for_window [window_role="task_dialog"] floating enable, border normal
 # for_window [class=".*" window_role="pop-up"] floating enable, border normal
 for_window [class="Qemu-system-x86_64"] floating enable
 for_window [class="Qemu-system-i386"] floating enable
+for_window [class="vlc"] floating enable
 
 # convenience "const"
 set $alt Mod1
