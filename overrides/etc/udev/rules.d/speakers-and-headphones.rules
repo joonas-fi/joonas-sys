@@ -1,0 +1,12 @@
+# ATTR{id} is for ALSA, ENV{PULSE_NAME} is for PulseAudio
+#
+# https://gist.github.com/Aishou/f39c2f970c6db20e1845925c5cc0890e
+
+DEVPATH=="/devices/pci0000:00/0000:00:08.1/0000:09:00.1/sound/card?", ATTR{id}="speakers", ENV{PULSE_NAME}="speakers"
+DEVPATH=="/devices/pci0000:00/0000:00:08.1/0000:09:00.6/sound/card?", ATTR{id}="headphones", ENV{PULSE_NAME}="headphones"
+
+# Raven/Raven2/Fenghuang HDMI/DP Audio Controller => monitor => "speakers"
+# KERNELS=="card[0-9]*", SUBSYSTEM=="sound", ATTRS{vendor}=="0x1002", ATTRS{device}=="0x15de", ATTR{id}="speakers"
+
+# Family 17h (Models 10h-1fh) HD Audio Controller => front panel => "headphones"
+# KERNELS=="card[0-9]*", SUBSYSTEM=="sound", ATTRS{vendor}=="0x1022", ATTRS{device}=="0x15e3", ATTR{id}="headphones"
