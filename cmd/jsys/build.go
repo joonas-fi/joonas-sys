@@ -187,6 +187,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 				"--volume", fmt.Sprintf("%s:%s:slave", treeLocation, treeLocation),
 				"--volume", fmt.Sprintf("%s:/repo", workdir), // shouldn't use ADD in Dockerfile, because we have secrets.env
 				"--privileged",
+				"--shm-size=1024M", // if default 64M, Nvidia driver installation (via DKMS) fails due to compiler segfault (I guess by null pointer dereference by not checking SHM alloc success?)
 				"joonas-sys-builder",
 				step.ScriptName,
 			)
