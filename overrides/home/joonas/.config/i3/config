@@ -214,9 +214,8 @@ bindsym Shift+XF86AudioMute exec --no-startup-id hautomo-client audioctl toggle-
 # Media player controls (https://superuser.com/a/1407379 for play/pause problems)
 bindsym XF86AudioPause exec --no-startup-id hautomo-client playerctl play-pause
 
-# TODO: honor default browser https://askubuntu.com/q/8252
-bindsym XF86HomePage exec firefox --browser
-bindsym Shift+XF86HomePage exec firefox --private-window
+bindsym XF86HomePage exec sensible-browser
+bindsym Shift+XF86HomePage exec sensible-browser --incognito
 
 bindsym XF86Mail exec thunar
 
