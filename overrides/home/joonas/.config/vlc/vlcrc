@@ -24,3 +24,8 @@ prefetch-read-size=1048576
 prefetch-seek-threshold=1048576
 
 
+[core]
+
+# preferred subtitle language
+sub-language=en
+
