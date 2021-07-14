@@ -13,6 +13,7 @@ import (
 
 	"github.com/function61/gokit/encoding/hcl2json"
 	"github.com/function61/gokit/encoding/jsonfile"
+	"github.com/joonas-fi/joonas-sys/misc"
 )
 
 type item struct {
@@ -25,7 +26,12 @@ type config struct {
 }
 
 func loadConf() (*config, []string, []string, error) {
-	hcl, err := os.Open("misc/state-diff-config.hcl")
+	// open with this priority:
+	// 1) if ./misc/<file> exists locally
+	// 2) from embedded FS
+	confFiles := newOverlayFs(os.DirFS("./misc/"), misc.Files)
+
+	hcl, err := confFiles.Open("state-diff-config.hcl")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -61,7 +67,7 @@ func loadConf() (*config, []string, []string, error) {
 		return items
 	}()
 
-	ignoreTemp, err := os.Open("misc/state-diff-ignore-temp.txt")
+	ignoreTemp, err := confFiles.Open("state-diff-ignore-temp.txt")
 	if err != nil {
 		return nil, nil, nil, err
 	}
