@@ -1,6 +1,0 @@
-# this is NIC in my work PC
-[Match]
-Name=enp3s0
-
-[Network]
-DHCP=yes
