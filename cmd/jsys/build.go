@@ -102,6 +102,15 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool) error {
 		}
 	}
 
+	mounted, err := isMounted(treeLocation)
+	if err != nil {
+		return err
+	}
+
+	if !mounted {
+		return fmt.Errorf("%s is not a mountpoint. would write files to disk", treeLocation)
+	}
+
 	steps, err := loadAndValidateSteps()
 	if err != nil {
 		return err
