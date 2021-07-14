@@ -218,7 +218,7 @@ func copyKernelAndInitrdToEsp(system systemSpec) error {
 		copyESPFrom,
 		filepath.Join(tmpMountpointEsp, "EFI"),
 	).Run(); err != nil {
-		return fmt.Errorf("rsync: %v", err)
+		return fmt.Errorf("ESP rsync: %v", err)
 	}
 
 	return nil
