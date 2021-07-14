@@ -17,4 +17,10 @@
 	// '$ sublime_text --crawl' takes a LOT of CPU, I guess it has an infinite loop when a symlink
 	// points to outside of repo and it finds the repo again.
 	"index_files": false,
+	// Sublime's new version came with a new theme. Set the old one back.
+	"show_legacy_color_schemes": true,
+	"theme": "Default.sublime-theme",
+	"dark_theme": "Default.sublime-theme",
+	"light_theme": "Default.sublime-theme",
+	"color_scheme": "Packages/Color Scheme - Default/Monokai.sublime-color-scheme",
 }
