@@ -33,28 +33,38 @@ func buildEntrypoint() *cobra.Command {
 	keep := false
 	rm := false
 	verbose := false
+	fancyUI := true
 
 	cmd := &cobra.Command{
-		Use: "build",
-		// Short:   "Goes through diffs to see if there's any interesting state we forgot to persist",
-		Args: cobra.NoArgs,
+		Use:   "build",
+		Short: "Builds the system tree (so it can be flashed somewhere)",
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(build(
-				osutil.CancelOnInterruptOrTerminate(nil),
-				keep,
-				rm,
-				verbose))
+			osutil.ExitIfError(func() error {
+				started := time.Now()
+				defer func() {
+					fmt.Printf("finished in %s", time.Since(started))
+				}()
+
+				return build(
+					osutil.CancelOnInterruptOrTerminate(nil),
+					keep,
+					rm,
+					verbose,
+					fancyUI)
+			}())
 		},
 	}
 
 	cmd.Flags().BoolVarP(&keep, "keep", "", keep, "Keep current tree (if one exists)")
 	cmd.Flags().BoolVarP(&rm, "rm", "", rm, "Remove current tree (if one exists)")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", verbose, "Verbose logging output")
+	cmd.Flags().BoolVarP(&fancyUI, "fancy-ui", "", fancyUI, "Use fancy UI to show progress")
 
 	return cmd
 }
 
-func build(ctx context.Context, keep bool, rm bool, verbose bool) error {
+func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) error {
 	if err := requireRoot(); err != nil {
 		return err
 	}
@@ -132,8 +142,21 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool) error {
 	appendLogLine := make(chan string)
 
 	go func() {
-		if err := displayFancyUI(uiCtx, nextStep, steps, appendLogLine); err != nil {
-			panic(err)
+		if fancyUI {
+			if err := displayFancyUI(uiCtx, nextStep, steps, appendLogLine); err != nil {
+				panic(err)
+			}
+		} else {
+			for {
+				select {
+				case line := <-appendLogLine:
+					fmt.Println(line)
+				case <-uiCtx.Done():
+					return
+				case <-nextStep:
+					fmt.Println("----------------------")
+				}
+			}
 		}
 	}()
 
