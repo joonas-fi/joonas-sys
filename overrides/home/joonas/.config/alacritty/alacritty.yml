@@ -2,6 +2,13 @@
 
 # Starting with what is closest to my xfce4-terminal config to be familiar in a new environment :)
 
+env:
+  # without this if local terminfo DB knows alacritty, it would use "alacritty". the trouble is
+  # that SSH forwards the "TERM" ENV and if the remote host doesn't know about alacritty, we'd get
+  # a broken terminal. this is the case for Raspbian currently.
+  #   https://github.com/alacritty/alacritty/issues/2838#issuecomment-537414944
+  TERM: xterm-256color
+
 window:
   padding:
     x: 5
