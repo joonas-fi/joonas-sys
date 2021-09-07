@@ -54,6 +54,13 @@ mkdir -p \
 	"$treeDiff" \
 	"$treeWork"
 
+# user has requested to nuke the diff tree on next reboot (to get back to previously-good state)
+if [ -f "${treeDiff}/.delete_on_next_boot" ]; then
+	# can't rm dir/* because star doesn't match hidden files
+	rm -rf "$treeDiff"
+	mkdir -p "$treeDiff"
+fi
+
 activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
 
 # verify that we're booting the intended system id.
