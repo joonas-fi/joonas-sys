@@ -214,7 +214,9 @@ bindsym Shift+XF86AudioMute exec --no-startup-id hautomo-client audioctl toggle-
 # Media player controls (https://superuser.com/a/1407379 for play/pause problems)
 bindsym XF86AudioPause exec --no-startup-id hautomo-client playerctl play-pause
 
-bindsym XF86HomePage exec sensible-browser
+# workaround for some browsers like Brave that don't support configuring new tab page
+# (because they want to extract maximum money from users)
+bindsym XF86HomePage exec sensible-browser --new-window https://home.fn61.net/
 bindsym Shift+XF86HomePage exec sensible-browser --incognito
 
 # start file manager (different computers have different keys available)
