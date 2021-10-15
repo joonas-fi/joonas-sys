@@ -60,7 +60,7 @@ load {
 
 cpu_temperature 0 {
         format = "🌡 %degrees °C"
-        path = "/persist/apps/SYSTEM_nobackup/cpu_temp"
+        path = "/dev/cpu_temp"
 }
 
 memory {
