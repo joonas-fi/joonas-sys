@@ -131,8 +131,6 @@ func diff(maxDiffFilesFind int) error {
 
 	report := &diffReport{output: os.Stdout}
 
-	diffFilesFound := 0
-
 	var walkOneDir func(string, string) error
 	walkOneDir = func(dirCanonical string, dirDiff string) error {
 		entries, err := ioutil.ReadDir(dirDiff)
@@ -203,12 +201,6 @@ func diff(maxDiffFilesFind int) error {
 
 	if err := walkOneDir("/", dirs.diff); err != nil {
 		return err
-	}
-
-	if diffFilesFound > 0 {
-		_ = os.Stdout.Sync()
-
-		return fmt.Errorf("unclean system: %d file(s) with diffs found", diffFilesFound)
 	}
 
 	return nil
