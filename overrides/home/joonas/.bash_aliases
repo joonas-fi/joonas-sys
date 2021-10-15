@@ -107,3 +107,8 @@ hey() {
 	# (am not sure how packets from container virtual NICs are routed)
 	docker run --rm -it --net=host joonas/hey "$@"
 }
+
+lshw() {
+	# privileges needed for /dev, /sys etc access
+	docker run --rm -it --net=host --privileged joonas/lshw "$@"
+}
