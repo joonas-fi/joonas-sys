@@ -1,0 +1,6 @@
+
+# makes symlink to /dev/screen-backlight so we have a standardized lookup path
+
+# for Intel backlight there is some mystery reason why the regular command would not work
+# https://wiki.archlinux.org/title/backlight#Udev_rule
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="intel_backlight", GROUP="joonas", MODE="0664", RUN+="/bin/chgrp joonas /sys/class/backlight/intel_backlight/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/intel_backlight/brightness" RUN+="/bin/ln -s /sys/class/backlight/intel_backlight /dev/screen-backlight"

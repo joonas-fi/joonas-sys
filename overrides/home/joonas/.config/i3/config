@@ -221,6 +221,9 @@ bindsym XF86Mail exec thunar
 
 bindsym XF86Calculator exec alacritty --command lf ~/Desktop/Salasanoja
 
+bindsym XF86MonBrightnessUp exec jsys backlight increment
+bindsym XF86MonBrightnessDown exec jsys backlight decrement
+
 # print => select screenshot area now
 # shift+print => ask what to do ("custom", so you select between window/fullscreen etc.)
 # super+print => screen recorder (video as gif/mp4/...)
