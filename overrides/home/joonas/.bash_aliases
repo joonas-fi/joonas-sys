@@ -88,6 +88,10 @@ netstat() {
 	docker run --rm -it --net=host alpine netstat "$@"
 }
 
+iperf() {
+	docker run --rm -it --net=host joonas/iperf "$@"
+}
+
 file() {
 	docker run --rm -it --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/file "$@"
 }
