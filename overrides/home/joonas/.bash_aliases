@@ -88,6 +88,10 @@ file() {
 	docker run --rm -it --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/file "$@"
 }
 
+smartctl() {
+	docker run --rm -it --net=none --privileged joonas/smartmontools "$@"
+}
+
 ncdu() {
 	# need to pass locale for non-ASCII chars to work
 
