@@ -103,7 +103,7 @@ func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 
 	copySystreeFrom := func() string {
 		if remote := os.Getenv("REMOTE"); remote != "" {
-			return remote
+			return remote + "jsys/"
 		} else {
 			return treeLocation + "/"
 		}
