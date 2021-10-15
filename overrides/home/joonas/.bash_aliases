@@ -101,3 +101,9 @@ ncdu() {
 awscli() {
 	docker run --rm -it -v "$(pwd):/aws" --entrypoint= amazon/aws-cli bash
 }
+
+hey() {
+	# host networking for correct perspective to "localhost" and to minimize perf impact
+	# (am not sure how packets from container virtual NICs are routed)
+	docker run --rm -it --net=host joonas/hey "$@"
+}
