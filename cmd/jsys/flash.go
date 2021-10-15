@@ -47,7 +47,15 @@ func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 		return err
 	}
 
-	system, err := getSystemNotCurrent(sysLabel)
+	system, err := func() (systemSpec, error) {
+		// ignore would be needed in preinstallation environment where we don't have /persist available
+		// (and by extension, active_sys_id)
+		if ignoreWarnings {
+			return getSystemNoEditCheck(sysLabel)
+		} else {
+			return getSystemNotCurrent(sysLabel)
+		}
+	}()
 	if err != nil {
 		return err
 	}
