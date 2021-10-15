@@ -97,3 +97,7 @@ ncdu() {
 		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "$@"
 	fi
 }
+
+awscli() {
+	docker run --rm -it -v "$(pwd):/aws" --entrypoint= amazon/aws-cli bash
+}
