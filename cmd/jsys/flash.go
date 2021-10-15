@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/prometheus/procfs"
@@ -144,8 +145,11 @@ func mountEsp(paths systemSpec) error {
 }
 
 func unmount(mountpoint string) error {
-	// TODO: use syscall
-	return exec.Command("umount", mountpoint).Run()
+	if err := syscall.Unmount(mountpoint, 0); err != nil {
+		return fmt.Errorf("unmount: %w", err)
+	}
+
+	return nil
 }
 
 func copySystree(from string, paths systemSpec) error {
