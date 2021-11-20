@@ -119,7 +119,8 @@ bindsym $mod+e layout toggle split
 bindsym $mod+Shift+space floating toggle
 
 # change focus between tiling / floating windows
-bindsym $mod+space focus mode_toggle
+# (commented out due to conflict with Thinkpad keyboard backlight toggle)
+# bindsym $mod+space focus mode_toggle
 
 # focus the parent container
 bindsym $mod+a focus parent
@@ -225,8 +226,10 @@ bindsym XF86Search exec thunar
 
 bindsym XF86Calculator exec alacritty --command lf ~/Desktop/Salasanoja
 
-bindsym XF86MonBrightnessUp exec jsys backlight increment
-bindsym XF86MonBrightnessDown exec jsys backlight decrement
+bindsym XF86MonBrightnessUp exec jsys backlight screen increase
+bindsym XF86MonBrightnessDown exec jsys backlight screen decrease
+
+bindsym $mod+space exec jsys backlight keyboard cycle
 
 # print => select screenshot area now
 # shift+print => ask what to do ("custom", so you select between window/fullscreen etc.)

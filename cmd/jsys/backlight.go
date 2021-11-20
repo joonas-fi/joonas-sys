@@ -21,18 +21,52 @@ import (
 
 const (
 	// points to the backlight interface, e.g. "/sys/class/backlight/intel_backlight"
-	backlightPath              = "/dev/screen-backlight"
+	backlightPath = "/dev/screen-backlight"
+
+	// assumes a udev rule sets up a symlink
+	keyboardBacklightDevice = "/dev/keyboard-backlight"
+
 	desktopNotificationPreviousIDFile = "backlightctl/desktop-notification-previous-id"
 )
 
 func backlightEntrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backlight",
-		Short: "Backlight management",
+		Short: "Backlight management (screen/keyboard/...)",
+	}
+
+	cmd.AddCommand(backlightKeyboardEntrypoint())
+	cmd.AddCommand(backlightScreenEntrypoint())
+
+	return cmd
+}
+
+func backlightKeyboardEntrypoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "keyboard",
+		Short: "Keyboard backlight",
 	}
 
 	cmd.AddCommand(&cobra.Command{
-		Use:   "increment",
+		Use:   "cycle",
+		Short: "Cycle keyboard backlight (off/medium/high)",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			osutil.ExitIfError(keyboardBacklightCycle())
+		},
+	})
+
+	return cmd
+}
+
+func backlightScreenEntrypoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "screen",
+		Short: "Screen backlight",
+	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "increase",
 		Short: "Increase brightness",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -41,7 +75,7 @@ func backlightEntrypoint() *cobra.Command {
 	})
 
 	cmd.AddCommand(&cobra.Command{
-		Use:   "decrement",
+		Use:   "decrease",
 		Short: "Decrease brightness",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -50,6 +84,34 @@ func backlightEntrypoint() *cobra.Command {
 	})
 
 	return cmd
+}
+
+// cycles values between 0 and max_brightness. this is sensible only when the numbers are mapped to
+// "modes", i.e. 0 => off, 1 => medium, 2 => high etc.
+func keyboardBacklightCycle() error {
+	brightnessPath := filepath.Join(keyboardBacklightDevice, "brightness")
+
+	max, err := readIntFile(filepath.Join(keyboardBacklightDevice, "max_brightness"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("keyboard backlight not found. did you forget to set up the symlink? (%s)", keyboardBacklightDevice)
+		} else {
+			return err
+		}
+	}
+
+	current, err := readIntFile(brightnessPath)
+	if err != nil {
+		return err
+	}
+
+	// With max=2
+	// - current=0 -> 1
+	// - current=1 -> 2
+	// - current=2 -> 0
+	next := (current + 1) % (max + 1)
+
+	return os.WriteFile(brightnessPath, []byte(strconv.Itoa(next)), 0611)
 }
 
 func backlightAdjustBy(ctx context.Context, incrementPercentagePoints float64) error {
