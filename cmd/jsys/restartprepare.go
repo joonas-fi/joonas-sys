@@ -91,7 +91,7 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 				}
 
 				fmt.Printf(
-					"succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\nremember to enter %s!",
+					"succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\nremember to enter %s!\n",
 					systemLabel)
 
 				return nil
