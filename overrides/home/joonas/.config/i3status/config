@@ -8,7 +8,7 @@ general {
 
 # order += "ipv6"
 order += "battery 0"
-order += "wireless wlp1s0"
+order += "wireless _first_"
 order += "disk /"
 # order += "run_watch DHCP"
 # order += "path_exists VPN"
@@ -44,7 +44,7 @@ battery 0 {
 #         path = "/proc/sys/net/ipv4/conf/tun0"
 # }
 
-wireless wlp1s0 {
+wireless _first_ {
         format_up = "📶 %quality %essid"
         format_down = ""
         color_good = "#FFFFFF"
