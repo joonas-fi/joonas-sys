@@ -72,6 +72,11 @@ gdisk() {
 	docker run --rm -it --net=none --privileged --entrypoint=/usr/bin/gdisk joonas/fdisk "$@"
 }
 
+hollywood() {
+	# jess/hollywood does not work :(
+	docker run --rm -it --net=none bcbcarl/hollywood "$@"
+}
+
 radeontop() {
 	docker run --rm -it --net=none --privileged joonas/radeontop "$@"
 }
