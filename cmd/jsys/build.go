@@ -43,7 +43,10 @@ func buildEntrypoint() *cobra.Command {
 			osutil.ExitIfError(func() error {
 				started := time.Now()
 				defer func() {
-					fmt.Printf("finished in %s", time.Since(started))
+					duration := time.Since(started)
+					if duration > 1*time.Second { // fast failures are not interesting
+						fmt.Printf("finished in %s", duration)
+					}
 				}()
 
 				return build(
