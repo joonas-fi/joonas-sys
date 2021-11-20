@@ -129,3 +129,7 @@ lshw() {
 	# privileges needed for /dev, /sys etc access
 	docker run --rm -it --net=host --privileged joonas/lshw "$@"
 }
+
+uuidgen() {
+	docker run --rm -it --net=none joonas/uuidgen "$@"
+}
