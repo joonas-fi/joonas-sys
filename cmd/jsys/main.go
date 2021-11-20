@@ -28,6 +28,7 @@ func main() {
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 	app.AddCommand(backlightEntrypoint())
+	app.AddCommand(infoEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
