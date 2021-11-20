@@ -1,0 +1,12 @@
+version: '3'
+services:
+  tailscale:
+    restart: unless-stopped
+    image: fn61/tailscale:20211016_0746_c1061a9e
+    devices:
+    - /dev/net/tun
+    privileged: true
+    network_mode: host
+    volumes:
+    - /persist/apps/tailscale-state:/var/lib/tailscale
+
