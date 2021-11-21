@@ -113,6 +113,10 @@ smartctl() {
 	docker run --rm -it --net=none --privileged joonas/smartmontools "$@"
 }
 
+qrencode() {
+	docker run --rm -it --net=none joonas/qrencode "$@"
+}
+
 ncdu() {
 	# need to pass locale for non-ASCII chars to work
 
