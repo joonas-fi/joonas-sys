@@ -31,6 +31,11 @@ func info() error {
 		return err
 	}
 
+	sysId, err := readRunningSystemId()
+	if err != nil {
+		return err
+	}
+
 	osRelease, err := osrelease.Read()
 	if err != nil {
 		return err
@@ -45,6 +50,8 @@ func info() error {
 
 	// "Ubuntu 20.04.3 LTS (Focal Fossa)"
 	infoTbl.AddRow("OS", fmt.Sprintf("OS: %s %s", osRelease["NAME"], osRelease["VERSION"]))
+
+	infoTbl.AddRow("System ID", sysId)
 
 	fmt.Println(infoTbl.Render())
 

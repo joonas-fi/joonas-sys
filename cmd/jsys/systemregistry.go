@@ -6,9 +6,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/function61/gokit/os/osutil"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -149,24 +146,4 @@ func getSystemNotCurrent(label string) (systemSpec, error) {
 	}
 
 	return getSystemNoEditCheck(label)
-}
-
-func currentSysIdEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "current-sys-id",
-		Short: "Prints currently running system ID",
-		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				sysId, err := readRunningSystemId()
-				if err != nil {
-					return err
-				}
-
-				fmt.Println(sysId)
-
-				return nil
-			}())
-		},
-	}
 }

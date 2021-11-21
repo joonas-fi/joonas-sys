@@ -24,7 +24,6 @@ func main() {
 	app.AddCommand(espEntrypoint())
 	app.AddCommand(restartPrepareEntrypoint())
 	app.AddCommand(restartPrepareCurrentEntrypoint())
-	app.AddCommand(currentSysIdEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 	app.AddCommand(backlightEntrypoint())
