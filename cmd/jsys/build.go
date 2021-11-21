@@ -45,7 +45,7 @@ func buildEntrypoint() *cobra.Command {
 				defer func() {
 					duration := time.Since(started)
 					if duration > 1*time.Second { // fast failures are not interesting
-						fmt.Printf("finished in %s", duration)
+						fmt.Printf("finished in %s\n", duration)
 					}
 				}()
 
