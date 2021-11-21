@@ -1,0 +1,7 @@
+[Unit]
+Description=Low disk space checker
+OnFailure=failure-notification@%n
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/jsys lowdiskspace-checker

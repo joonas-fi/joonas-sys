@@ -27,6 +27,7 @@ func main() {
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 	app.AddCommand(backlightEntrypoint())
+	app.AddCommand(lowDiskSpaceCheckerEntrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
 
