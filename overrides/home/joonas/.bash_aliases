@@ -97,6 +97,10 @@ netstat() {
 	docker run --rm -it --net=host alpine netstat "$@"
 }
 
+arp() {
+	docker run --rm -it --net=host alpine arp "$@"
+}
+
 iperf() {
 	docker run --rm -it --net=host joonas/iperf "$@"
 }
