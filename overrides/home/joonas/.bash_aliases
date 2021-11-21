@@ -81,6 +81,10 @@ radeontop() {
 	docker run --rm -it --net=none --privileged joonas/radeontop "$@"
 }
 
+pwdgen() {
+	docker run --rm -it --net=none joonas/pwdgen:20211113_1928_0fea588c "$@"
+}
+
 nmap() {
 	docker run --rm -it --net=host joonas/nmap "$@"
 }
