@@ -69,7 +69,7 @@ memory {
 }
 
 disk "/" {
-        format = "💽 %free"
+        format = "💽 %avail"
 }
 
 read_file uptime {
