@@ -17,5 +17,9 @@ systemctl disable motd-news.timer
 systemctl disable apt-daily.timer
 systemctl disable apt-daily-upgrade.timer
 
+# paid Ubuntu subscription support scheduled tasks, installed by ubuntu-minimal package - really??!
+# https://packages.ubuntu.com/bionic/amd64/ubuntu-minimal
+systemctl disable ua-timer.timer
+
 # https://help.ubuntu.com/community/AutomaticSecurityUpdates , https://wiki.debian.org/UnattendedUpgrades
 apt remove -y unattended-upgrades
