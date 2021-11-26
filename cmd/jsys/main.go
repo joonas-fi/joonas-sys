@@ -30,6 +30,7 @@ func main() {
 	app.AddCommand(lowDiskSpaceCheckerEntrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
+	app.AddCommand(sshConfigGeneratorEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
