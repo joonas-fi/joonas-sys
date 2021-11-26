@@ -16,7 +16,7 @@ exec --no-startup-id /usr/lib/x86_64-linux-gnu/xfce4/notifyd/xfce4-notifyd
 exec --no-startup-id xfce4-screensaver
 
 # clipboard manager
-exec --no-startup-id clipcatd &
+exec --no-startup-id xfce4-clipman &
 
 # compositor for transparent terminal windows
 exec --no-startup-id compton &
