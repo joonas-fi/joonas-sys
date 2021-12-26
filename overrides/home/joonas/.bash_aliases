@@ -1,4 +1,7 @@
 
+# starship.rs integration
+eval "$(starship init bash)"
+
 # make "$ cd project" equivalent to "$ cd ~/work/project"
 # must NOT be exported, see https://bosker.wordpress.com/2012/02/12/bash-scripters-beware-of-the-cdpath/
 CDPATH=.:~/work/
