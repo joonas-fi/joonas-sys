@@ -2,23 +2,23 @@
 
 source common.sh
 
-# even when symlinks exist for host keys, when their targets are missing the installation tries to
-# generate the keys. the fix is to have the symlinks point to empty files during the installation.
-enableDirtyHack() {
-	mkdir -p /persist/apps/ssh-server
 
-	touch /persist/apps/ssh-server/{ssh_host_ecdsa_key,ssh_host_ecdsa_key.pub,ssh_host_ed25519_key,ssh_host_ed25519_key.pub,ssh_host_rsa_key,ssh_host_rsa_key.pub}
-}
+downloadAndInstallSingleBinaryProgram \
+	/usr/bin/bob \
+	"https://function61.com/app-dl/api/github.com/function61/function22/latest_releases_asset/function22_linux-amd64"
 
-cleanupDirtyHack() {
-	rm -rf /persist/apps/ssh-server
-}
+# this is an existing symlink for us
+mv /etc/ssh/ssh_host_ed25519_key{,.temp}
 
+# a hack because install requires the host key to be present at service installation time
+#
+# TODO: add --validate-host-key=false (once lands in a release) to overcome hack
+function22 host-key-generate
 
-enableDirtyHack
+# only listen on Tailscale interface
+function22 install --allowed-users="$username" --interface=tailscale0
 
-DEBIAN_FRONTEND=noninteractive apt install -y openssh-server
+# replace dummy-generated-file with our symlink
+mv /etc/ssh/ssh_host_ed25519_key{.temp,}
 
-cleanupDirtyHack
-
-#versioncommand: apt show openssh-server | grep Version: | cut -d' ' -f2
+#versioncommand: function22 --version | cut -d' ' -f3
