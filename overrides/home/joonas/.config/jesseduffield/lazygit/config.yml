@@ -3,3 +3,5 @@ disableStartupPopups: true
 # whether 'esc' will quit when there is nothing to cancel/close
 quitOnTopLevelReturn: false
 
+# starting in a non-Git repository, do not ask if we'll create a repository
+notARepository: 'skip'
