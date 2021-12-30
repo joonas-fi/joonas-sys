@@ -8,7 +8,9 @@
 	"project_quality": {
 		"files_that_should_exist": [
 			"README.md",
-			"LICENSE",
+			"LICENSE"
+		],
+		"files_that_should_not_exist": [
 			"docs/security.md"
 		],
 		"builder_uses_expect": {
