@@ -7,8 +7,8 @@ source common.sh
 
 apt install -y wireguard
 
-# installation unfortunately replaces our symlink with an empty dir
-if [ ! -L /etc/wireguard ]; then # not a symlink? => replace our symlink back
+# installation force-creates this *directory* which overrides our symlink.
+# remove it so it will be added back via our post-install touch-ups.
+if [ ! -L /etc/wireguard ]; then # not a symlink?
 	rm -rf /etc/wireguard
-	cp -a "${repodir}/overrides/etc/wireguard" /etc/wireguard
 fi
