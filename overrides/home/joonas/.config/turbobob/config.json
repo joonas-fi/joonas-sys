@@ -10,7 +10,10 @@
 			"README.md",
 			"LICENSE",
 			"docs/security.md"
-		]
+		],
+		"builder_uses_expect": {
+			"docker://fn61/buildkit-golang": "docker://fn61/buildkit-golang:20210912_1048_2f1d31cd"
+		}
 	},
 	"code_editor":  {"cmd": ["subl", "--new-window", "$PROJECT_ROOT"]},
 	"file_browser": {"cmd": ["thunar", "$DIRECTORY"]}
