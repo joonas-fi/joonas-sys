@@ -310,6 +310,11 @@ func diffOne(entryPathCanonical string) error {
 		return err
 	}
 
+	if string(contentUpdated) == string(contentPrevious) {
+		fmt.Println("files are binary equal")
+		return nil
+	}
+
 	diffText(string(contentPrevious), string(contentUpdated))
 
 	// fmt.Println(diff)
