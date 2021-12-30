@@ -21,6 +21,10 @@ exec --no-startup-id xfce4-clipman &
 # compositor for transparent terminal windows
 exec --no-startup-id compton &
 
+# https://askubuntu.com/a/623746
+# I put this at Xsession.d script but it doesn't seem to work??! the script gets run, but no effect.
+exec --no-startup-id setxkbmap -option "nbsp:none"
+
 workspace_auto_back_and_forth yes
 
 for_window [class=".*"] border pixel 0
