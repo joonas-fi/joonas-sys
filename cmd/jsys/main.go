@@ -31,6 +31,7 @@ func main() {
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
 	app.AddCommand(sshConfigGeneratorEntrypoint())
+	app.AddCommand(statusbar.Entrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }

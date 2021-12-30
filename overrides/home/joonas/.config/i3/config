@@ -192,7 +192,7 @@ bar {
 	# need to override the default to enable transparency (via RGBA colors)
 	i3bar_command i3bar --transparency
 
-	font pango:monospace 11, pango:Noto Color Emoji 11
+	font pango:monospace 11
 
 	colors {
 		background #000000a0
@@ -202,7 +202,7 @@ bar {
 
 	separator_symbol " | "
 
-	status_command i3status
+	status_command jsys statuswidgets
 }
 
 # https://faq.i3wm.org/question/3747/enabling-multimedia-keys.1.html

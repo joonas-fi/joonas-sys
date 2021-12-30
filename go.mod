@@ -7,7 +7,7 @@ require (
 	github.com/apcera/termtables v0.0.0-20170405184538-bcbc5dc54055 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/esiqveland/notify v0.11.0
-	github.com/function61/gokit v0.0.0-20210714081557-f1bb54bf98ee
+	github.com/function61/gokit v0.0.0-20211228101508-315ec8b830c9
 	github.com/gdamore/tcell/v2 v2.2.0
 	github.com/godbus/dbus/v5 v5.0.5
 	github.com/joonas-fi/rsync v0.0.0-20210902091922-303efd623903
