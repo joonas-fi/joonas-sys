@@ -8,6 +8,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/esiqveland/notify v0.11.0
 	github.com/function61/gokit v0.0.0-20211228101508-315ec8b830c9
+	github.com/function61/tailscale-discovery v0.0.0-20211126163947-c080f2d4cf86
 	github.com/gdamore/tcell/v2 v2.2.0
 	github.com/godbus/dbus/v5 v5.0.5
 	github.com/joonas-fi/rsync v0.0.0-20210902091922-303efd623903
@@ -17,6 +18,8 @@ require (
 	github.com/prometheus/procfs v0.0.8
 	github.com/scylladb/termtables v1.0.0
 	github.com/sergi/go-diff v1.2.0
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.2.1
 	github.com/u-root/u-root v7.0.0+incompatible // indirect
+	github.com/vishvananda/netlink v1.1.0
+	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
 )
