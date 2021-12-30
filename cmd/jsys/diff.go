@@ -145,12 +145,12 @@ func diff(maxDiffFilesFind int) error {
 
 			entryPath := newEntryPathBuilder(entry.Name(), dirCanonical, dirs)
 
-			// TODO: it might not be safe to ignore symlinks. they're data also?
-			if (entry.Mode() & os.ModeSymlink) != 0 {
+			if sliceutil.ContainsString(allowedChangeFiles, entryPath.Canonical()) { // allowed to be changed
 				continue
 			}
 
-			if entry.IsDir() {
+			switch {
+			case entry.IsDir():
 				if sliceutil.ContainsString(allowedChangeSubtrees, entryPath.Canonical()) { // allowed to be changed
 					continue
 				}
@@ -158,40 +158,49 @@ func diff(maxDiffFilesFind int) error {
 				if err := walkOneDir(entryPath.Canonical(), entryPath.Diff()); err != nil {
 					return err
 				}
-			} else {
-				if sliceutil.ContainsString(allowedChangeFiles, entryPath.Canonical()) { // allowed to be changed
-					continue
+			case (entry.Mode() & os.ModeCharDevice) != 0: // assuming whiteout file (= deleted marker)
+				report.Deleted(entryPath.Canonical())
+			case (entry.Mode() & os.ModeSymlink) != 0:
+				// deleted symlink is already handled by a whiteout file, so we have create / modify to handle
+
+				imageExists, err := osutil.Exists(entryPath.Image())
+				if err != nil {
+					return err
 				}
 
-				if (entry.Mode() & os.ModeCharDevice) != 0 { // assuming whiteout file (= deleted marker)
-					report.Deleted(entryPath.Canonical())
-				} else {
-					overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
+				if !imageExists { // symlink added
+					report.TotallyNewFile(entryPath.Canonical())
+				} else { // modified or modified-then-reverted-to-no-change
+					// TODO: detect modified-then-reverted-to-no-change
+
+					report.ModifiedFromImage(entryPath.Canonical())
+				}
+			default: // regular file
+				overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
+				if err != nil {
+					return err
+				}
+
+				imageExists, err := osutil.Exists(entryPath.Image())
+				if err != nil {
+					return err
+				}
+
+				if overrideExists {
+					equal, err := compareFiles(entryPath.Diff(), entryPath.OverridesWorkdir())
 					if err != nil {
 						return err
 					}
 
-					imageExists, err := osutil.Exists(entryPath.Image())
-					if err != nil {
-						return err
-					}
-
-					if overrideExists {
-						equal, err := compareFiles(entryPath.Diff(), entryPath.OverridesWorkdir())
-						if err != nil {
-							return err
-						}
-
-						if equal {
-							report.OverrideEqual(entryPath.Canonical())
-						} else {
-							report.OverrideOutOfDate(entryPath.Canonical())
-						}
-					} else if imageExists {
-						report.ModifiedFromImage(entryPath.Canonical())
+					if equal {
+						report.OverrideEqual(entryPath.Canonical())
 					} else {
-						report.TotallyNewFile(entryPath.Canonical())
+						report.OverrideOutOfDate(entryPath.Canonical())
 					}
+				} else if imageExists {
+					report.ModifiedFromImage(entryPath.Canonical())
+				} else {
+					report.TotallyNewFile(entryPath.Canonical())
 				}
 			}
 		}
