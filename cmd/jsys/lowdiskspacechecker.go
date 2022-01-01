@@ -51,6 +51,7 @@ func lowDiskSpaceCheckerEntrypoint() *cobra.Command {
 	})
 
 	cmd.AddCommand(setThresholdEntrypoint())
+	cmd.AddCommand(createRuleEntrypoint())
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "systemd-units",
@@ -151,6 +152,17 @@ func loadRules() ([]rule, error) {
 	return rules, nil
 }
 
+func createRuleEntrypoint() *cobra.Command {
+	return &cobra.Command{
+		Use:   "rule-create [rule-name] [target]",
+		Short: "Create low disk space rule",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			osutil.ExitIfError(createRule(args[0], args[1]))
+		},
+	}
+}
+
 func setThresholdEntrypoint() *cobra.Command {
 	mb := int64(0)
 	gb := int64(0)
@@ -179,6 +191,20 @@ func setThresholdEntrypoint() *cobra.Command {
 	cmd.Flags().Int64VarP(&mb, "mb", "", 0, "Megabytes")
 
 	return cmd
+}
+
+func createRule(label string, target string) error {
+	if err := touch(ruleFile(label)); err != nil {
+		return err
+	}
+
+	return xattr.Set(ruleFile(label), "user.target", []byte(target))
+
+	if err := setThreshold(label, 0); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func setThreshold(label string, threshold int64) error {
@@ -246,4 +272,15 @@ WantedBy=timers.target
 
 func ruleFile(name string) string {
 	return filepath.Join(rulesDir, name)
+}
+
+// just makes an empty file
+// TODO: only if one doesn't already exist?
+func touch(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	return file.Close()
 }
