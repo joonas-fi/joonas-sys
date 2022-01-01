@@ -30,3 +30,4 @@ prefetch-seek-threshold=1048576
 sub-language=en
 audio-language=en
 
+play-and-exit=1
