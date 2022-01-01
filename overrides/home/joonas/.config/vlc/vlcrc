@@ -26,6 +26,7 @@ prefetch-seek-threshold=1048576
 
 [core]
 
-# preferred subtitle language
+# preferred languages
 sub-language=en
+audio-language=en
 
