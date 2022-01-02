@@ -171,7 +171,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 	badLinesFixed := 0
 
 	lineCompleted := func(line string) {
-		if strings.IndexAny(line, "\r\n") != -1 {
+		if strings.ContainsAny(line, "\r\n") {
 			line = strings.ReplaceAll(line, "\r", "")
 			line = strings.ReplaceAll(line, "\n", "")
 
@@ -182,6 +182,8 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 	}
 
 	for _, step := range steps {
+		step := step // pin
+
 		if err := runIfNotAlreadyCompleted(step, func() error {
 			cmd := exec.CommandContext(ctx,
 				"docker",

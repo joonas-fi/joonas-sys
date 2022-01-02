@@ -55,9 +55,8 @@ func restartPrepareEntrypoint() *cobra.Command {
 					return fmt.Errorf("unmount system: %w", err)
 				}
 
-				fmt.Printf(
-					"succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\nremember to enter %s!",
-					system.label)
+				fmt.Println(
+					"succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec")
 
 				return nil
 			}(args[0]))

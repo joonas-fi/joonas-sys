@@ -13,16 +13,12 @@ var (
 		{
 			label: "system_a",
 
-			warnIfNotRunningIn: "system_b",
-
 			systemDevice: "/dev/disk/by-label/system_a",
 
 			espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
 		},
 		{
 			label: "system_b",
-
-			warnIfNotRunningIn: "system_a",
 
 			systemDevice: "/dev/disk/by-label/system_b",
 
@@ -31,8 +27,6 @@ var (
 		{
 			label:       "in-ram",
 			labelActual: "system_a", // if testing in a VM, we internally refer to it as system_a
-
-			warnIfNotRunningIn: "", // no warnings
 
 			systemDevice:                    "/dev/shm/joonas-os-ram-image",
 			systemDeviceCanCreateIfNotFound: true, // only because RAM-backed disk (not messing with any persistent media)
@@ -46,8 +40,6 @@ var (
 type systemSpec struct {
 	label       string
 	labelActual string
-
-	warnIfNotRunningIn string
 
 	systemDevice                    string
 	systemDeviceCanCreateIfNotFound bool

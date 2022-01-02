@@ -33,6 +33,8 @@ func TestToFixedWidthKiloBytesOrMegaBytes(t *testing.T) {
 		{"100 MB", 100 * MB},
 		{"999 MB", 999 * MB},
 	} {
+		tc := tc // pin
+
 		t.Run(tc.expectedOutput, func(t *testing.T) {
 			assert.EqualString(t, toFixedWidthKiloBytesOrMegaBytes(tc.input), tc.expectedOutput)
 		})

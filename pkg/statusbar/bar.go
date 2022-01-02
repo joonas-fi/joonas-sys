@@ -149,7 +149,6 @@ func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Valu
 			}
 		}
 	}
-	return nil
 }
 
 func subtract(a, b netlink.LinkStatistics) netlink.LinkStatistics {

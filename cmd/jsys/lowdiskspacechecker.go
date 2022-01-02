@@ -198,7 +198,9 @@ func createRule(label string, target string) error {
 		return err
 	}
 
-	return xattr.Set(ruleFile(label), "user.target", []byte(target))
+	if err := xattr.Set(ruleFile(label), "user.target", []byte(target)); err != nil {
+		return err
+	}
 
 	if err := setThreshold(label, 0); err != nil {
 		return err
