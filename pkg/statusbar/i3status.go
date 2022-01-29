@@ -76,6 +76,9 @@ func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barIt
 				if err := augmentOneLine(line, ""); err != nil {
 					panic(err)
 				}
+			case line == `{"version":1}`:
+				// add that we support click events
+				fmt.Println(`{ "version": 1, "click_events": true }`)
 			default:
 				fmt.Println(line) // passthrough as -is
 			}

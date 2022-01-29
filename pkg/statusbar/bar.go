@@ -5,14 +5,18 @@ package statusbar
 // Will probably at some later date replace i3status completely since it's easier to customize widgets here.
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"math"
 	"os"
+	"os/exec"
+	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/sync/taskrunner"
@@ -45,10 +49,63 @@ func logic(ctx context.Context) error {
 
 	tasks := taskrunner.New(ctx, logex.Discard)
 
+	// i3 sends click events via our stdin
+	tasks.Start("clickevents", func(ctx context.Context) error {
+		// NOTE: os.Stdin reads are blocking (.Close() will not help), so this task never exits even
+		//       if context is cancelled, unless the party doing the cancellation also closes stdin
+		//       (I think i3 luckily does that)
+		//
+		// https://benjamincongdon.me/blog/2020/04/23/Cancelable-Reads-in-Go/
+
+		stdinLines := bufio.NewScanner(os.Stdin)
+		for stdinLines.Scan() {
+			if stdinLines.Text() == "[" { // start of endless JSON object stream
+				continue // just ignore it
+			}
+
+			// each line is an ,{ ... } (expect first payload line)
+			// ",{ ... }" => "{ ... }"
+			object := strings.TrimPrefix(stdinLines.Text(), ",")
+
+			click := clickEvent{}
+			if err := jsonfile.UnmarshalDisallowUnknownFields(strings.NewReader(object), &click); err != nil {
+				return err
+			}
+
+			switch click.Name {
+			case "inetbw":
+				if err := startInteractiveShellCommandInDialog("nethogs", "nethogs"); err != nil {
+					log.Printf("%v", err) // has enough error context
+				}
+			case "tztime":
+				if err := startInteractiveShellCommandInDialog("cal", "cal; read"); err != nil {
+					log.Printf("%v", err) // has enough error context
+				}
+			case "disk_info":
+				if err := startInteractiveShellCommandInDialog("df", "df -h; read"); err != nil {
+					log.Printf("%v", err) // has enough error context
+				}
+			case "cpu_usage":
+				if err := startInteractiveShellCommandInDialog("htop", "htop"); err != nil {
+					log.Printf("%v", err) // has enough error context
+				}
+			default:
+				log.Printf("unmapped click '%s'", click.Name)
+			}
+		}
+		log.Println("unblocked from scan")
+		if err := stdinLines.Err(); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	tasks.Start("i3status-augment", func(ctx context.Context) error {
 		return augmentI3Status(ctx, func(items []barItem) ([]barItem, error) {
 			prepend := []barItem{}
 
+			// this is where we append our augmented modules
 			if item := latestNetworkItem.Load(); item != nil {
 				prepend = append(prepend, *item.(*barItem))
 			}
@@ -222,4 +279,32 @@ func storeDefaultLinkIndex(to *atomic.Value) error {
 	to.Store(defaultLinkIndex)
 
 	return nil
+}
+
+// interactive so .bashrc gets sourced (so we support aliases, functions etc.)
+func startInteractiveShellCommandInDialog(description string, shellCommand string) error {
+	// window class with magic prefix so window manager can match a rule to transform it into a dialog
+	// (and not automatically-tiled window for instance, if using a tiling window manager)
+	windowClass := fmt.Sprintf("%s_9dc82_dialog", description)
+
+	if err := exec.Command("i3-sensible-terminal", "--class", windowClass, "--command", "/bin/bash", "-i", "-c", shellCommand).Start(); err != nil {
+		return fmt.Errorf("startInteractiveShellCommandInDialog(%s): %w", description, err)
+	}
+
+	return nil
+}
+
+type clickEvent struct {
+	Name       string   `json:"name"`
+	Instance   string   `json:"instance"`
+	Button     int      `json:"button"`
+	Modifiers  []string `json:"modifiers"`
+	X          int      `json:"x"`
+	Y          int      `json:"y"`
+	Relative_x int      `json:"relative_x"`
+	Relative_y int      `json:"relative_y"`
+	Output_x   int      `json:"output_x"`
+	Output_y   int      `json:"output_y"`
+	Width      int      `json:"width"`
+	Height     int      `json:"height"`
 }
