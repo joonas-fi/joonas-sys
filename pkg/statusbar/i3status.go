@@ -18,7 +18,7 @@ type barItem struct {
 	Instance string `json:"instance"`
 	Markup   string `json:"markup"`
 	FullText string `json:"full_text"`
-	Color    string `json:"color"` // example: "#FF0000"
+	Color    string `json:"color,omitempty"` // example: "#FF0000"
 }
 
 func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barItem, error)) error {
