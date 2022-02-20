@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/os/osutil"
@@ -31,14 +33,17 @@ func Entrypoint() *cobra.Command {
 		Short: "Extends i3status with custom widgets",
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
+			rootLogger := logex.StandardLogger()
+
 			osutil.ExitIfError(logic(
-				osutil.CancelOnInterruptOrTerminate(nil)))
+				osutil.CancelOnInterruptOrTerminate(rootLogger),
+				rootLogger))
 		},
 	}
 }
 
 // we augment i3status with additional elements
-func logic(ctx context.Context) error {
+func logic(ctx context.Context, logger *log.Logger) error {
 	latestNetworkItem := &atomic.Value{} // *barItem
 
 	// used as key to netlink.LinkByIndex(...)
@@ -47,17 +52,17 @@ func logic(ctx context.Context) error {
 		return err
 	}
 
-	tasks := taskrunner.New(ctx, logex.Discard)
+	tasks := taskrunner.New(ctx, logger)
 
 	// i3 sends click events via our stdin
 	tasks.Start("clickevents", func(ctx context.Context) error {
-		// NOTE: os.Stdin reads are blocking (.Close() will not help), so this task never exits even
-		//       if context is cancelled, unless the party doing the cancellation also closes stdin
-		//       (I think i3 luckily does that)
+		// cancelable reader b/c if we get canceled by e.g. sibling task, we could end up blocking
+		// reading from our stdin (which click events from i3bar) and never exit, so in effect i3bar
+		// content will get stuck.
 		//
-		// https://benjamincongdon.me/blog/2020/04/23/Cancelable-Reads-in-Go/
-
-		stdinLines := bufio.NewScanner(os.Stdin)
+		// IIRC i3 properly closes our stdin so we'll exit properly, but we cannot rely on that alone
+		// as we must be able to also exit if stdin is kept open. (os.Stdin.Close() has no effect)
+		stdinLines := bufio.NewScanner(newCancelableReader(ctx, os.Stdin))
 		for stdinLines.Scan() {
 			if stdinLines.Text() == "[" { // start of endless JSON object stream
 				continue // just ignore it
@@ -93,8 +98,8 @@ func logic(ctx context.Context) error {
 				log.Printf("unmapped click '%s'", click.Name)
 			}
 		}
-		log.Println("unblocked from scan")
-		if err := stdinLines.Err(); err != nil {
+		// IgnoreErrorIfCanceled because "context canceled" error is expected if we cancel
+		if err := IgnoreErrorIfCanceled(ctx, stdinLines.Err()); err != nil {
 			return err
 		}
 
@@ -307,4 +312,52 @@ type clickEvent struct {
 	Output_y   int      `json:"output_y"`
 	Width      int      `json:"width"`
 	Height     int      `json:"height"`
+}
+
+type cancelableReader struct {
+	ctx   context.Context
+	inner io.Reader // the reader we're actually reading from
+
+	// latest read result (int, error) pair
+	readBytes int
+	err       chan error
+}
+
+// Use when you have potentially blocking syscalls that you need to be able to cancel
+//
+// https://benjamincongdon.me/blog/2020/04/23/Cancelable-Reads-in-Go/
+//
+// concurrent Read() calls not allowed
+func newCancelableReader(ctx context.Context, inner io.Reader) io.Reader {
+	return &cancelableReader{
+		ctx:   ctx,
+		inner: inner,
+		err:   make(chan error, 1), // buffered as not to leak a goroutine on cancel'd read syscall eventual return
+	}
+}
+
+var _ io.Reader = (*cancelableReader)(nil)
+
+// concurrent Read() calls not allowed
+// do not Read() after the first canceled Read() returns error
+func (i *cancelableReader) Read(p []byte) (int, error) {
+	select { // check for cancellation status pre-read
+	case <-i.ctx.Done():
+		return 0, i.ctx.Err()
+	default:
+	}
+
+	// start a goroutine, so if we end up blocking on a read() syscall, we can still interrupt the Read()
+	go func() {
+		var err error
+		i.readBytes, err = i.inner.Read(p)
+		i.err <- err
+	}()
+
+	select {
+	case <-i.ctx.Done():
+		return 0, i.ctx.Err()
+	case err := <-i.err:
+		return i.readBytes, err
+	}
 }
