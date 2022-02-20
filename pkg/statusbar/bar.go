@@ -94,6 +94,10 @@ func logic(ctx context.Context, logger *log.Logger) error {
 				if err := startInteractiveShellCommandInDialog("htop", "htop"); err != nil {
 					log.Printf("%v", err) // has enough error context
 				}
+			case "memory":
+				if err := startInteractiveShellCommandInDialog("free", "free -m; read"); err != nil {
+					log.Printf("%v", err) // has enough error context
+				}
 			default:
 				log.Printf("unmapped click '%s'", click.Name)
 			}
