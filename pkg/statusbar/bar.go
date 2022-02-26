@@ -87,7 +87,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "disk_info":
-				if err := startInteractiveShellCommandInDialog("df", "df -h; read"); err != nil {
+				if err := startInteractiveShellCommandInDialog("lfs", "lfs; read"); err != nil {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "cpu_usage":
