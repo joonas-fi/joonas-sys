@@ -56,27 +56,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 
 	// i3 sends click events via our stdin
 	tasks.Start("clickevents", func(ctx context.Context) error {
-		// cancelable reader b/c if we get canceled by e.g. sibling task, we could end up blocking
-		// reading from our stdin (which click events from i3bar) and never exit, so in effect i3bar
-		// content will get stuck.
-		//
-		// IIRC i3 properly closes our stdin so we'll exit properly, but we cannot rely on that alone
-		// as we must be able to also exit if stdin is kept open. (os.Stdin.Close() has no effect)
-		stdinLines := bufio.NewScanner(newCancelableReader(ctx, os.Stdin))
-		for stdinLines.Scan() {
-			if stdinLines.Text() == "[" { // start of endless JSON object stream
-				continue // just ignore it
-			}
-
-			// each line is an ,{ ... } (expect first payload line)
-			// ",{ ... }" => "{ ... }"
-			object := strings.TrimPrefix(stdinLines.Text(), ",")
-
-			click := clickEvent{}
-			if err := jsonfile.UnmarshalDisallowUnknownFields(strings.NewReader(object), &click); err != nil {
-				return err
-			}
-
+		return parseClicksFromStdin(ctx, func(click clickEvent) {
 			switch click.Name {
 			case "inetbw":
 				if err := startInteractiveShellCommandInDialog("nethogs", "nethogs"); err != nil {
@@ -101,13 +81,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 			default:
 				log.Printf("unmapped click '%s'", click.Name)
 			}
-		}
-		// IgnoreErrorIfCanceled because "context canceled" error is expected if we cancel
-		if err := IgnoreErrorIfCanceled(ctx, stdinLines.Err()); err != nil {
-			return err
-		}
-
-		return nil
+		})
 	})
 
 	tasks.Start("i3status-augment", func(ctx context.Context) error {
@@ -298,6 +272,38 @@ func startInteractiveShellCommandInDialog(description string, shellCommand strin
 
 	if err := exec.Command("i3-sensible-terminal", "--class", windowClass, "--command", "/bin/bash", "-i", "-c", shellCommand).Start(); err != nil {
 		return fmt.Errorf("startInteractiveShellCommandInDialog(%s): %w", description, err)
+	}
+
+	return nil
+}
+
+func parseClicksFromStdin(ctx context.Context, handleClick func(event clickEvent)) error {
+	// cancelable reader b/c if we get canceled by e.g. sibling task, we could end up blocking
+	// reading from our stdin (which click events from i3bar) and never exit, so in effect i3bar
+	// content will get stuck.
+	//
+	// IIRC i3 properly closes our stdin so we'll exit properly, but we cannot rely on that alone
+	// as we must be able to also exit if stdin is kept open. (os.Stdin.Close() has no effect)
+	stdinLines := bufio.NewScanner(newCancelableReader(ctx, os.Stdin))
+	for stdinLines.Scan() {
+		if stdinLines.Text() == "[" { // start of endless JSON object stream
+			continue // just ignore it
+		}
+
+		// each line is an ,{ ... } (expect first payload line)
+		// ",{ ... }" => "{ ... }"
+		object := strings.TrimPrefix(stdinLines.Text(), ",")
+
+		click := clickEvent{}
+		if err := jsonfile.UnmarshalDisallowUnknownFields(strings.NewReader(object), &click); err != nil {
+			return err
+		}
+
+		handleClick(click)
+	}
+	// IgnoreErrorIfCanceled because "context canceled" error is expected if we cancel
+	if err := IgnoreErrorIfCanceled(ctx, stdinLines.Err()); err != nil {
+		return err
 	}
 
 	return nil
