@@ -83,7 +83,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "tztime":
-				if err := startInteractiveShellCommandInDialog("cal", "cal; read"); err != nil {
+				if err := startInteractiveShellCommandInDialog("cal", "jsys cal; read"); err != nil {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "disk_info":
