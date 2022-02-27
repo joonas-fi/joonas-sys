@@ -6,6 +6,7 @@ package statusbar
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -14,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/sync/taskrunner"
@@ -79,18 +81,25 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		})
 	})
 
-	tasks.Start("i3status-augment", func(ctx context.Context) error {
-		return augmentI3Status(ctx, func(items []barItem) ([]barItem, error) {
-			prepend := []barItem{}
+	requestRefreshCh := make(chan Void, 1)
 
-			// this is where we append our augmented modules
-			if item := latestNetworkItem.Load(); item != nil {
-				prepend = append(prepend, *item.(*barItem))
-			}
+	requestRefresh := func() {
+		select {
+		case requestRefreshCh <- Void{}:
+		default:
+		}
+	}
 
-			return append(prepend, items...), nil
+	itemsFromI3Status := make(chan []barItem, 1)
+
+	// in the future i3status integration will be optional
+	if true {
+		tasks.Start("i3status", func(ctx context.Context) error {
+			return getOutputFromI3Status(ctx, func(items []barItem) { // we'll get notified of new items
+				itemsFromI3Status <- items
+			})
 		})
-	})
+	}
 
 	// each time the routing table changes is is a natural time to refresh the link list and see which
 	// one of them is the internet-facing one.
@@ -122,7 +131,43 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		return networkPoller(ctx, internetFacingLinkIdxAtomic, latestNetworkItem)
 	})
 
-	return tasks.Wait()
+	latestItems := []barItem{}
+
+	doRefresh := func() {
+		prepend := []barItem{}
+
+		// this is where we append our augmented modules
+		if item := latestNetworkItem.Load(); item != nil {
+			prepend = append(prepend, *item.(*barItem))
+		}
+
+		items := append(prepend, latestItems...)
+
+		itemsJSON, err := json.Marshal(items)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("," + string(itemsJSON))
+	}
+
+	// send "headers" to i3bar. without these, the output we write in doRefresh() won't be valid
+	//
+	// add also empty items line, so we don't have to special case the first payload line we send
+	// (first payload line has to be "[...]", second ",[...]")
+	fmt.Println(`{ "version": 1, "click_events": true }` + "\n[\n[]")
+
+	for {
+		select {
+		case err := <-tasks.Done():
+			return err
+		case items := <-itemsFromI3Status:
+			latestItems = items
+			doRefresh()
+		case <-requestRefreshCh:
+			doRefresh()
+		}
+	}
 }
 
 func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Value, latestNetworkItem *atomic.Value) error {

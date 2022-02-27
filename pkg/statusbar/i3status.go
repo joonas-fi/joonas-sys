@@ -1,10 +1,11 @@
 package statusbar
 
+// Parses bar items from i3status, so we can benefit from implementations and only add what we need
+// on top ("compose").
+
 import (
 	"bufio"
 	"context"
-	"encoding/json"
-	"fmt"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -21,14 +22,17 @@ type barItem struct {
 	Color    string `json:"color,omitempty"` // example: "#FF0000"
 }
 
-func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barItem, error)) error {
+func getOutputFromI3Status(
+	ctx context.Context,
+	notifyOfNewItems func(items []barItem),
+) error {
 	i3status := exec.Command("i3status")
 	stdout, err := i3status.StdoutPipe()
 	if err != nil {
 		return err
 	}
 
-	augmentOneLine := func(line string, prefix string) error {
+	processOneLine := func(line string, prefix string) error {
 		items := []barItem{}
 
 		lineJson := strings.TrimPrefix(line, prefix)
@@ -36,17 +40,7 @@ func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barIt
 			return err
 		}
 
-		augmentedItems, err := augment(items)
-		if err != nil {
-			return err
-		}
-
-		augmentedJSON, err := json.Marshal(augmentedItems) // re-assemble
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(prefix + string(augmentedJSON))
+		notifyOfNewItems(items)
 
 		return nil
 	}
@@ -69,18 +63,17 @@ func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barIt
 			*/
 			switch {
 			case strings.HasPrefix(line, ",["): // subsequent item lines (the most common case)
-				if err := augmentOneLine(line, ","); err != nil {
+				if err := processOneLine(line, ","); err != nil {
 					panic(err)
 				}
 			case strings.HasPrefix(line, "[{"): // first item line. "[" not enough to discriminate
-				if err := augmentOneLine(line, ""); err != nil {
+				if err := processOneLine(line, ""); err != nil {
 					panic(err)
 				}
-			case line == `{"version":1}`:
-				// add that we support click events
-				fmt.Println(`{ "version": 1, "click_events": true }`)
-			default:
-				fmt.Println(line) // passthrough as -is
+			case line == `{"version":1}` || line == "[":
+				// no-op
+			default: //
+				panic("unrecognized line: " + line)
 			}
 		}
 
@@ -98,5 +91,6 @@ func augmentI3Status(ctx context.Context, augment func(items []barItem) ([]barIt
 		}
 	}()
 
+	// start '$ i3status' and also wait it to exit
 	return IgnoreErrorIfCanceled(ctx, i3status.Run())
 }
