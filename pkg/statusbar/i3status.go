@@ -14,14 +14,6 @@ import (
 	"github.com/function61/gokit/encoding/jsonfile"
 )
 
-type barItem struct {
-	Name     string `json:"name"`
-	Instance string `json:"instance"`
-	Markup   string `json:"markup"`
-	FullText string `json:"full_text"`
-	Color    string `json:"color,omitempty"` // example: "#FF0000"
-}
-
 func getOutputFromI3Status(
 	ctx context.Context,
 	notifyOfNewItems func(items []barItem),

@@ -6,7 +6,6 @@ package statusbar
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os/exec"
@@ -129,6 +128,8 @@ func logic(ctx context.Context, logger *log.Logger) error {
 
 	latestItems := []barItem{}
 
+	sender := newI3barProtocolSenderSendHeaders()
+
 	doRefresh := func() {
 		prepend := []barItem{}
 
@@ -139,19 +140,8 @@ func logic(ctx context.Context, logger *log.Logger) error {
 
 		items := append(prepend, latestItems...)
 
-		itemsJSON, err := json.Marshal(items)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println("," + string(itemsJSON))
+		sender.writeBarItems(items)
 	}
-
-	// send "headers" to i3bar. without these, the output we write in doRefresh() won't be valid
-	//
-	// add also empty items line, so we don't have to special case the first payload line we send
-	// (first payload line has to be "[...]", second ",[...]")
-	fmt.Println(`{ "version": 1, "click_events": true }` + "\n[\n[]")
 
 	for {
 		select {
