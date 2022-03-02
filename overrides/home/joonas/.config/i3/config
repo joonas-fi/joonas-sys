@@ -35,6 +35,11 @@ for_window [class="Qemu-system-x86_64"] floating enable
 for_window [class="Qemu-system-i386"] floating enable
 for_window [class="vlc"] floating enable
 
+# from i3bar we might launch "$ i3-sensible-terminal --class nethogs_9dc82_dialog --command /bin/bash -i -c 'nethogs'"
+# there is no way to pass window type dialog, so we'll hack with having a magic suffix.
+# https://faq.i3wm.org/question/2172/how-do-i-find-the-criteria-for-use-with-i3-config-commands-like-for_window-eg-to-force-splashscreens-and-dialogs-to-show-in-floating-mode.1.html
+for_window [instance=".*_9dc82_dialog"] floating enable
+
 # convenience "const"
 set $alt Mod1
 
