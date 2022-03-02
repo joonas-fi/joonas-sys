@@ -204,7 +204,14 @@ bar {
 	font pango:monospace 11
 
 	colors {
-		background #000000a0
+		# fully transparent
+		background #00000000
+
+		# <colorclass> <border> <background> <text>
+
+        active_workspace   #333333 #000000 #ffffff
+        focused_workspace   #00000000 #00000000 #ffffffff
+        inactive_workspace   #00000000 #00000000 #ffffff20
 	}
 
 	position top
