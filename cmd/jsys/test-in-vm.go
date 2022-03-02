@@ -153,7 +153,29 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		return "", err
 	}
 
-	_ = os.Chmod("apps/SYSTEM_nobackup/background.png", 0661)
+	for _, dirToCreate := range []string{
+		"apps/SYSTEM_nobackup/backlight-state",
+		"apps/SYSTEM_nobackup/rfkill-state",
+		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
+		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
+		"apps/docker/data_nobackup",
+		"apps/docker/config",
+		"apps/zoxide",
+		"apps/varasto",
+		"apps/Desktop",
+	} {
+		if err := os.MkdirAll(filepath.Join(tmpMountpointPersist, dirToCreate), 0777); err != nil {
+			return "", err
+		}
+
+		// umask doesn't give us 0777 from above (FIXME)
+		if err := os.Chmod(filepath.Join(tmpMountpointPersist, dirToCreate), 0777); err != nil {
+			return "", err
+		}
+	}
+
+	// FIXME: wrong path, wasn't needed because didn't work anyways?
+	// _ = os.Chmod("apps/SYSTEM_nobackup/background.png", 0661)
 
 	if err := os.MkdirAll(filepath.Join(tmpMountpointPersist, "apps/docker/data_nobackup"), 0770); err != nil {
 		return "", err
