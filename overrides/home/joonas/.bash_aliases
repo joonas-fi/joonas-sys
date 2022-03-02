@@ -18,6 +18,20 @@ alias less="less --chop-long-lines --raw-control-chars"
 
 alias pubkey="ssh-keygen -y -f ~/.ssh/id_rsa"
 
+lazygit() {
+	local repoName="$(basename "`pwd`")"
+	local terminalTitle="lazygit $repoName"
+
+	# set terminal title
+	printf "\e]2;$terminalTitle\a"
+
+	# to not invoke our alias again
+	/usr/bin/lazygit
+
+	# don't know better way to reset, empty or space doesn't seem to work
+	printf "\e]2;-\a"
+}
+
 tailscale() {
 	docker exec -it tailscale_tailscale_1 tailscale "$@"
 }
