@@ -62,12 +62,12 @@ bindsym $mod+Return exec alacritty
 bindsym $alt+F4 kill
 
 # start program launcher
-bindsym $mod+d exec "rofi -show combi -combi-modi run,ssh -disable-history -kb-row-select 'Tab' -kb-row-tab '' -kb-accept-entry '' -kb-accept-custom 'Return'"
+bindsym $mod+d exec "rofi -show combi"
 
 # bare Win key to open dmenu
 # (for some reason "bindsym --release $mod" doesn't work
 # https://github.com/i3/i3/issues/3024#issuecomment-343680572
-bindcode --release 133 exec "rofi -show combi -combi-modi run,ssh -disable-history -kb-row-select 'Tab' -kb-row-tab '' -kb-accept-entry '' -kb-accept-custom 'Return'"
+bindcode --release 133 exec "rofi -show combi"
 
 # make lone win key launch program selector
 # bindsym Super_L exec dmenu_run
