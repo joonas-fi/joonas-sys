@@ -16,6 +16,8 @@ alias .....="cd ../../../.."
 
 alias less="less --chop-long-lines --raw-control-chars"
 
+alias pubkey="ssh-keygen -y -f ~/.ssh/id_rsa"
+
 tailscale() {
 	docker exec -it tailscale_tailscale_1 tailscale "$@"
 }
