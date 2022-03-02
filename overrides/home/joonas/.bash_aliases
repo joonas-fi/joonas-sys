@@ -14,6 +14,9 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
 
+# mnemonic: "cd directory"
+alias cdd="cd \$(find . -type d | fzf)"
+
 alias less="less --chop-long-lines --raw-control-chars"
 
 alias pubkey="ssh-keygen -y -f ~/.ssh/id_rsa"
