@@ -6,15 +6,51 @@
 		"network": "fn61"
 	},
 	"project_quality": {
-		"files_that_should_exist": [
-			"README.md",
-			"LICENSE"
-		],
-		"files_that_should_not_exist": [
-			"docs/security.md"
+		"file_rules": [
+			{
+				"path": "README.md",
+				"must_exist": true,
+				"must_contain": [
+					"⬆️ For table of contents, click the above icon"
+				]
+			},
+			{
+				"path": "LICENSE",
+				"must_exist": true
+			},
+			{
+				"path": "docs/security.md",
+				"must_exist": false
+			},
+			{
+				"path": ".github/workflows/build.yml",
+				"must_contain": [
+					"in-ci-autodetect-settings",
+					"turbobob-latest-stable-linux-amd64"
+				],
+				"must_not_contain": [
+					"unfortunately there"
+				]
+			},
+			{
+				"path": "turbobob.json",
+				"must_not_contain": [
+					"creds_from_env"
+				]
+			},
+			{
+				"path": "bin/build.sh",
+				"must_not_contain": [
+					"standardBuildProcess"
+				]
+			},
+			{
+				"path": ".golangci.yml",
+				"must_exist": false
+			}
 		],
 		"builder_uses_expect": {
-			"docker://fn61/buildkit-golang": "docker://fn61/buildkit-golang:20210912_1048_2f1d31cd"
+			"docker://fn61/buildkit-golang": "docker://fn61/buildkit-golang:20220115_1318_71191646"
 		}
 	},
 	"code_editor":  {"cmd": ["subl", "--new-window", "$PROJECT_ROOT"]},
