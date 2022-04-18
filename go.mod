@@ -13,6 +13,7 @@ require (
 	github.com/godbus/dbus/v5 v5.0.5
 	github.com/joonas-fi/rsync v0.0.0-20210902091922-303efd623903
 	github.com/mattn/go-runewidth v0.0.10
+	github.com/noamt/go-cldr v1.0.0
 	github.com/pkg/xattr v0.4.4
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/procfs v0.0.8

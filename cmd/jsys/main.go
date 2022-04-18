@@ -32,6 +32,7 @@ func main() {
 	app.AddCommand(infoEntrypoint())
 	app.AddCommand(sshConfigGeneratorEntrypoint())
 	app.AddCommand(statusbar.Entrypoint())
+	app.AddCommand(calendarEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
