@@ -309,6 +309,10 @@ func runIfNotAlreadyCompleted(step *Step, run func() error) error {
 }
 
 func buildSysBuilderImage(ctx context.Context, verbose bool) error {
+	// this can take a long time if Docker doesn't already have this cached,
+	// better tell the user we're doing something
+	log.Println("buildSysBuilderImage starting")
+
 	dockerBuild := exec.CommandContext(ctx,
 		"docker",
 		"build",
