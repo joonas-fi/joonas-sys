@@ -1,0 +1,9 @@
+{
+	"notes": [
+		"reason for this file: Git only tracks +x bit, but some of the files in overrides/ dir need exact uid/gid ownership or permission bits",
+		"it is an error for a file/dir mentioned in this file to not exist"
+	],
+
+	"objects": [
+	]
+}

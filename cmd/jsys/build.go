@@ -10,10 +10,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/joonas-fi/joonas-sys/pkg/logtee"
 	"github.com/spf13/cobra"
@@ -218,6 +220,60 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		}
 
 		nextStep <- Void{}
+	}
+
+	// finishing steps in Go
+	if err := fixObjectPermissions(); err != nil {
+		return fmt.Errorf("fixObjectPermissions: %w", err)
+	}
+
+	return nil
+}
+
+func fixObjectPermissions() error {
+	permsFile := struct {
+		Notes   []string `json:"notes"`
+		Objects []struct {
+			Path   string  `json:"path"`
+			UidGid *int    `json:"uid&gid"`
+			Perms  *string `json:"perms"` // string because JSON doesn't support octal notation
+		} `json:"objects"`
+	}{}
+	if err := jsonfile.ReadDisallowUnknownFields("perms-for-overrides.json", &permsFile); err != nil {
+		return err
+	}
+
+	for _, object := range permsFile.Objects {
+		objectPath := filepath.Join(treeLocation, object.Path)
+
+		exists, err := osutil.Exists(objectPath)
+		if err != nil {
+			return err
+		}
+
+		// it should be an error if file does not exist, because that means that:
+		// a) something is broken
+		// b) we have an outdated rule, and as such it should be removed
+		if !exists {
+			return fmt.Errorf("object '%s' does not exist", object.Path)
+		}
+
+		if uidGid := object.UidGid; uidGid != nil {
+			if err := os.Chown(objectPath, *uidGid, *uidGid); err != nil {
+				return err
+			}
+		}
+
+		if perms := object.Perms; perms != nil {
+			mode, err := strconv.ParseInt(*perms, 8, 64) // 8 = parse octal
+			if err != nil {
+				return err
+			}
+
+			if err := os.Chmod(objectPath, os.FileMode(mode)); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
