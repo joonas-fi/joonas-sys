@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"strconv"
@@ -33,7 +35,9 @@ type localeDefinition struct {
    27 28
 */
 func calendarEntrypoint() *cobra.Command {
-	return &cobra.Command{
+	interactive := false
+
+	cmd := &cobra.Command{
 		Use:   "cal [month-number | year]",
 		Short: "Displays a calendar",
 		Args:  cobra.MaximumNArgs(1),
@@ -60,11 +64,26 @@ func calendarEntrypoint() *cobra.Command {
 
 					return calendarPrint(now, "January 2006", *locale, false, os.Stdout)
 				default:
-					return calendarPrint(time.Now(), "January 2006", *locale, true, os.Stdout)
+					now := time.Now()
+
+					if interactive {
+						return calendarNavigateInteractive(now, func(ts time.Time) error { // called many times
+							// only do when for the *now* month
+							highlightCurrentDay := ts.Equal(now)
+
+							return calendarPrint(ts, "January 2006", *locale, highlightCurrentDay, os.Stdout)
+						})
+					}
+
+					return calendarPrint(now, "January 2006", *locale, true, os.Stdout)
 				}
 			}())
 		},
 	}
+
+	cmd.Flags().BoolVarP(&interactive, "interactive", "i", interactive, "Navigate months with keyboard")
+
+	return cmd
 }
 
 func calendarPrint(
@@ -285,5 +304,41 @@ func sliceItemMaybe(arr []string, i int) string {
 		return arr[i]
 	} else {
 		return ""
+	}
+}
+
+func calendarNavigateInteractive(now time.Time, render func(time.Time) error) error {
+	monthOffset := 0 // mutated with keyboard input
+
+	keyReader := bufio.NewReader(os.Stdin)
+
+	for {
+		nowPlusMonthOffset := now.AddDate(0, monthOffset, 0)
+
+		if err := render(nowPlusMonthOffset); err != nil {
+			return err
+		}
+
+		// FIXME: really janky keyboard input implementation.
+		//        improve: https://stackoverflow.com/questions/40159137/golang-reading-from-stdin-how-to-detect-special-keys-enter-backspace-etc
+
+		key, err := keyReader.ReadString('\n')
+		switch err {
+		case io.EOF: // ctrl + d
+			return nil
+		case nil:
+			// no-op
+		default:
+			return err
+		}
+
+		switch fmt.Sprintf("%x", key) {
+		case "1b5b440a": // left
+			monthOffset--
+		case "1b5b430a": // right
+			monthOffset++
+		default:
+			log.Printf("unknown sequence: %x", key)
+		}
 	}
 }
