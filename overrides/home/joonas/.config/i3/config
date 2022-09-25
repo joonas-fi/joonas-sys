@@ -242,6 +242,7 @@ bindsym Shift+XF86HomePage exec sensible-browser --incognito
 # start file manager (different computers have different keys available)
 bindsym XF86Mail exec thunar
 bindsym XF86Search exec thunar
+bindsym XF86Explorer exec thunar # for some reason XF86MyComputer is different? https://wiki.linuxquestions.org/wiki/XF86_keyboard_symbols
 
 bindsym XF86Calculator exec i3-sensible-terminal --command /usr/bin/password.sh
 
