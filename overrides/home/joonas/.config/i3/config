@@ -243,7 +243,7 @@ bindsym Shift+XF86HomePage exec sensible-browser --incognito
 bindsym XF86Mail exec thunar
 bindsym XF86Search exec thunar
 
-bindsym XF86Calculator exec alacritty --command lf ~/Desktop/Salasanoja
+bindsym XF86Calculator exec i3-sensible-terminal --command /usr/bin/password.sh
 
 bindsym XF86MonBrightnessUp exec jsys backlight screen increase
 bindsym XF86MonBrightnessDown exec jsys backlight screen decrease
