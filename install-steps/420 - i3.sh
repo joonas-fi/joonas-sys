@@ -9,8 +9,12 @@ source common.sh
 # status bar for i3. recommended would install dzen2 and i3-wm
 # apt install --no-install-recommends -y i3status
 
-# i3-gaps (a fork of i3 with gaps support) exists in speed-ricer repo
-add-apt-repository -y ppa:kgilmer/speed-ricer
+# i3-gaps (a fork of i3 with gaps support) exists only as PPA
+add-apt-repository -y ppa:regolith-linux/release
+
+# a horrible hack to get packages for older release (b/c there are no packages for current release)
+echo "deb https://ppa.launchpadcontent.net/regolith-linux/release/ubuntu impish main" > /etc/apt/sources.list.d/regolith-linux-ubuntu-release-jammy.list
+apt update
 
 # recommended would install dunst.
 # suckless-tools = dmenu (used for workspace renaming)
