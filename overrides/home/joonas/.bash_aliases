@@ -186,3 +186,7 @@ uuidgen() {
 cmatrix() {
 	docker run --rm -it --net=none joonas/cmatrix "$@"
 }
+
+telnet() {
+	docker run --rm -it joonas/telnet "$@"
+}
