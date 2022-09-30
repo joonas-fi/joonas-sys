@@ -106,6 +106,10 @@ hollywood() {
 	docker run --rm -it --net=none bcbcarl/hollywood "$@"
 }
 
+asciiquarium() {
+	docker run --rm -it --net=none danielkraic/asciiquarium "$@"
+}
+
 radeontop() {
 	docker run --rm -it --net=none --privileged joonas/radeontop "$@"
 }
