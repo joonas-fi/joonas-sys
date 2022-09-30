@@ -24,6 +24,9 @@ usermod -a -G systemd-journal "$username"
 # add as sudoer
 gpasswd --add "$username" sudo
 
+# allow reading raw events & grabbing devinput
+usermod -a -G input "$username"
+
 # do not require re-auth when invoking "$ sudo ..."
 echo "$username ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/$username" \
 	&& chmod 440 "/etc/sudoers.d/$username"
