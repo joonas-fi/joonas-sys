@@ -39,6 +39,10 @@ tailscale() {
 	docker exec -it tailscale_tailscale_1 tailscale "$@"
 }
 
+alpine() {
+	docker run --rm -it --network=host alpine "$@"
+}
+
 exiftool() {
 	docker run --rm --net=none -v "$(pwd):/workspace" joonas/exiftool "$@"
 }
