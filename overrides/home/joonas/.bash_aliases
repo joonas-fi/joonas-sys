@@ -175,6 +175,10 @@ lshw() {
 	docker run --rm -it --net=host --privileged joonas/lshw "$@"
 }
 
+sqlite() {
+	docker run --rm -it --net=none -v "$(pwd):/workspace" --workdir=/workspace joonas/sqlite "$@"
+}
+
 uuidgen() {
 	docker run --rm -it --net=none joonas/uuidgen "$@"
 }
