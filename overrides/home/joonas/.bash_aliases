@@ -190,3 +190,7 @@ cmatrix() {
 telnet() {
 	docker run --rm -it joonas/telnet "$@"
 }
+
+mapscii() {
+	docker run --rm -it joonas/telnet mapscii.me
+}
