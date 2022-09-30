@@ -6,10 +6,10 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"sync/atomic"
 	"time"
 
+	. "github.com/function61/gokit/builtin"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
@@ -20,7 +20,22 @@ func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Valu
 	var statsPrev *netlink.LinkStatistics
 
 	pollOnce := func() error {
-		internetFacingLink, err := netlink.LinkByIndex(internetFacingLinkIdxAtomic.Load().(int))
+		storeInetbwBarItem := func(fullText string) {
+			latestNetworkItem.Store(&barItem{
+				Name: "inetbw",
+				// Instance: internetFacingLinkName,
+				Instance: "",
+				Markup:   "none",
+				FullText: fullText,
+			})
+		}
+
+		internetFacingLinkIdx := internetFacingLinkIdxAtomic.Load().(int)
+		if internetFacingLinkIdx == -1 { // no default route
+			storeInetbwBarItem("Offline")
+			return nil
+		}
+		internetFacingLink, err := netlink.LinkByIndex(internetFacingLinkIdx)
 		if err != nil {
 			return err
 		}
@@ -44,13 +59,7 @@ func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Valu
 			}
 		}()
 
-		latestNetworkItem.Store(&barItem{
-			Name: "inetbw",
-			// Instance: internetFacingLinkName,
-			Instance: "",
-			Markup:   "none",
-			FullText: largestOfRxOrTx,
-		})
+		storeInetbwBarItem(largestOfRxOrTx)
 
 		statsPrev = &statsNow
 
@@ -116,6 +125,7 @@ func toFixedWidthKiloBytesOrMegaBytes(size int) string {
 
 // find the link where the default route points to.
 // this is usually the internet-facing link.
+// index is -1 if no default route
 func getDefaultLinkIndex() (int, error) {
 	routes, err := netlink.RouteList(nil, unix.AF_INET)
 	if err != nil {
@@ -130,7 +140,7 @@ func getDefaultLinkIndex() (int, error) {
 	}
 
 	if len(defaultRoutes) < 1 {
-		return 0, os.ErrNotExist
+		return -1, nil
 	}
 
 	return defaultRoutes[0].LinkIndex, nil
@@ -140,7 +150,7 @@ func getDefaultLinkIndex() (int, error) {
 func storeDefaultLinkIndex(to *atomic.Value) error {
 	defaultLinkIndex, err := getDefaultLinkIndex()
 	if err != nil {
-		return err
+		return ErrorWrap("storeDefaultLinkIndex", err)
 	}
 
 	to.Store(defaultLinkIndex)
