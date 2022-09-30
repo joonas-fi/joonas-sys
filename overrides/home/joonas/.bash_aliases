@@ -182,3 +182,7 @@ sqlite() {
 uuidgen() {
 	docker run --rm -it --net=none joonas/uuidgen "$@"
 }
+
+cmatrix() {
+	docker run --rm -it --net=none joonas/cmatrix "$@"
+}
