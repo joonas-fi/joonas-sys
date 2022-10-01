@@ -236,8 +236,8 @@ bindsym XF86AudioPrev exec --no-startup-id hautomo-client playerctl previous
 
 # workaround for some browsers like Brave that don't support configuring new tab page
 # (because they want to extract maximum money from users)
-bindsym XF86HomePage exec sensible-browser --new-window https://home.fn61.net/
-bindsym Shift+XF86HomePage exec sensible-browser --incognito
+bindsym XF86HomePage exec com.brave.Browser --new-window https://home.fn61.net/
+bindsym Shift+XF86HomePage exec com.brave.Browser --incognito
 
 # start file manager (different computers have different keys available)
 bindsym XF86Mail exec thunar
@@ -255,9 +255,8 @@ bindsym $mod+space exec jsys backlight keyboard cycle
 # shift+print => ask what to do ("custom", so you select between window/fullscreen etc.)
 # super+print => screen recorder (video as gif/mp4/...)
 
-bindsym Print exec flameshot gui # region selector
-bindsym Shift+Print exec flameshot launcher # select between fullscreen and region
-bindsym $mod+Print exec peek
+bindsym Print exec org.flameshot.Flameshot gui # region selector
+bindsym $mod+Print exec com.uploadedlobster.peek
 
 gaps inner 15
 
