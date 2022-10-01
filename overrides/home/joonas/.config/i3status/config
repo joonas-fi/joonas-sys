@@ -59,7 +59,10 @@ cpu_usage {
 }
 
 cpu_temperature 0 {
-        format = "🌡 %degrees °C"
+        # only show when above threshold
+        format = ""
+        max_threshold = 60
+        format_above_threshold = "🌡 %degrees °C"
         path = "/dev/cpu_temp"
 }
 
