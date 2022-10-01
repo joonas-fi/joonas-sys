@@ -40,7 +40,7 @@ tailscale() {
 }
 
 alpine() {
-	docker run --rm -it --network=host alpine "$@"
+	docker run --rm -it --network=host -v "$(pwd):/workspace" --workdir /workspace alpine "$@"
 }
 
 exiftool() {
