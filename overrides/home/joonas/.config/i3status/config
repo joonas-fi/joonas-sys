@@ -18,12 +18,6 @@ order += "cpu_usage"
 order += "cpu_temperature 0"
 order += "tztime local"
 
-ethernet enp3s0 {
-        format_up = "🖧 %ip"
-        # format_up = "🖧 %ip (%speed)"
-        format_down = "🖧 down"
-}
-
 battery 0 {
         format = "%status %percentage %remaining"
         format_down = ""
@@ -73,8 +67,4 @@ memory {
 
 disk "/" {
         format = "💽 %avail"
-}
-
-read_file uptime {
-        path = "/proc/uptime"
 }
