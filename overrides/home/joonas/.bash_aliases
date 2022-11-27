@@ -5,6 +5,9 @@ eval "$(starship init bash)"
 # zoxide integration
 eval "$(zoxide init bash)"
 
+# McFly integration
+eval "$(mcfly init bash)"
+
 # make "$ cd project" equivalent to "$ cd ~/work/project"
 # must NOT be exported, see https://bosker.wordpress.com/2012/02/12/bash-scripters-beware-of-the-cdpath/
 CDPATH=.:~/work/
