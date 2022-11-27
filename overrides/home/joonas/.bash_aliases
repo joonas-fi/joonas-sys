@@ -130,7 +130,7 @@ stress-ng() {
 }
 
 netstat() {
-	docker run --rm -it --net=host alpine netstat "$@"
+	docker run --rm -t --net=host alpine netstat "$@"
 }
 
 arp() {
