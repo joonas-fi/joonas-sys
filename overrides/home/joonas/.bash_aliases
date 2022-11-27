@@ -145,6 +145,10 @@ file() {
 	docker run --rm -it --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/file "$@"
 }
 
+rpm2cpio() {
+	docker run --rm -t --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/rpm2cpio "$@"
+}
+
 smartctl() {
 	docker run --rm -it --net=none --privileged joonas/smartmontools "$@"
 }
@@ -196,4 +200,12 @@ telnet() {
 
 mapscii() {
 	docker run --rm -it joonas/telnet mapscii.me
+}
+
+cowsay() {
+        docker run --rm -it --net=none joonas/cowsay "$@"
+}
+
+tokei() {
+	docker run --rm -it -v "$(pwd):/workspace" joonas/tokei "$@"
 }
