@@ -126,12 +126,20 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		return networkPoller(ctx, internetFacingLinkIdxAtomic, latestNetworkItem)
 	})
 
+	tasks.Start("micmonitor", func(ctx context.Context) error {
+		return micMonitorTask(ctx, requestRefresh)
+	})
+
 	latestItems := []barItem{}
 
 	sender := newI3barProtocolSenderSendHeaders()
 
 	doRefresh := func() {
 		prepend := []barItem{}
+
+		if item := getPossibleMicRecordingItem(); item != nil {
+			prepend = append(prepend, *item)
+		}
 
 		// this is where we append our augmented modules
 		if item := latestNetworkItem.Load(); item != nil {
