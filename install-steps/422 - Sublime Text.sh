@@ -5,6 +5,7 @@ source common.sh
 
 # Text editor
 
+# Sublime Text on Flatpak is many years old, seems unmaintained.
 
 # instructions from https://www.sublimetext.com/docs/3/linux_repositories.html
 
