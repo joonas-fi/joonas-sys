@@ -206,6 +206,10 @@ cowsay() {
         docker run --rm -it --net=none joonas/cowsay "$@"
 }
 
+doge() {
+        docker run --rm -it --net=none joonas/doge "$@"
+}
+
 tokei() {
 	docker run --rm -it -v "$(pwd):/workspace" joonas/tokei "$@"
 }
