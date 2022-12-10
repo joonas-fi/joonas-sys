@@ -15,11 +15,13 @@ source common.sh
 # - fonts-noto-color-emoji to get colored emojis for i3 workspace symbols
 # - gvfs-backends = Samba working in thunar
 # - gvfs-fuse = GVFS files to work in non-GIO (= POSIX) programs
+# - xdg-utils = xdg-mime (for setting default programs for file types)
 DEBIAN_FRONTEND=noninteractive apt install -y \
 	xfce4 \
 	xfce4-screensaver \
 	xfce4-notifyd \
 	lightdm \
+	xdg-utils \
 	slick-greeter \
 	gvfs-backends \
 	gvfs-fuse \
