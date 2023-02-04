@@ -5,6 +5,7 @@
 	],
 
 	"objects": [
-		{"path": "/etc/doas.conf", "uid&gid": 0, "perms": "0600" }
+		{"path": "/etc/doas.conf", "uid&gid": 0, "perms": "0600" },
+		{"path": "/var/lib", "uid&gid": 0, "perms": "0755" }
 	]
 }
