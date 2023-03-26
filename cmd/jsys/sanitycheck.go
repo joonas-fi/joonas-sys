@@ -35,6 +35,7 @@ func sanityCheck(ctx context.Context) error {
 		"/persist/apps/docker/data_nobackup",
 		"/persist/apps/mcfly",
 		"/persist/apps/git config", // usually symlink to Varasto, sometimes may be local "fork" (custom Git author for client work on client laptop)
+		"/persist/swapfile",
 		"/dev/cpu_temp",
 	}
 

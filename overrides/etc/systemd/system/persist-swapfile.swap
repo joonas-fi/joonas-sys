@@ -1,0 +1,9 @@
+[Unit]
+Description=Turn on swap
+
+[Swap]
+What=/persist/swapfile
+
+[Install]
+WantedBy=multi-user.target
+
