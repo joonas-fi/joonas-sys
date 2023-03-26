@@ -1,0 +1,16 @@
+# flatpak doesn't support ~/.var/app (= flatpak app instance -specific data) being
+# a symlink (some apps work, some don't), so we need a bind mount for it:
+# - https://www.reddit.com/r/flatpak/comments/fx49xk/how_to_move_var/
+# - https://github.com/flatpak/flatpak/issues/1519
+# - "I suspect that apps that have the --persist=. permission will break. For example, Steam is one of them."
+# - https://discourse.flathub.org/t/how-to-store-var-on-a-different-hard-disk/2395/5
+
+[Mount]
+What=/persist/apps/flatpak-appdata
+Where=/home/joonas/.var/app
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target
+
