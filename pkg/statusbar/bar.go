@@ -67,7 +67,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "memory":
-				if err := startInteractiveShellCommandInDialog("free", "free -m; read"); err != nil {
+				if err := startInteractiveShellCommandInDialog("free", "free --mega --human; read"); err != nil {
 					log.Printf("%v", err) // has enough error context
 				}
 			default:
