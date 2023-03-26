@@ -55,7 +55,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "tztime":
-				if err := startInteractiveShellCommandInDialog("cal", "jsys cal --interactive"); err != nil {
+				if err := startInteractiveShellCommandInDialog("cal", "jsys cal --interactive --weeknumbers"); err != nil {
 					log.Printf("%v", err) // has enough error context
 				}
 			case "disk_info":

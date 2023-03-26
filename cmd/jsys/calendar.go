@@ -24,18 +24,20 @@ type localeDefinition struct {
 	firstDayOfWeek time.Weekday
 }
 
-/* Creates a calendar like this:
+/*
+Creates a calendar like this:
 
-      February 2022
-   Su Mo Tu We Th Fr Sa
-          1  2  3  4  5
-    6  7  8  9 10 11 12
-   13 14 15 16 17 18 19
-   20 21 22 23 24 25 26
-   27 28
+	   February 2022
+	Su Mo Tu We Th Fr Sa
+	       1  2  3  4  5
+	 6  7  8  9 10 11 12
+	13 14 15 16 17 18 19
+	20 21 22 23 24 25 26
+	27 28
 */
 func calendarEntrypoint() *cobra.Command {
 	interactive := false
+	weekNumbers := false
 
 	cmd := &cobra.Command{
 		Use:   "cal [month-number | year]",
@@ -55,14 +57,14 @@ func calendarEntrypoint() *cobra.Command {
 						return err
 					}
 
-					return calendarPrintYear(year, *locale, os.Stdout)
+					return calendarPrintYear(year, *locale, os.Stdout, weekNumbers)
 				case len(args) == 1: // custom month (probably different than the running one)
 					now, err := time.Parse("2006-01", args[0])
 					if err != nil {
 						return err
 					}
 
-					return calendarPrint(now, "January 2006", *locale, false, os.Stdout)
+					return calendarPrint(now, "January 2006", *locale, false, os.Stdout, weekNumbers)
 				default:
 					now := time.Now()
 
@@ -71,17 +73,18 @@ func calendarEntrypoint() *cobra.Command {
 							// only do when for the *now* month
 							highlightCurrentDay := ts.Equal(now)
 
-							return calendarPrint(ts, "January 2006", *locale, highlightCurrentDay, os.Stdout)
+							return calendarPrint(ts, "January 2006", *locale, highlightCurrentDay, os.Stdout, weekNumbers)
 						})
 					}
 
-					return calendarPrint(now, "January 2006", *locale, true, os.Stdout)
+					return calendarPrint(now, "January 2006", *locale, true, os.Stdout, weekNumbers)
 				}
 			}())
 		},
 	}
 
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", interactive, "Navigate months with keyboard")
+	cmd.Flags().BoolVarP(&weekNumbers, "weeknumbers", "w", weekNumbers, "Print week numbers")
 
 	return cmd
 }
@@ -92,6 +95,7 @@ func calendarPrint(
 	locale localeDefinition,
 	highlightCurrentDay bool,
 	output io.Writer,
+	weekNumbers bool,
 ) error {
 	// which calendar month to print
 	month := firstOfMonth(today).Month()
@@ -100,14 +104,22 @@ func calendarPrint(
 	cal.Style = tableStyleWithoutBorder()
 	cal.AddTitle(today.Format(monthTitleFormat))
 	wkd := makeWeekdays(locale)
-	cal.AddHeaders(wkd[0], wkd[1], wkd[2], wkd[3], wkd[4], wkd[5], wkd[6]) // not using wkd... b/c API is ...interface{}
+	if weekNumbers {
+		cal.AddHeaders(wkd[0], wkd[1], wkd[2], wkd[3], wkd[4], wkd[5], wkd[6], " ", "") // not using wkd... b/c API is ...interface{}
+	} else {
+		cal.AddHeaders(wkd[0], wkd[1], wkd[2], wkd[3], wkd[4], wkd[5], wkd[6]) // not using wkd... b/c API is ...interface{}
+	}
 
 	// represents:
-	//   mo tu we th fr sa su
-	weekdayCells := make([]string, 7)
+	//   mo tu we th fr sa su   [weekday]
+	weekdayCells := make([]string, 7+1)
 
 	addWeekRow := func() {
-		cal.AddRow(weekdayCells[0], weekdayCells[1], weekdayCells[2], weekdayCells[3], weekdayCells[4], weekdayCells[5], weekdayCells[6])
+		if weekNumbers {
+			cal.AddRow(weekdayCells[0], weekdayCells[1], weekdayCells[2], weekdayCells[3], weekdayCells[4], weekdayCells[5], weekdayCells[6], "", weekdayCells[7])
+		} else {
+			cal.AddRow(weekdayCells[0], weekdayCells[1], weekdayCells[2], weekdayCells[3], weekdayCells[4], weekdayCells[5], weekdayCells[6])
+		}
 	}
 
 	currentDate := firstOfMonth(today) // start from day 1 of the month
@@ -118,10 +130,12 @@ func calendarPrint(
 
 	for currentDate.Month() == month {
 		weekdayCells[cellIdx] = fmt.Sprintf("%2d", currentDate.Day())
+		_, weekday := currentDate.ISOWeek()
+		weekdayCells[7] = fmt.Sprintf("W%d", weekday)
 
 		if cellIdx == (7 - 1) { // move to next week (= new row)
 			addWeekRow()
-			weekdayCells = make([]string, 7)
+			weekdayCells = make([]string, 7+1)
 			cellIdx = 0
 		} else {
 			cellIdx++
@@ -147,7 +161,7 @@ func calendarPrint(
 }
 
 // prints each month of the year
-func calendarPrintYear(year int, locale localeDefinition, output io.Writer) error {
+func calendarPrintYear(year int, locale localeDefinition, output io.Writer, weekNumbers bool) error {
 	now := time.Now() // for hightlighting current day
 
 	cal := termtables.CreateTable()
@@ -170,6 +184,7 @@ func calendarPrintYear(year int, locale localeDefinition, output io.Writer) erro
 			locale,
 			highlightCurrentDay,
 			&output,
+			weekNumbers,
 		); err != nil {
 			panic(err)
 		}
