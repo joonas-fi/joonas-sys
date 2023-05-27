@@ -201,6 +201,10 @@ sqlite() {
 	docker run --rm -it --net=none -v "$(pwd):/workspace" --workdir=/workspace joonas/sqlite "$@"
 }
 
+pdfcpu() {
+	docker run --rm -it --net=none -v "$(pwd):/workspace" joonas/pdfcpu "$@"
+}
+
 uuidgen() {
 	docker run --rm -it --net=none joonas/uuidgen "$@"
 }
