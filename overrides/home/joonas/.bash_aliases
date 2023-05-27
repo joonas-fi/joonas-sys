@@ -165,7 +165,7 @@ smartctl() {
 }
 
 qrencode() {
-	docker run --rm -it --net=none joonas/qrencode "$@"
+	docker run --rm -t --net=none joonas/qrencode "$@"
 }
 
 figlet() {
