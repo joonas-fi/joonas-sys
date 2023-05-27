@@ -27,6 +27,14 @@ alias pubkey="ssh-keygen -y -f ~/.ssh/id_rsa"
 # horizontal rule
 alias hr="jsys hr"
 
+# when mapping full host FS to inside container like under previx /host/... we can't set workdir
+# necessarily as-is (because absolute symlinks like /etc/foo.conf are not resolvable from different
+# perspective as it would need to be /host/etc/foo.conf now), but instead evaluate symlinks as workaround.
+_pwd_symlinksresolved() {
+	# like "$ pwd", but with symlinks evaluated to their final destination
+	readlink --canonicalize-existing .
+}
+
 lazygit() {
 	local repoName="$(basename "`pwd`")"
 	local terminalTitle="lazygit $repoName"
@@ -145,11 +153,11 @@ iperf() {
 }
 
 file() {
-	docker run --rm -it --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/file "$@"
+	docker run --rm -it --net=none -v "/:/host:ro" --workdir="/host$(_pwd_symlinksresolved)" joonas/file "$@"
 }
 
 rpm2cpio() {
-	docker run --rm -t --net=none -v "/:/host:ro" --workdir="/host$(pwd)" joonas/rpm2cpio "$@"
+	docker run --rm -t --net=none -v "/:/host:ro" --workdir="/host$(_pwd_symlinksresolved)" joonas/rpm2cpio "$@"
 }
 
 smartctl() {
@@ -164,7 +172,7 @@ ncdu() {
 	# need to pass locale for non-ASCII chars to work
 
 	if [[ $# -eq 0 ]]; then
-		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "$(pwd)"
+		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "/host$(_pwd_symlinksresolved)"
 	else
 		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "$@"
 	fi
