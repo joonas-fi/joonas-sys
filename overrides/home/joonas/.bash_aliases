@@ -24,6 +24,9 @@ alias less="less --chop-long-lines --raw-control-chars"
 
 alias pubkey="ssh-keygen -y -f ~/.ssh/id_rsa"
 
+# horizontal rule
+alias hr="jsys hr"
+
 lazygit() {
 	local repoName="$(basename "`pwd`")"
 	local terminalTitle="lazygit $repoName"
