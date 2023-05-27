@@ -85,7 +85,8 @@ func espFormatInternal(ctx context.Context, sys systemSpec) error {
 }
 
 // pretty much summed up by:
-//   $ cp -r misc/esp/ /tmp/jsys-esp
+//
+//	$ cp -r misc/esp/ /tmp/jsys-esp
 func copyEspTemplateToEsp(ctx context.Context) error {
 	// can't use -a flag because it would try to copy permissions, which FAT doesn't support
 	rsync := exec.CommandContext(ctx, "rsync",
