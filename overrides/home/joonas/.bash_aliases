@@ -230,5 +230,5 @@ doge() {
 }
 
 tokei() {
-	docker run --rm -it -v "$(pwd):/workspace" joonas/tokei "$@"
+	docker run --rm -it -v --net=none "$(pwd):/workspace" joonas/tokei "$@"
 }
