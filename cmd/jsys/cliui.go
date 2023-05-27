@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	. "github.com/function61/gokit/builtin"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 )
-
-type Void struct{}
 
 type process struct {
 	phases         []*Step

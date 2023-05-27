@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/joonas-fi/joonas-sys/pkg/logtee"
