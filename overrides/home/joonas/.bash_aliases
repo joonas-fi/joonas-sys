@@ -168,6 +168,10 @@ qrencode() {
 	docker run --rm -it --net=none joonas/qrencode "$@"
 }
 
+figlet() {
+	docker run --rm -i --net=none joonas/figlet "$@"
+}
+
 ncdu() {
 	# need to pass locale for non-ASCII chars to work
 
