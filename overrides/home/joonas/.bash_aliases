@@ -248,3 +248,8 @@ pipes.sh() {
 go-life() {
 	docker run --rm -it --net=none joonas/go-life "$@"
 }
+
+lolcat() {
+	# --force -> Force color even when stdout is not a tty
+	docker run --rm -i --net=none joonas/lolcat --force "$@"
+}
