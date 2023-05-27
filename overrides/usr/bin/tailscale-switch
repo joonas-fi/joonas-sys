@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+
+nickname=$(echo -e "home\nssrc\nunikie" | fzf);
+
+exec tailscale switch "$nickname"
+
