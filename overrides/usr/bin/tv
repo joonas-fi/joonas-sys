@@ -1,0 +1,5 @@
+#!/bin/bash -eu
+
+# without --no-playlist-autostart VLC would start playing the first playlist item
+org.videolan.VLC --no-playlist-autostart http://home.fn61.net:9981/playlist/channels
+
