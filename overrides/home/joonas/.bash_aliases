@@ -232,3 +232,7 @@ doge() {
 tokei() {
 	docker run --rm -it -v --net=none "$(pwd):/workspace" joonas/tokei "$@"
 }
+
+neofetch() {
+	docker run --rm -it --network=host -v /etc/os-release:/etc/os-release:ro joonas/neofetch "$@"
+}
