@@ -244,3 +244,7 @@ yulelog() {
 pipes.sh() {
 	docker run --rm -it --net=none joonas/pipes.sh "$@"
 }
+
+go-life() {
+	docker run --rm -it --net=none joonas/go-life "$@"
+}
