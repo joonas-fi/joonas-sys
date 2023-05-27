@@ -20,17 +20,19 @@ import (
 
 func diffEntrypoint() *cobra.Command {
 	maxDiffFilesFind := 100
+	ignoreDeleted := false
 
 	cmd := &cobra.Command{
 		Use:   "diff",
 		Short: "Goes through diffs to see if there's any interesting state we forgot to persist",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(diff(maxDiffFilesFind))
+			osutil.ExitIfError(diff(maxDiffFilesFind, ignoreDeleted))
 		},
 	}
 
 	cmd.Flags().IntVarP(&maxDiffFilesFind, "max-diff-files-find", "m", maxDiffFilesFind, "Maximum # of diff files to report before bailing out")
+	cmd.Flags().BoolVarP(&ignoreDeleted, "ignore-deleted", "", ignoreDeleted, "Ignore deleted files")
 
 	return cmd
 }
@@ -66,10 +68,13 @@ func revertEntrypoint() *cobra.Command {
 type diffReport struct {
 	output          io.Writer
 	totallyNewFiles int
+	ignoreDeleted   bool
 }
 
 func (d *diffReport) Deleted(entryPathCanonical string) {
-	fmt.Fprintf(d.output, " D %s\n", entryPathCanonical)
+	if !d.ignoreDeleted {
+		fmt.Fprintf(d.output, " D %s\n", entryPathCanonical)
+	}
 }
 
 func (d *diffReport) TotallyNewFile(entryPathCanonical string) {
@@ -109,7 +114,7 @@ func dirBasesForRunningSystemId() (*dirBases, error) {
 }
 
 // TODO: show file content diffs
-func diff(maxDiffFilesFind int) error {
+func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 	if err := requireRoot(); err != nil {
 		return err
 	}
@@ -129,7 +134,7 @@ func diff(maxDiffFilesFind int) error {
 		return fmt.Errorf("diff dir doesn't exist: %s: %w", dirs.diff, err)
 	}
 
-	report := &diffReport{output: os.Stdout}
+	report := &diffReport{output: os.Stdout, ignoreDeleted: ignoreDeleted}
 
 	var walkOneDir func(string, string) error
 	walkOneDir = func(dirCanonical string, dirDiff string) error {
