@@ -236,3 +236,7 @@ tokei() {
 neofetch() {
 	docker run --rm -it --network=host -v /etc/os-release:/etc/os-release:ro joonas/neofetch "$@"
 }
+
+yulelog() {
+	docker run --rm -it --net=none joonas/yulelog "$@"
+}
