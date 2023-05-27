@@ -222,11 +222,11 @@ mapscii() {
 }
 
 cowsay() {
-        docker run --rm -it --net=none joonas/cowsay "$@"
+	docker run --rm -it --net=none joonas/cowsay "$@"
 }
 
 doge() {
-        docker run --rm -it --net=none joonas/doge "$@"
+	docker run --rm -it --net=none joonas/doge "$@"
 }
 
 tokei() {
