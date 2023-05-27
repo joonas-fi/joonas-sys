@@ -240,3 +240,7 @@ neofetch() {
 yulelog() {
 	docker run --rm -it --net=none joonas/yulelog "$@"
 }
+
+pipes.sh() {
+	docker run --rm -it --net=none joonas/pipes.sh "$@"
+}
