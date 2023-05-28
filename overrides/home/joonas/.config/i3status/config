@@ -45,11 +45,11 @@ wireless _first_ {
 }
 
 tztime local {
-        format = "📅 %d.%m ⏰ %H:%M"
+        format = "󰸗 %d.%m 󰅐 %H:%M"
 }
 
 cpu_usage {
-        format = "💪 %usage"
+        format = "󰍛 %usage"
 }
 
 cpu_temperature 0 {
@@ -61,10 +61,10 @@ cpu_temperature 0 {
 }
 
 memory {
-        format = "🍫 %available"
+        format = "󰑭 %available"
         threshold_degraded = "10%"
 }
 
 disk "/" {
-        format = "💽 %avail"
+        format = "󰋊 %avail"
 }
