@@ -22,4 +22,10 @@ if [ ! -L /etc/docker ]; then # not a symlink?
 	rm -rf /etc/docker
 fi
 
+# install buildx (CLI plugin that extends the docker command with the full support of the features provided by BuildKit)
+
+curl -fsSL -o /usr/bin/docker-buildx https://function61.com/app-dl/api/github.com/docker/buildx/latest_releases_asset/buildx-%2A.linux-amd64
+chmod +x /usr/bin/docker-buildx
+
+
 #versioncommand: docker --version
