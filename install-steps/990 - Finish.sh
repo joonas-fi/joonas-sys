@@ -11,3 +11,6 @@ source common.sh
 # run this again so they get back.
 
 rsync -v --exclude=.empty_dir -a "${repodir}/overrides/" /
+
+# in case we put in place some fonts
+fc-cache -f -v
