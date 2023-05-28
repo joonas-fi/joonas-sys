@@ -158,7 +158,7 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		"apps/SYSTEM_nobackup/rfkill-state",
 		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
 		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
-		"apps/docker/data_nobackup",
+		"apps/docker/data",
 		"apps/docker/config",
 		"apps/zoxide",
 		"apps/varasto",
@@ -177,7 +177,7 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 	// FIXME: wrong path, wasn't needed because didn't work anyways?
 	// _ = os.Chmod("apps/SYSTEM_nobackup/background.png", 0661)
 
-	if err := os.MkdirAll(filepath.Join(tmpMountpointPersist, "apps/docker/data_nobackup"), 0770); err != nil {
+	if err := os.Symlink("/etc/docker-cli-plugins/", filepath.Join(tmpMountpointPersist, "apps/docker/cli-plugins")); err != nil {
 		return "", err
 	}
 
