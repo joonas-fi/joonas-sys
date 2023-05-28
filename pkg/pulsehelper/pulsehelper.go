@@ -1,6 +1,7 @@
 package pulsehelper
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
@@ -30,13 +31,13 @@ func (p *Helper) Work(work func(client *pulseaudio.Client) error) error {
 		// was restarted (and thus connection break), the module needs to be loaded again.
 		isPulseAudioDBusModuleLoaded, err := pulseaudio.ModuleIsLoaded()
 		if err != nil {
-			return err
+			return fmt.Errorf("pulseaudio.ModuleIsLoaded: %w", err)
 		}
 
 		// PulseAudio by default might not have DBus control module loaded, and thus we need to ask it explicitly to load
 		if !isPulseAudioDBusModuleLoaded {
 			if err := pulseaudio.LoadModule(); err != nil {
-				return err
+				return fmt.Errorf("pulseaudio.LoadModule: %w", err)
 			}
 		}
 

@@ -3,6 +3,7 @@ package statusbar
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync/atomic"
 	"time"
 
@@ -55,8 +56,10 @@ func micMonitorTask(ctx context.Context, requestRefresh func()) error {
 
 	return pulseHelper.Work(func(pulse *pulseaudio.Client) error {
 		sourceToListen, initialMute, err := micMonitorTaskResolveSource(target, pulse)
-		if err != nil {
-			return err
+		if err != nil { // TODO: handle more gracefully?
+			log.Printf("micMonitorTaskResolveSource: %v", err)
+			<-ctx.Done()
+			return nil
 		}
 
 		mutedStatus <- initialMute
