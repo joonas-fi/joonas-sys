@@ -130,6 +130,10 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		return micMonitorTask(ctx, requestRefresh)
 	})
 
+	tasks.Start("powermonitor", func(ctx context.Context) error {
+		return powerMonitor(ctx, requestRefresh)
+	})
+
 	latestItems := []barItem{}
 
 	sender := newI3barProtocolSenderSendHeaders()
@@ -138,6 +142,10 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		prepend := []barItem{}
 
 		if item := getPossibleMicRecordingItem(); item != nil {
+			prepend = append(prepend, *item)
+		}
+
+		if item := getPossibleBatteryLowItem(); item != nil {
 			prepend = append(prepend, *item)
 		}
 
