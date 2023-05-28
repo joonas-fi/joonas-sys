@@ -33,6 +33,9 @@ func sanityCheck(ctx context.Context) error {
 		"/persist/apps/ssh-server/ssh_host_ed25519_key",
 		"/persist/apps/varasto",
 		"/persist/apps/docker/data_nobackup",
+		"/persist/apps/docker/config",
+		"/persist/apps/docker/data",
+		"/persist/apps/docker/cli-plugins", // needs to be a symlink to /etc/docker-cli-plugins
 		"/persist/apps/mcfly",
 		"/persist/apps/git config", // usually symlink to Varasto, sometimes may be local "fork" (custom Git author for client work on client laptop)
 		"/persist/swapfile",
