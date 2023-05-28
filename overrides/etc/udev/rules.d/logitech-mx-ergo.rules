@@ -1,0 +1,5 @@
+# logitech MX ergo
+# we cannot use the symlink facility for anything that doesn't end up in /dev?
+ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{manufacturer}=="Logitech", ATTR{model_name}=="MX Ergo Multi-Device Trackball ", RUN+="/bin/sh -c 'ln -s /sys$devpath /dev/powermonitor-logitech-mx-ergo'"
+# ACTION=="add|change",    SUBSYSTEM=="power_supply", ATTR{manufacturer}=="Logitech", ATTR{model_name}=="MX Ergo Multi-Device Trackball ", RUN+="/bin/sh -c 'ln -s /sys$devpath /dev/powermonitor-logitech-mx-ergo'"
+ACTION=="remove", SUBSYSTEM=="power_supply", ATTR{manufacturer}=="Logitech", ATTR{model_name}=="MX Ergo Multi-Device Trackball ",                 RUN+="/bin/sh -c 'rm /dev/powermonitor-logitech-mx-ergo'"
