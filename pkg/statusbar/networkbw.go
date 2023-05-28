@@ -14,6 +14,18 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+type upDownIconThemeIcons struct {
+	download string
+	upload   string
+}
+
+var (
+	upDownIconThemeEmoji    = upDownIconThemeIcons{"⬇️", "⬆️"}
+	upDownIconThemeNerdFont = upDownIconThemeIcons{"󰁆", "󰁞"} // https://www.nerdfonts.com/
+
+	upDownIconTheme = upDownIconThemeNerdFont
+)
+
 func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Value, latestNetworkItem *atomic.Value) error {
 	refreshRate := 5 * time.Second
 
@@ -53,9 +65,9 @@ func networkPoller(ctx context.Context, internetFacingLinkIdxAtomic *atomic.Valu
 
 		largestOfRxOrTx := func() string {
 			if statsPerSecond.RxBytes >= statsPerSecond.TxBytes {
-				return fmt.Sprintf("⬇️ %s/s", toFixedWidthKiloBytesOrMegaBytes(int(statsPerSecond.RxBytes)))
+				return fmt.Sprintf("%s %s/s", upDownIconTheme.download, toFixedWidthKiloBytesOrMegaBytes(int(statsPerSecond.RxBytes)))
 			} else {
-				return fmt.Sprintf("⬆️ %s/s", toFixedWidthKiloBytesOrMegaBytes(int(statsPerSecond.TxBytes)))
+				return fmt.Sprintf("%s %s/s", upDownIconTheme.upload, toFixedWidthKiloBytesOrMegaBytes(int(statsPerSecond.TxBytes)))
 			}
 		}()
 
