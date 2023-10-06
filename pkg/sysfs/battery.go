@@ -89,7 +89,7 @@ func (p PowerSupplyDir) ReadUevent() (*PowerSupplyItem, error) {
 // "Coarse representation of battery capacity." - https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
 type sysfsClassPowerCapacityLevel string
 
-// Unknown < Critical < Low < Normal < High < Full
+// Unknown < Critical < Low < Normal < High < Full < Charging
 // ________________________  <-- below normal
 func (s sysfsClassPowerCapacityLevel) IsBelowNormal() bool {
 	switch s {
@@ -107,12 +107,13 @@ const (
 	sysfsClassPowerCapacityLevelNormal   sysfsClassPowerCapacityLevel = "Normal"
 	sysfsClassPowerCapacityLevelHigh     sysfsClassPowerCapacityLevel = "High"
 	sysfsClassPowerCapacityLevelFull     sysfsClassPowerCapacityLevel = "Full"
+	sysfsClassPowerCapacityLevelCharging sysfsClassPowerCapacityLevel = "Charging"
 )
 
 func parseSysfsClassPowerCapacityLevel(raw string) (sysfsClassPowerCapacityLevel, error) {
 	cast := sysfsClassPowerCapacityLevel(raw)
 	switch cast {
-	case sysfsClassPowerCapacityLevelUnknown, sysfsClassPowerCapacityLevelCritical, sysfsClassPowerCapacityLevelLow, sysfsClassPowerCapacityLevelNormal, sysfsClassPowerCapacityLevelHigh, sysfsClassPowerCapacityLevelFull:
+	case sysfsClassPowerCapacityLevelUnknown, sysfsClassPowerCapacityLevelCritical, sysfsClassPowerCapacityLevelLow, sysfsClassPowerCapacityLevelNormal, sysfsClassPowerCapacityLevelHigh, sysfsClassPowerCapacityLevelFull, sysfsClassPowerCapacityLevelCharging:
 		return cast, nil
 	default:
 		return sysfsClassPowerCapacityLevelUnknown, fmt.Errorf("parseSysfsClassPowerCapacityLevel: unsupported value '%s'", raw)
