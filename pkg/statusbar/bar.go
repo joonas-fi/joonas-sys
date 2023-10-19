@@ -6,6 +6,7 @@ package statusbar
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -110,7 +111,11 @@ func logic(ctx context.Context, logger *log.Logger) error {
 			select {
 			case <-ctx.Done():
 				return nil
-			case <-routesUpdated:
+			case _, ok := <-routesUpdated:
+				if !ok {
+					return errors.New("routesUpdated channel closed, WTF") // this actually happens
+				}
+
 				log.Println("routes updated")
 
 				// update the internet facing link index atomic, so it will be picked up by
