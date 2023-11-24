@@ -104,7 +104,7 @@ killall() {
 }
 
 lspci() {
-	docker run --rm -it --net=none joonas/lspci "$@"
+	docker run --rm -it --net=none ghcr.io/r-xs-fi/lspci "$@"
 }
 
 fdisk() {
