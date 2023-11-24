@@ -95,6 +95,10 @@ nethogs() {
 	docker run --rm -it --net=host --pid=host --privileged joonas/nethogs "$@"
 }
 
+ethtool() {
+	docker run --rm -it --net=host ghcr.io/r-xs-fi/ethtool "$@"
+}
+
 pstree() {
 	docker run --rm -it --net=none --pid=host joonas/psmisc pstree "$@"
 }
