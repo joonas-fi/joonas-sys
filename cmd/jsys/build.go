@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,12 +19,10 @@ import (
 	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/joonas-fi/joonas-sys/pkg/logtee"
 	"github.com/spf13/cobra"
-)
-
-const (
-	treeLocation = "/mnt/j-os-inmem-staging"
 )
 
 type Step struct {
@@ -81,7 +80,7 @@ func buildWrapped(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI
 }
 
 func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) error {
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 
@@ -89,19 +88,19 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		return errors.New("illegal to combine --keep & --rm")
 	}
 
-	currentTreeExists, err := osutil.Exists(treeLocation)
+	currentTreeExists, err := osutil.Exists(common.BuildTreeLocation)
 	if err != nil {
 		return err
 	}
 
 	createRamdisk := func() error {
 		// create mount point
-		if err := os.MkdirAll(treeLocation, 0777); err != nil {
+		if err := os.MkdirAll(common.BuildTreeLocation, 0777); err != nil {
 			return fmt.Errorf("error making mount point: %w", err)
 		}
 
-		if err := syscall.Mount("", treeLocation, "tmpfs", 0, "rw,size=20G"); err != nil {
-			return fmt.Errorf("failed mounting RAM disk for %s: %w", treeLocation, err)
+		if err := syscall.Mount("", common.BuildTreeLocation, "tmpfs", 0, "rw,size=20G"); err != nil {
+			return fmt.Errorf("failed mounting RAM disk for %s: %w", common.BuildTreeLocation, err)
 		}
 
 		return nil
@@ -112,7 +111,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		case keep:
 			// no-op
 		case rm:
-			if err := removeDirectoryChildren(treeLocation); err != nil {
+			if err := removeDirectoryChildren(common.BuildTreeLocation); err != nil {
 				return err
 			}
 
@@ -128,7 +127,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		}
 	}
 
-	mounted, err := isMounted(treeLocation)
+	mounted, err := isMounted(common.BuildTreeLocation)
 	if err != nil {
 		return err
 	}
@@ -202,7 +201,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 				"docker",
 				"run",
 				"--rm",
-				"--volume", fmt.Sprintf("%s:%s:slave", treeLocation, treeLocation),
+				"--volume", fmt.Sprintf("%s:%s:slave", common.BuildTreeLocation, common.BuildTreeLocation),
 				"--volume", fmt.Sprintf("%s:/repo", workdir), // shouldn't use ADD in Dockerfile, because we have secrets.env
 				"--privileged",
 				"--shm-size=1024M", // if default 64M, Nvidia driver installation (via DKMS) fails due to compiler segfault (I guess by null pointer dereference by not checking SHM alloc success?)
@@ -257,7 +256,7 @@ func fixObjectPermissions() error {
 	}
 
 	for _, object := range permsFile.Objects {
-		objectPath := filepath.Join(treeLocation, object.Path)
+		objectPath := filepath.Join(common.BuildTreeLocation, object.Path)
 
 		exists, err := osutil.Exists(objectPath)
 		if err != nil {
@@ -294,7 +293,7 @@ func fixObjectPermissions() error {
 
 func runIfNotAlreadyCompleted(step *Step, run func() error) error {
 	// inside systree: "/tmp/.joonas-os-install/<step>.flag-completed"
-	completedFlag := filepath.Join(treeLocation, "tmp", ".joonas-os-install", fmt.Sprintf("%s.flag-completed", step.ScriptName))
+	completedFlag := filepath.Join(common.BuildTreeLocation, "tmp", ".joonas-os-install", fmt.Sprintf("%s.flag-completed", step.ScriptName))
 
 	if err := os.MkdirAll(filepath.Dir(completedFlag), 0777); err != nil {
 		return err

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/spf13/cobra"
 )
 
@@ -17,16 +17,12 @@ func restartPrepareEntrypoint() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(func(sysLabel string) error {
-				if err := requireRoot(); err != nil {
+				if _, err := userutil.RequireRoot(); err != nil {
 					return err
 				}
 
 				system, err := getSystemNotCurrent(sysLabel)
 				if err != nil {
-					return err
-				}
-
-				if err := os.WriteFile("/persist/apps/SYSTEM_nobackup/active_sys_id", []byte(sysLabel), 0770); err != nil {
 					return err
 				}
 
@@ -71,7 +67,7 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(func() error {
-				if err := requireRoot(); err != nil {
+				if _, err := userutil.RequireRoot(); err != nil {
 					return err
 				}
 

@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	rulesDir = "/persist/apps/SYSTEM_nobackup/lowdiskspace-check-rules"
+	rulesDir = "/sysroot/apps/SYSTEM/lowdiskspace-check-rules"
 )
 
 func lowDiskSpaceCheckerEntrypoint() *cobra.Command {

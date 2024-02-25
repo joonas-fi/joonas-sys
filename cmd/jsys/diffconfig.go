@@ -99,7 +99,8 @@ func loadConf() (*config, []string, []string, error) {
 	return conf, allowedChangeSubtrees, allowedChangeFiles, nil
 }
 
-var runningSystemIdFromKernelCommandLineRe = regexp.MustCompile("root=LABEL=([^ ]+)")
+// "sysid=v1" => "v1"
+var runningSystemIdFromKernelCommandLineRe = regexp.MustCompile("sysid=([^ ]+)")
 
 func readRunningSystemId() (string, error) {
 	kernelCommandLine, err := ioutil.ReadFile("/proc/cmdline")

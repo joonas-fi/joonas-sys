@@ -4,42 +4,50 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 )
 
 var (
 	systemRegistry = []systemSpec{
-		{
-			label: "system_a",
+		/*
+			{
+				label: "system_a",
 
-			systemDevice: "/dev/disk/by-label/system_a",
+				systemDevice: "/dev/disk/by-label/system_a",
 
-			espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
-		},
-		{
-			label: "system_b",
+				espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
+			},
+			{
+				label: "system_b",
 
-			systemDevice: "/dev/disk/by-label/system_b",
+				systemDevice: "/dev/disk/by-label/system_b",
 
-			espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
-		},
-		{
-			label:       "in-ram",
-			labelActual: "system_a", // if testing in a VM, we internally refer to it as system_a
+				espDevice: "_AUTODETECT_", // or hardcode something like /dev/disk/by-label/ESP
+			},
+			{
+				label:       "in-ram",
+				labelActual: "system_a", // if testing in a VM, we internally refer to it as system_a
 
-			systemDevice:                    "/dev/shm/joonas-os-ram-image",
-			systemDeviceCanCreateIfNotFound: true, // only because RAM-backed disk (not messing with any persistent media)
+				systemDevice:                    "/dev/shm/joonas-os-ram-image",
+				systemDeviceCanCreateIfNotFound: true, // only because RAM-backed disk (not messing with any persistent media)
 
-			espDevice:                    "/dev/disk/by-label/ESP-VM", // RAM-backed disk for a VM
-			espDeviceCanCreateIfNotFound: true,                        // only because RAM-backed disk (not messing with any persistent media)
-		},
+				espDevice:                    "/dev/disk/by-label/ESP-VM", // RAM-backed disk for a VM
+				espDeviceCanCreateIfNotFound: true,                        // only because RAM-backed disk (not messing with any persistent media)
+			},
+		*/
 	}
 )
 
 type systemSpec struct {
-	label       string
-	labelActual string
+	label string
+	/*
+		labelActual string
+	*/
 
 	systemDevice                    string
 	systemDeviceCanCreateIfNotFound bool
@@ -49,15 +57,11 @@ type systemSpec struct {
 }
 
 func (s systemSpec) lieAboutLabelIfVirtualMachine() string {
-	if s.labelActual != "" {
-		return s.labelActual
-	} else {
-		return s.label
-	}
+	panic("outdated code")
 }
 
 func (s systemSpec) diffPath() string {
-	return fmt.Sprintf("/persist/apps/SYSTEM_nobackup/%s-diff", s.label)
+	return filepath.Join(filelocations.Sysroot.App(common.AppOSDiff), s.label)
 }
 
 func (s systemSpec) espDeviceLabel() (string, error) {

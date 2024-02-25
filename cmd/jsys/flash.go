@@ -9,10 +9,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
+	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/prometheus/procfs"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -24,6 +31,9 @@ const (
 
 func flashEntrypoint() *cobra.Command {
 	ignoreWarnings := false
+	remote := false
+	autoRemove := false
+	ostreeRef := ""
 
 	cmd := &cobra.Command{
 		Use:   "flash [system]",
@@ -33,18 +43,68 @@ func flashEntrypoint() *cobra.Command {
 			osutil.ExitIfError(flash(
 				osutil.CancelOnInterruptOrTerminate(nil),
 				args[0],
-				ignoreWarnings))
+				ostreeRef,
+				ignoreWarnings,
+				remote,
+				autoRemove))
 		},
 	}
 
 	cmd.Flags().BoolVarP(&ignoreWarnings, "ignore-warnings", "", ignoreWarnings, "Ignore any warnings")
+	cmd.Flags().BoolVarP(&remote, "remote", "", remote, "Use known remote (192.168.1.104)")
+	cmd.Flags().BoolVarP(&autoRemove, "auto-remove", "", autoRemove, "Automatically remove previous diff")
+	cmd.Flags().StringVarP(&ostreeRef, "ostree", "", ostreeRef, "OSTree ref to checkout")
+
+	cmd.AddCommand(flashEFIEntrypoint())
 
 	return cmd
 }
 
-func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
-	if err := requireRoot(); err != nil {
+func flashEFIEntrypoint() *cobra.Command {
+	return &cobra.Command{
+		Use:   "efi",
+		Short: "Flash EFI boot partition with target sysid",
+		Args:  cobra.NoArgs,
+		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+			sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
+			if err != nil {
+				return err
+			}
+
+			idx, _, err := promptUISelect("Version", lo.Map(sysrootCheckouts, func(x ostree.CheckoutWithLabel, _ int) string { return x.Label }))
+			if err != nil {
+				return err
+			}
+
+			sysID := sysrootCheckouts[idx].Dir
+
+			cmdline := fmt.Sprintf("sysid=%s rw", sysID)
+
+			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
+			vol2 := "--volume=/tmp/ukifybuild:/workspace"
+
+			ukifyBuild := exec.CommandContext(ctx, "docker", "run", "--rm", "-t", vol1, vol2, "ukify", "build",
+				"--linux=/sysroot/boot/vmlinuz",
+				"--initrd=/sysroot/boot/initrd.img",
+				"--cmdline="+cmdline,
+				"--output=/workspace/BOOTx64.efi")
+			if output, err := ukifyBuild.CombinedOutput(); err != nil {
+				return fmt.Errorf("ukify: %w: %s", err, string(output))
+			}
+
+			return nil
+		}),
+	}
+}
+
+func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarnings bool, remote bool, autoRemove bool) error {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
+	}
+
+	if remote {
+		// dirty implementation
+		_ = os.Setenv("REMOTE", "rsync://192.168.1.104/")
 	}
 
 	system, err := func() (systemSpec, error) {
@@ -70,10 +130,18 @@ func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 		return err
 	}
 
-	if diffTreeExists && !ignoreWarnings {
-		return fmt.Errorf(
-			"safety: bailing out because diff tree exists!\n(safely do this first:) $ rm -rf %s",
-			system.diffPath())
+	if diffTreeExists {
+		if autoRemove {
+			if err := os.RemoveAll(system.diffPath()); err != nil {
+				return fmt.Errorf("automatic remove of diff: %w", err)
+			}
+		} else {
+			if !ignoreWarnings {
+				return fmt.Errorf(
+					"safety: bailing out because diff tree exists!\n(safely do this first:) $ rm -rf %s",
+					system.diffPath())
+			}
+		}
 	}
 
 	if !exists {
@@ -101,16 +169,30 @@ func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 		}
 	}()
 
-	copySystreeFrom := func() string {
-		if remote := os.Getenv("REMOTE"); remote != "" {
-			return remote + "jsys/"
-		} else {
-			return treeLocation + "/"
-		}
-	}()
+	if ostreeRef != "" {
+		checkout := exec.CommandContext(ctx, "ostree", "checkout", "--union", "--force-copy", ostreeRef, tmpMountpointSystem)
+		checkout.Stdout = os.Stdout
+		checkout.Stderr = os.Stderr
 
-	if err := copySystree(copySystreeFrom, system); err != nil {
-		return fmt.Errorf("copySystree: %w", err)
+		if err := checkout.Run(); err != nil {
+			return fmt.Errorf("ostree checkout: %w", err)
+		}
+	} else {
+		copySystreeFrom := func() string {
+			if remote := os.Getenv("REMOTE"); remote != "" {
+				if !strings.HasSuffix(remote, "/") { // made this accident once
+					panic("remote must end in slash")
+				}
+
+				return remote + "jsys/"
+			} else {
+				return common.BuildTreeLocation + "/"
+			}
+		}()
+
+		if err := copySystree(copySystreeFrom, system); err != nil {
+			return fmt.Errorf("copySystree: %w", err)
+		}
 	}
 
 	if system.espDeviceCanCreateIfNotFound {
@@ -139,6 +221,16 @@ func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
 
 	if err := copyKernelAndInitrdToEsp(system); err != nil {
 		return fmt.Errorf("copyKernelAndInitrdToEsp: %w", err)
+	}
+
+	syscall.Sync() // no return value
+
+	if sysLabel != "in-ram" { // no sense for in-ram flash
+		// pro-tip
+		fmt.Printf(
+			"flashing complete. to prepare boot into the new system:\n  $ %s restart-prepare %s\n",
+			os.Args[0],
+			sysLabel)
 	}
 
 	return nil
@@ -287,7 +379,7 @@ func isMounted(mountpoint string) (bool, error) {
 }
 
 func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
-	backgroundFromCurrentSystem := "/persist/apps/SYSTEM_nobackup/background.png"
+	backgroundFromCurrentSystem := filepath.Join(filelocations.Sysroot.App(common.AppSYSTEM), "background.png")
 
 	backgroundExists, err := osutil.Exists(backgroundFromCurrentSystem)
 	if err != nil {

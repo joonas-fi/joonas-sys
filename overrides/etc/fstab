@@ -1,7 +1,2 @@
 
-# All truly persistent data lives on a different partition
 LABEL=persist   /persist  ext4  errors=remount-ro 0 1
-
-# "_will_be_replaced_by_initramfs_script_" would be system_a/system_b etc but is replaced from
-# initramfs script because we primarily know only boot-time which system instance we're booting into
-LABEL=_will_be_replaced_by_initramfs_script_  /         ext4  errors=remount-ro 0 1
