@@ -60,7 +60,7 @@ func rsyncServerLegacy(ctx context.Context) error {
 	//   $ REMOTE=rsync://192.168.1.123/ ./jsys_linux-amd64 flash system_b
 
 	// reading some files in the systree require root access
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 

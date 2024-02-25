@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -59,14 +58,6 @@ func createEmptyFile(filename string) error {
 	}
 
 	return file.Close()
-}
-
-func requireRoot() error {
-	if os.Getuid() != 0 {
-		return errors.New("need root")
-	}
-
-	return nil
 }
 
 func removeDirectoryChildren(directory string) error {

@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/prometheus/procfs"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +44,7 @@ func flashEntrypoint() *cobra.Command {
 }
 
 func flash(ctx context.Context, sysLabel string, ignoreWarnings bool) error {
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 

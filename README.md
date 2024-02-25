@@ -42,6 +42,11 @@ Summary:
 
 ### Partitioning
 
+![](docs/system-files-layout.drawio.png)
+
+> [!WARNING]
+> From below this is outdated.
+
 Overview as a drawing:
 
 ![](docs/overview.png)

@@ -2,7 +2,7 @@
 Description=Turn on swap
 
 [Swap]
-What=/persist/swapfile
+What=/sysroot/apps/SYSTEM/swapfile
 
 [Install]
 WantedBy=multi-user.target

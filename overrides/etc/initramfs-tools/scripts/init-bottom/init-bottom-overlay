@@ -19,82 +19,29 @@ esac
 # exports "$rootmnt" etc.
 . /scripts/functions
 
+set -eu
+
 log_begin_msg "Setting up root overlay rootmnt=${rootmnt}"
 
-# it's important to realize we're NOT creating this tree under the actual root (which is temporarily
-# under "$rootmnt"). this is an in-memory tree inside the ramdisk
-mkdir -p /persist
-
-# search fs to use for the persist partition
-persistDev=`blkid --label=persist`
-
-if [ ! -z "${persistDev}" ]; then
-	# _checkfs_once "$persistDev" /persist >> /log.txt 2>&1 ||  \
-	mount "$persistDev" /persist || panic "failed mounting /persist"
-else
-	panic "partition with label=persist not found"
-fi
-
-# "\\EFI\systemb\vmlinuz root=LABEL=system_b ro initrd=\EFI\systemb\initrd.img" -> "system_b"
-# (busybox grep behaves differently than GNU grep, so we'll use "$ cut" instead of capture group)
-sysId="$(grep -oE 'root=LABEL=[^ ]+' /proc/cmdline | cut -d = -f 3)"
-
+#    "sysid=v1"
+# => "v1"
+sysId="$(grep -oE 'sysid=[^ ]+' /proc/cmdline | cut -d = -f 2)"
 if [ -z "$sysId" ]; then
 	panic "failed to resolve sysId"
 fi
 
-treeCurrentRom="/mnt/sys-current-rom"
-treeDiff="/persist/apps/SYSTEM_nobackup/${sysId}-diff"
-treeWork="/persist/apps/SYSTEM_nobackup/${sysId}-work"
+# it's important to realize we're NOT creating this tree under the actual root (which is temporarily
+# under "$rootmnt"). this is an in-memory tree inside the ramdisk
+mkdir -p /sysroot
 
-# make mount points for readonly root, diff and workdir. (these are persisted on the actual persisted partition)
-# usually these already exist, but let's be friendly to the user if she's starting from empty data partition
-mkdir -p \
-	"$treeCurrentRom" \
-	"$treeDiff" \
-	"$treeWork"
+# move real root
+mount --no-mtab -o move "$rootmnt" "/sysroot" || panic "failed mounting $treeSysroot"
 
-# user has requested to nuke the diff tree on next reboot (to get back to previously-good state)
-if [ -f "${treeDiff}/.delete_on_next_boot" ]; then
-	# can't rm dir/* because star doesn't match hidden files
-	rm -rf "$treeDiff"
-	mkdir -p "$treeDiff"
-fi
+mount -t overlay overlay -olowerdir="/sysroot/apps/OS-checkout/${sysId},upperdir=/sysroot/apps/OS-diff/${sysId},workdir=/sysroot/apps/OS-diff/${sysId}-work" /root
 
-activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
+mkdir -p /root/sysroot
 
-# verify that we're booting the intended system id.
-# it can be catastrophic if user accidentally boots the wrong one and continues working for a long time.
-if [ ! "$sysId" = "$activeSysId" ]; then
-	panic "activeSysId != sys ID you're booting now. edit /persist/apps/SYSTEM_nobackup/active_sys_id if you really want to boot $sysId"
-fi
-
-# make the readonly root (TODO: who makes it readonly?) available bypassing the overlayfs
-mount --no-mtab -o move "$rootmnt" "$treeCurrentRom" || panic "failed mounting $treeCurrentRom"
-
-# TODO: I think we now have two mounts for "$rootmnt", is that ok?
-mount -t overlay overlay \
-	"-olowerdir=${treeCurrentRom},upperdir=${treeDiff},workdir=${treeWork}" \
-	"$rootmnt" || panic "failed mounting / overlay"
-
-# /mnt/sys-current-rom -> /root/mnt/sys-current-rom
-mount --no-mtab -o move "$treeCurrentRom" "${rootmnt}${treeCurrentRom}" || panic "failed moving $treeCurrentRom"
-
-# now move the purely-in-RAM mount point under the actual root mount
-mkdir -p "${rootmnt}/persist" || panic "failed making /persist dir"
-
-# rbind means recursive
-mount --no-mtab -o rbind /persist "${rootmnt}/persist" || panic "failed binding in-RAM /persist to rootfs /persist"
-
-# root was like this:
-# 	/dev/sda / ext4  errors=remount-ro 0 1
-# make it look like this:
-# 	overlay / overlay rw,relative,lowerdir=/persist/sys-current-rom,upperdir=/persist/sys-a-diff,workdir=/persist/.sys-a-work 0 0
-
-# TODO: what's this do exactly? it's not just a backup, since it's used by AWK
-cp "${rootmnt}/etc/fstab" "${rootmnt}/etc/fstab.orig"
-
-awk '$2 != "/" {print $0}' "${rootmnt}/etc/fstab.orig" > "${rootmnt}/etc/fstab"
-awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> "${rootmnt}/etc/fstab"
+# expose real root to be accessible from overlaid filesystem
+mount --no-mtab -o rbind /sysroot /root/sysroot
 
 log_end_msg

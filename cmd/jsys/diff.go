@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/spf13/cobra"
@@ -124,7 +125,7 @@ func dirBasesForRunningSystemId() (*dirBases, error) {
 
 // TODO: show file content diffs
 func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 

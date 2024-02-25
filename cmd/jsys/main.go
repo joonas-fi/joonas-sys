@@ -8,6 +8,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/calendar"
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
+	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,7 @@ func main() {
 
 	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEntrypoint())
-	app.AddCommand(testInVmEntrypoint())
+	app.AddCommand(testInVMEntrypoint())
 	app.AddCommand(diffEntrypoint())
 	app.AddCommand(diffOneEntrypoint())
 	app.AddCommand(revertEntrypoint())
@@ -39,6 +40,7 @@ func main() {
 	app.AddCommand(calendar.Entrypoint())
 	app.AddCommand(tui.HREntrypoint())
 	app.AddCommand(debug.Entrypoint())
+	app.AddCommand(ostree.Entrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
