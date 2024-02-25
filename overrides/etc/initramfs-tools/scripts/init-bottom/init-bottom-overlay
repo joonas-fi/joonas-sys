@@ -23,45 +23,45 @@ log_begin_msg "Setting up root overlay rootmnt=${rootmnt}"
 
 # it's important to realize we're NOT creating this tree under the actual root (which is temporarily
 # under "$rootmnt"). this is an in-memory tree inside the ramdisk
-mkdir -p /persist
+# mkdir -p /persist
 
 # search fs to use for the persist partition
-persistDev=`blkid --label=persist`
+# the `PARRTYPE` corresponds to "Linux x86-64 root (/)"
+# spec: https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+# persistDev=`blkid --list-one --output=device --match-token=PARTLABEL="Linux x86-64 root (/)"`
+# this doesn't work for some reason:
+# persistDev=`blkid --list-one --output=device --match-token=PARTTYPE="4f68bce3-e8cd-4db1-96e7-fbcaf984b709"`
 
-if [ ! -z "${persistDev}" ]; then
-	# _checkfs_once "$persistDev" /persist >> /log.txt 2>&1 ||  \
-	mount "$persistDev" /persist || panic "failed mounting /persist"
-else
-	panic "partition with label=persist not found"
-fi
+# if [ ! -z "${persistDev}" ]; then
+# 	# _checkfs_once "$persistDev" /persist >> /log.txt 2>&1 ||  \
+# 	mount "$persistDev" /persist || panic "failed mounting /persist"
+# else
+# 	panic "partition with label=persist not found"
+# fi
 
 # "\\EFI\systemb\vmlinuz root=LABEL=system_b ro initrd=\EFI\systemb\initrd.img" -> "system_b"
 # (busybox grep behaves differently than GNU grep, so we'll use "$ cut" instead of capture group)
-sysId="$(grep -oE 'root=LABEL=[^ ]+' /proc/cmdline | cut -d = -f 3)"
+# sysId="$(grep -oE 'root=LABEL=[^ ]+' /proc/cmdline | cut -d = -f 3)"
+sysId="v1"
 
 if [ -z "$sysId" ]; then
 	panic "failed to resolve sysId"
 fi
 
-treeCurrentRom="/mnt/sys-current-rom"
-treeDiff="/persist/apps/SYSTEM_nobackup/${sysId}-diff"
-treeWork="/persist/apps/SYSTEM_nobackup/${sysId}-work"
+treeCheckout="${rootmnt}/apps/OS-checkout/${sysId}"
+treeSysroot="/sysroot"
+treeDiff="${rootmnt}/apps/OS-diff/${sysId}"
+treeWork="${rootmnt}/apps/OS-diff/${sysId}-work"
 
 # make mount points for readonly root, diff and workdir. (these are persisted on the actual persisted partition)
 # usually these already exist, but let's be friendly to the user if she's starting from empty data partition
 mkdir -p \
-	"$treeCurrentRom" \
+	"$treeSysroot" \
 	"$treeDiff" \
 	"$treeWork"
 
-# user has requested to nuke the diff tree on next reboot (to get back to previously-good state)
-if [ -f "${treeDiff}/.delete_on_next_boot" ]; then
-	# can't rm dir/* because star doesn't match hidden files
-	rm -rf "$treeDiff"
-	mkdir -p "$treeDiff"
-fi
-
-activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
+# activeSysId="$(cat /persist/apps/SYSTEM_nobackup/active_sys_id)"
+activeSysId="v1"
 
 # verify that we're booting the intended system id.
 # it can be catastrophic if user accidentally boots the wrong one and continues working for a long time.
@@ -70,21 +70,21 @@ if [ ! "$sysId" = "$activeSysId" ]; then
 fi
 
 # make the readonly root (TODO: who makes it readonly?) available bypassing the overlayfs
-mount --no-mtab -o move "$rootmnt" "$treeCurrentRom" || panic "failed mounting $treeCurrentRom"
+mount --no-mtab -o move "$rootmnt" "$treeSysroot" || panic "failed mounting $treeSysroot"
 
 # TODO: I think we now have two mounts for "$rootmnt", is that ok?
 mount -t overlay overlay \
-	"-olowerdir=${treeCurrentRom},upperdir=${treeDiff},workdir=${treeWork}" \
+	"-olowerdir=${treeCheckout},upperdir=${treeDiff},workdir=${treeWork}" \
 	"$rootmnt" || panic "failed mounting / overlay"
 
-# /mnt/sys-current-rom -> /root/mnt/sys-current-rom
-mount --no-mtab -o move "$treeCurrentRom" "${rootmnt}${treeCurrentRom}" || panic "failed moving $treeCurrentRom"
+# /sysroot -> /root/sysroot
+mount --no-mtab -o move "$treeSysroot" "${rootmnt}${treeSysroot}" || panic "failed moving $treeSysroot"
 
 # now move the purely-in-RAM mount point under the actual root mount
-mkdir -p "${rootmnt}/persist" || panic "failed making /persist dir"
+# mkdir -p "${rootmnt}/persist" || panic "failed making /persist dir"
 
 # rbind means recursive
-mount --no-mtab -o rbind /persist "${rootmnt}/persist" || panic "failed binding in-RAM /persist to rootfs /persist"
+# mount --no-mtab -o rbind /persist "${rootmnt}/persist" || panic "failed binding in-RAM /persist to rootfs /persist"
 
 # root was like this:
 # 	/dev/sda / ext4  errors=remount-ro 0 1
@@ -92,9 +92,9 @@ mount --no-mtab -o rbind /persist "${rootmnt}/persist" || panic "failed binding 
 # 	overlay / overlay rw,relative,lowerdir=/persist/sys-current-rom,upperdir=/persist/sys-a-diff,workdir=/persist/.sys-a-work 0 0
 
 # TODO: what's this do exactly? it's not just a backup, since it's used by AWK
-cp "${rootmnt}/etc/fstab" "${rootmnt}/etc/fstab.orig"
+# cp "${rootmnt}/etc/fstab" "${rootmnt}/etc/fstab.orig"
 
-awk '$2 != "/" {print $0}' "${rootmnt}/etc/fstab.orig" > "${rootmnt}/etc/fstab"
-awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> "${rootmnt}/etc/fstab"
+# awk '$2 != "/" {print $0}' "${rootmnt}/etc/fstab.orig" > "${rootmnt}/etc/fstab"
+# awk '$2 == "'${rootmnt}'" { $2 = "/" ; print $0}' /etc/mtab >> "${rootmnt}/etc/fstab"
 
 log_end_msg
