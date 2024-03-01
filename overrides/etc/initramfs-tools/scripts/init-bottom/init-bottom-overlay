@@ -19,7 +19,33 @@ esac
 # exports "$rootmnt" etc.
 . /scripts/functions
 
+set -eu
+
 log_begin_msg "Setting up root overlay rootmnt=${rootmnt}"
+
+#    "sysid=v1"
+# => "v1"
+sysId="$(grep -oE 'sysid=[^ ]+' /proc/cmdline | cut -d = -f 2)"
+if [ -z "$sysId" ]; then
+	panic "failed to resolve sysId"
+fi
+
+# in-ram mount point
+mkdir -p /sysroot
+
+# move real root
+mount --no-mtab -o move "$rootmnt" "/sysroot" || panic "failed mounting $treeSysroot"
+
+mount -t overlay overlay -olowerdir="/sysroot/apps/OS-checkout/${sysId},upperdir=/sysroot/apps/OS-diff/${sysId},workdir=/sysroot/apps/OS-diff/${sysId}-work" /root
+
+mkdir -p /root/sysroot
+
+# expose real root to be accessible from overlaid filesystem
+mount --no-mtab -o rbind /sysroot /root/sysroot
+
+log_end_msg
+
+exit 0
 
 # it's important to realize we're NOT creating this tree under the actual root (which is temporarily
 # under "$rootmnt"). this is an in-memory tree inside the ramdisk

@@ -4,7 +4,7 @@
 
 # TODO: --no-startup-id to dmenu-run ?
 
-exec --no-startup-id xwallpaper --zoom /persist/apps/SYSTEM_nobackup/background.png
+exec --no-startup-id xwallpaper --zoom /sysroot/apps/SYSTEM/background.png
 
 # when monitors get connected/disconnect, restore appropriate config
 exec --no-startup-id autorandr --change
@@ -89,7 +89,7 @@ bindcode --release 133 exec "rofi -show combi"
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 
 # change focus
-bindsym $mod+l exec i3lock -i /persist/apps/SYSTEM_nobackup/background.png
+bindsym $mod+l exec i3lock -i /sysroot/apps/SYSTEM/background.png
 
 # change focus with arrow keys
 bindsym $mod+Left focus left
