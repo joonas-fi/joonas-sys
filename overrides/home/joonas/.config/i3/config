@@ -258,6 +258,6 @@ bindsym $mod+space exec jsys backlight keyboard cycle
 bindsym Print exec org.flameshot.Flameshot gui # region selector
 bindsym $mod+Print exec com.uploadedlobster.peek
 
-gaps inner 15
+gaps inner 20
 
 smart_gaps on
