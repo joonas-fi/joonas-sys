@@ -1,7 +1,12 @@
 # CPU temp
+# creates stable symlink `/dev/cpu_temp` from which we always know we can read the CPU temperature
 
-# https://joonas-fi-blog.dev.fn61.net/2021/07/stable-device-path-for-linux-hwmon-interfaces/
+# https://joonas.fi/2021/07/stable-device-path-for-linux-hwmon-interfaces/
 # NOTE: we're banking on only one of these rules matching. if multiple match, the result is.. undefined?
+
+# AMD Ryzen 9 5900X (Matisse Device 24: Function 3)
+# temp3 is `Tccd1` (temp1 would be `Tctl`)
+ACTION=="add", SUBSYSTEM=="hwmon", ATTRS{vendor}=="0x1022", ATTRS{device}=="0x1443", RUN+="/bin/sh -c 'ln -s /sys$devpath/Ttemp3_input /dev/cpu_temp'"
 
 # AMD Ryzen 2400G (Raven/Raven2 Device 24: Function 3)
 ACTION=="add", SUBSYSTEM=="hwmon", ATTRS{vendor}=="0x1022", ATTRS{device}=="0x15eb", RUN+="/bin/sh -c 'ln -s /sys$devpath/temp1_input /dev/cpu_temp'"
