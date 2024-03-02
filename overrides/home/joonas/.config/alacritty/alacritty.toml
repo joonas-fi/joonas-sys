@@ -1,0 +1,67 @@
+[bell]
+animation = "EaseOutExpo"
+color = "#ffffff"
+duration = 1000
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.bright]
+black = "#777777"
+blue = "#295fcc"
+cyan = "#4ccce6"
+green = "#4ce64c"
+magenta = "#cc58cc"
+red = "#ff8787"
+white = "#ffffff"
+yellow = "#ded82c"
+
+[colors.normal]
+black = "#000000"
+blue = "#0039aa"
+cyan = "#1a92aa"
+green = "#44aa44"
+magenta = "#aa22aa"
+red = "#aa0000"
+white = "#aaaaaa"
+yellow = "#aa5500"
+
+[colors.primary]
+background = "#131926"
+foreground = "#c5c8c6"
+
+[cursor.style]
+blinking = "On"
+shape = "Underline"
+
+[env]
+# without this if local terminfo DB knows alacritty, it would use "alacritty". the trouble is
+# that SSH forwards the "TERM" ENV and if the remote host doesn't know about alacritty, we'd get
+# a broken terminal. this is the case for Raspbian currently.
+#   https://github.com/alacritty/alacritty/issues/2838#issuecomment-537414944
+TERM = "xterm-256color"
+
+[font]
+size = 7.0
+
+[[hints.enabled]]
+command = "xdg-open"
+post_processing = true
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-<>\"\\s{-}\\^⟨⟩`]+"
+
+[hints.enabled.mouse]
+enabled = true
+mods = "Control"
+
+[mouse]
+hide_when_typing = true
+
+[selection]
+save_to_clipboard = true
+
+[window]
+opacity = 0.9
+
+[window.padding]
+x = 5
+y = 5
