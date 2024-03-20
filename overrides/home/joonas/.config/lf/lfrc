@@ -1,8 +1,13 @@
 
+# show borders by default
 set drawbox
 
+# show hidden files by default
 set hidden
 
 # dot -> toggle hidden files
-map . set hidden!
+# map . set hidden!
+
+# (shows confirmation modal before delete)
+map d delete
 
