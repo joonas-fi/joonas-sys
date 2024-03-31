@@ -17,6 +17,7 @@ import (
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/function61/gokit/sync/taskrunner"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/samber/lo"
@@ -59,7 +60,7 @@ func testInVM(ctx context.Context, rescue bool) error {
 
 	checkout := filepath.Join(filelocations.Sysroot.CheckoutsDir(), sysrootCheckouts[idx].Dir)
 
-	sysVersion := sysrootCheckouts[idx].Dir
+	sysID := sysrootCheckouts[idx].Dir
 
 	// cannot be in /tmp because then our topology would be:
 	// host: overlayfs -> virtiofsd
@@ -69,11 +70,8 @@ func testInVM(ctx context.Context, rescue bool) error {
 	// VM's sysroot is actually encapsulated in our sysroot's app directory
 	vmSysroot := filelocations.WithRoot(filelocations.Sysroot.App("OS-test-in-VM"))
 
-	// using this as heuristic to see if `writeBoilerplateFiles()` has ben executed before
-	if checkoutDirExists := Must(osutil.Exists(vmSysroot.CheckoutsDir())); !checkoutDirExists {
-		if err := writeBoilerplateFiles(vmSysroot, sysVersion); err != nil {
-			return err
-		}
+	if err := writeBoilerplateFiles(vmSysroot, sysID); err != nil {
+		return err
 	}
 
 	if len(Must(os.ReadDir(vmSysroot.CheckoutsDir()))) == 0 { // no checkouts => not mounted
@@ -98,7 +96,7 @@ func testInVM(ctx context.Context, rescue bool) error {
 		return virtiofsd.Run()
 	})
 
-	kernelCmdline := []string{"rootfstype=virtiofs", "root=vroot", "sysid=" + sysVersion, "rw"}
+	kernelCmdline := []string{"rootfstype=virtiofs", "root=vroot", "sysid=" + sysID, "rw"}
 	if rescue {
 		kernelCmdline = append(kernelCmdline, "systemd.unit=rescue.target")
 	}
@@ -200,6 +198,11 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		return withErr(err)
 	}
 
+	// we need this to comply with `App()` "factory" to just add the `apps/` prefix (not `/sysroot/apps/`)
+	dummyRoot := filelocations.WithRoot("/")
+
+	app := func(appName string) string { return dummyRoot.App(appName) }
+
 	for _, dirToCreate := range []string{
 		"apps/SYSTEM/backlight-state",
 		"apps/SYSTEM/rfkill-state",
@@ -209,10 +212,10 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		fmt.Sprintf("apps/OS-diff/%s-work", sysVersion),
 		"apps/docker/data",
 		"apps/docker/config",
-		"apps/zoxide",
-		"apps/varasto",
-		"apps/Desktop",
-		"apps/mcfly",
+		app("zoxide"),
+		app("varasto"),
+		app("Desktop"),
+		app("mcfly"),
 	} {
 		if err := os.MkdirAll(path(dirToCreate), 0777); err != nil {
 			return withErr(err)
@@ -224,15 +227,26 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		}
 	}
 
-	// FIXME: wrong path, wasn't needed because didn't work anyways?
-	// _ = os.Chmod("apps/SYSTEM/background.png", 0661)
+	for _, symlink := range []struct {
+		from string
+		to   string
+	}{
+		{path("apps/docker/cli-plugins"), "/etc/docker-cli-plugins/"},
+		{path(app("SYSTEM_nobackup")), common.AppSYSTEM}, // backwards compat
+	} {
+		exists, err := osutil.ExistsNoLinkFollow(symlink.from)
+		if err != nil {
+			return withErr(fmt.Errorf("symlink %s: %w", symlink.from, err))
+		}
 
-	if err := os.Symlink("/etc/docker-cli-plugins/", path("apps/docker/cli-plugins")); err != nil {
-		return withErr(err)
-	}
+		// symlink creation errors if it already exists
+		if exists {
+			continue
+		}
 
-	if err := os.Symlink("SYSTEM", path("apps/SYSTEM_nobackup")); err != nil { // backwards compat
-		return withErr(err)
+		if err := os.Symlink(symlink.to, symlink.from); err != nil {
+			return withErr(err)
+		}
 	}
 
 	return nil
