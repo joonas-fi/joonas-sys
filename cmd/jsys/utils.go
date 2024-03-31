@@ -8,12 +8,15 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/function61/gokit/app/retry"
 	"github.com/function61/gokit/os/osutil"
 )
 
 func waitForFileAvailable(ctx context.Context, file string) error {
+	started := time.Now()
+
 	return retry.Retry(ctx, func(ctx context.Context) error {
 		exists, err := osutil.Exists(file)
 		if err != nil {
@@ -25,7 +28,11 @@ func waitForFileAvailable(ctx context.Context, file string) error {
 		} else {
 			return fmt.Errorf("not yet available: %s", file)
 		}
-	}, retry.DefaultBackoff(), func(err error) { log.Println(err.Error()) })
+	}, retry.DefaultBackoff(), func(err error) {
+		if time.Since(started) >= 3*time.Second { // don't spam user with expected error messages (the first attempts are expected to fail)
+			log.Println(err.Error())
+		}
+	})
 }
 
 // shell equivalent: "$ rm -f". os.RemoveAll() is very close to we want, but it can be dangerous
