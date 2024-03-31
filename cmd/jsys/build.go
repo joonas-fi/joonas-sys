@@ -52,7 +52,7 @@ func buildEntrypoint() *cobra.Command {
 					}
 				}()
 
-				return build(
+				return buildWrapped(
 					osutil.CancelOnInterruptOrTerminate(nil),
 					keep,
 					rm,
@@ -68,6 +68,16 @@ func buildEntrypoint() *cobra.Command {
 	cmd.Flags().BoolVarP(&fancyUI, "fancy-ui", "", fancyUI, "Use fancy UI to show progress")
 
 	return cmd
+}
+
+func buildWrapped(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) error {
+	if err := build(ctx, keep, rm, verbose, fancyUI); err != nil {
+		return err
+	}
+
+	fmt.Printf("pro-tip: to commit, run:\n  %s ostree commit 'summary of changes'\n", os.Args[0])
+
+	return nil
 }
 
 func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) error {
