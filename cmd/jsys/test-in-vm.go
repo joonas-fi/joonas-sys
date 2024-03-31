@@ -127,7 +127,7 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		}
 	}()
 
-	if _, err := writeBoilerplateFiles(tmpMountpointPersist); err != nil {
+	if err := writeBoilerplateFiles(tmpMountpointPersist); err != nil {
 		return "", err
 	}
 
@@ -135,9 +135,13 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 }
 
 // these minimum amount of files need to exist in order for the system to be usable
-func writeBoilerplateFiles(tmpMountpointPersist string) (string, error) {
-	writeFile := func(path string, content string) error {
-		pathInPersist := filepath.Join(tmpMountpointPersist, path)
+func writeBoilerplateFiles(tmpMountpointPersist string) error {
+	withErr := func(err error) error { return fmt.Errorf("writeBoilerplateFiles: %w", err) }
+
+	path := func(p string) string { return filepath.Join(tmpMountpointPersist, p) }
+
+	writeFile := func(pathRelative string, content string) error {
+		pathInPersist := path(pathRelative)
 
 		if err := os.MkdirAll(filepath.Dir(pathInPersist), 0775); err != nil {
 			return err
@@ -150,47 +154,55 @@ func writeBoilerplateFiles(tmpMountpointPersist string) (string, error) {
 		return nil
 	}
 
-	if err := writeFile("apps/SYSTEM_nobackup/active_sys_id", sys.lieAboutLabelIfVirtualMachine()); err != nil {
-		return "", err
+	if err := writeFile("apps/SYSTEM/hostname", "j-sys-test-vm"); err != nil {
+		return withErr(err)
 	}
 
-	if err := writeFile("apps/SYSTEM_nobackup/hostname", "j-sys-test-vm"); err != nil {
-		return "", err
+	// many places blow up without this.
+	// https://xkcd.com/221/
+	if err := writeFile("apps/SYSTEM/machine-id", "f5610b0c906aa304e98ea0fa6609649c\n"); err != nil {
+		return withErr(err)
 	}
 
-	if err := copyBackgroundFromCurrentSystemIfExistsTo(filepath.Join(tmpMountpointPersist, "apps/SYSTEM_nobackup/background.png")); err != nil {
-		return "", err
+	if err := copyBackgroundFromCurrentSystemIfExistsTo(path("apps/SYSTEM/background.png")); err != nil {
+		return withErr(err)
 	}
 
 	for _, dirToCreate := range []string{
-		"apps/SYSTEM_nobackup/backlight-state",
-		"apps/SYSTEM_nobackup/rfkill-state",
-		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
-		"apps/SYSTEM_nobackup/lowdiskspace-check-rules",
+		"apps/SYSTEM/backlight-state",
+		"apps/SYSTEM/rfkill-state",
+		"apps/SYSTEM/lowdiskspace-check-rules",
+		fmt.Sprintf("apps/OS-diff/%s", sysVersion),
+		fmt.Sprintf("apps/OS-diff/%s-work", sysVersion),
 		"apps/docker/data",
 		"apps/docker/config",
 		"apps/zoxide",
 		"apps/varasto",
 		"apps/Desktop",
+		"apps/mcfly",
 	} {
-		if err := os.MkdirAll(filepath.Join(tmpMountpointPersist, dirToCreate), 0777); err != nil {
-			return "", err
+		if err := os.MkdirAll(path(dirToCreate), 0777); err != nil {
+			return withErr(err)
 		}
 
 		// umask doesn't give us 0777 from above (FIXME)
-		if err := os.Chmod(filepath.Join(tmpMountpointPersist, dirToCreate), 0777); err != nil {
-			return "", err
+		if err := os.Chmod(path(dirToCreate), 0777); err != nil {
+			return withErr(err)
 		}
 	}
 
 	// FIXME: wrong path, wasn't needed because didn't work anyways?
-	// _ = os.Chmod("apps/SYSTEM_nobackup/background.png", 0661)
+	// _ = os.Chmod("apps/SYSTEM/background.png", 0661)
 
-	if err := os.Symlink("/etc/docker-cli-plugins/", filepath.Join(tmpMountpointPersist, "apps/docker/cli-plugins")); err != nil {
-		return "", err
+	if err := os.Symlink("/etc/docker-cli-plugins/", path("apps/docker/cli-plugins")); err != nil {
+		return withErr(err)
 	}
 
-	return "", nil
+	if err := os.Symlink("SYSTEM", path("apps/SYSTEM_nobackup")); err != nil { // backwards compat
+		return withErr(err)
+	}
+
+	return nil
 }
 
 }
