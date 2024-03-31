@@ -18,6 +18,7 @@ import (
 	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/joonas-fi/joonas-sys/pkg/logtee"
 	"github.com/spf13/cobra"
 )
@@ -71,7 +72,7 @@ func buildEntrypoint() *cobra.Command {
 }
 
 func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) error {
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 

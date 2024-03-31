@@ -5,102 +5,134 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"syscall"
 
+	. "github.com/function61/gokit/builtin"
+	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
+	"github.com/function61/gokit/sync/taskrunner"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
+	"github.com/joonas-fi/joonas-sys/pkg/ostree"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
-const (
-	cowNameEsp  = "misc/vm-test-disks/esp.qcow2"
-	cowNameRoot = "misc/vm-test-disks/root-ro.qcow2"
-)
+func testInVMEntrypoint() *cobra.Command {
+	rescue := false
 
-func testInVmEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "test-in-vm [system]",
-		Short: "Tests systree in a VM",
-		Args:  cobra.ExactArgs(1),
+	cmd := &cobra.Command{
+		Use:   "test-in-vm",
+		Short: "Tests new system version in a VM",
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(testInVm(
-				osutil.CancelOnInterruptOrTerminate(nil),
-				args[0]))
+			osutil.ExitIfError(func() error {
+				return testInVM(osutil.CancelOnInterruptOrTerminate(nil), rescue)
+			}())
 		},
 	}
+
+	cmd.Flags().BoolVarP(&rescue, "rescue", "", rescue, "Enter rescue (AKA single-user) mode: no GUI or network.")
+
+	return cmd
 }
 
-func testInVm(ctx context.Context, sysLabel string) error {
-	if err := requireRoot(); err != nil {
+func testInVM(ctx context.Context, rescue bool) error {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 
-	sys, err := getSystemNotCurrent(sysLabel)
+	sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
 	if err != nil {
 		return err
 	}
 
-	volatilePersistPartition, err := createEmptyRamBackedPersistPartition(sys)
+	idx, _, err := promptUISelect("Version", lo.Map(sysrootCheckouts, func(x ostree.CheckoutWithLabel, _ int) string { return x.Label }))
 	if err != nil {
 		return err
 	}
 
-	// there is no way in QEMU to mark drives as readonly (apparently IDE doesn't have the concept),
-	// so the next best thing we can do is create copy-on-write layer whose changes we discard
+	checkout := filepath.Join(filelocations.Sysroot.CheckoutsDir(), sysrootCheckouts[idx].Dir)
 
-	if err := qemuCreatePseudoReadonlyDisk(sys.systemDevice, cowNameRoot); err != nil {
-		return fmt.Errorf("qemuCreatePseudoReadonlyDisk %s: %w", cowNameRoot, err)
+	sysVersion := sysrootCheckouts[idx].Dir
+
+	// cannot be in /tmp because then our topology would be:
+	// host: overlayfs -> virtiofsd
+	// guest: virtiofs -> overlay
+	// (overlayFS cannot be hosted on overlayFS)
+	//
+	// VM's sysroot is actually encapsulated in our sysroot's app directory
+	vmSysroot := filelocations.WithRoot(filelocations.Sysroot.App("OS-test-in-VM"))
+
+	// using this as heuristic to see if `writeBoilerplateFiles()` has ben executed before
+	if checkoutDirExists := Must(osutil.Exists(vmSysroot.CheckoutsDir())); !checkoutDirExists {
+		if err := writeBoilerplateFiles(vmSysroot, sysVersion); err != nil {
+			return err
+		}
 	}
 
-	if err := qemuCreatePseudoReadonlyDisk(sys.espDevice, cowNameEsp); err != nil {
-		return fmt.Errorf("qemuCreatePseudoReadonlyDisk %s: %w", cowNameEsp, err)
+	if len(Must(os.ReadDir(vmSysroot.CheckoutsDir()))) == 0 { // no checkouts => not mounted
+		if err := syscall.Mount(filelocations.Sysroot.CheckoutsDir(), vmSysroot.CheckoutsDir(), "", uintptr(syscall.MS_BIND|syscall.MS_RDONLY), ""); err != nil {
+			return fmt.Errorf("bind-mount of checkouts to VM: %w", err)
+		}
 	}
 
-	// the various OVMF_VARS files decide which system we'll boot automatically (UEFI vars remembering
-	// last selected boot option)
-	uefiVars := fmt.Sprintf("misc/uefi-files/OVMF_VARS-boot-%s.fd", sys.lieAboutLabelIfVirtualMachine())
+	virtioFSDSockPath := "/tmp/jsys-virtiofsd.sock"
 
-	// RNG device supposedly speeds up Ubuntu boot
+	tasks := taskrunner.New(ctx, logex.StandardLogger())
 
-	vm := exec.CommandContext(ctx, "qemu-system-x86_64",
-		"-machine", "type=q35,accel=kvm",
-		"-drive", "file="+cowNameEsp,
-		"-drive", "file="+cowNameRoot,
-		"-drive", "format=raw,file="+volatilePersistPartition,
-		"-drive", "if=pflash,format=raw,unit=0,readonly,file=misc/uefi-files/OVMF_CODE-pure-efi.fd",
-		"-drive", "if=pflash,format=raw,unit=1,readonly,file="+uefiVars,
-		"-m", "4G",
-		"-smp", "4",
-	)
-	vm.Stdout = os.Stdout
-	vm.Stderr = os.Stderr
+	tasks.Start("FS", func(ctx context.Context) error {
+		virtiofsd := exec.CommandContext(ctx, "virtiofsd",
+			"--socket-path="+virtioFSDSockPath,
+			"--cache=never",
+			"-o", "modcaps=+sys_admin", // needed to support overlayfs
+			"--xattr", // needed to support overlayfs
+			"--shared-dir="+vmSysroot.Root())
+		virtiofsd.Stdout = os.Stdout
+		virtiofsd.Stderr = os.Stderr
+		return virtiofsd.Run()
+	})
 
-	return vm.Run()
-}
-
-// requires root
-func qemuCreatePseudoReadonlyDisk(realDevice string, cowFile string) error {
-	exists, err := osutil.Exists(realDevice)
-	if err != nil {
-		return err
+	kernelCmdline := []string{"rootfstype=virtiofs", "root=vroot", "sysid=" + sysVersion, "rw"}
+	if rescue {
+		kernelCmdline = append(kernelCmdline, "systemd.unit=rescue.target")
 	}
 
-	if !exists {
-		return fmt.Errorf("realDevice does not exist: %s", realDevice)
-	}
+	tasks.Start("VM", func(ctx context.Context) error {
+		// if we want some accelerated display:
+		//  -device virtio-vga-gl,xres=1920,yres=1080 -display gtk,gl=on
 
-	// remove existing, so we start with empty diff disk
-	if err := removeIfExists(cowFile); err != nil {
-		return err
-	}
+		// if we want to boot with UEFI:
+		// "-drive", "if=pflash,format=raw,unit=0,readonly=on,file=misc/uefi-files/OVMF_CODE-pure-efi.fd",
 
-	return exec.Command(
-		"qemu-img",
-		"create",
-		"-f", "qcow2",
-		"-b", realDevice,
-		cowFile).Run()
+		vm := exec.CommandContext(ctx, "qemu-system-x86_64",
+			"-machine", "type=q35,accel=kvm",
+			"-m", "3G",
+			"-smp", "4",
+			"-chardev", "socket,id=char0,path="+virtioFSDSockPath,
+			"-device", "vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=vroot",
+			"-object", "memory-backend-file,id=mem,size=3G,mem-path=/dev/shm,share=on", // required by virtiofsd
+			"-numa", "node,memdev=mem",
+			"-usb",
+			"-device", "qemu-xhci",
+			"-device", "usb-host,vendorid=0x04f9,productid=0x009a", // printer
+			"-kernel", filepath.Join(checkout, "/boot/vmlinuz"),
+			"-initrd", filepath.Join(checkout, "/boot/initrd.img"),
+			"-append", strings.Join(kernelCmdline, " "),
+			// "-drive", "format=raw,file="+volatilePersistPartition,
+		)
+		vm.Stdout = os.Stdout
+		vm.Stderr = os.Stderr
+
+		return vm.Run()
+	})
+
+	return tasks.Wait()
 }
 
 func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
@@ -127,7 +159,7 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		}
 	}()
 
-	if err := writeBoilerplateFiles(tmpMountpointPersist); err != nil {
+	if err := writeBoilerplateFiles(filelocations.WithRoot(tmpMountpointPersist), sys.label); err != nil {
 		return "", err
 	}
 
@@ -135,32 +167,32 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 }
 
 // these minimum amount of files need to exist in order for the system to be usable
-func writeBoilerplateFiles(tmpMountpointPersist string) error {
+func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 	withErr := func(err error) error { return fmt.Errorf("writeBoilerplateFiles: %w", err) }
 
-	path := func(p string) string { return filepath.Join(tmpMountpointPersist, p) }
+	path := func(p string) string { return filepath.Join(root.Root(), p) }
 
-	writeFile := func(pathRelative string, content string) error {
+	writeFile := func(pathRelative string, content string, mode fs.FileMode) error {
 		pathInPersist := path(pathRelative)
 
 		if err := os.MkdirAll(filepath.Dir(pathInPersist), 0775); err != nil {
 			return err
 		}
 
-		if err := os.WriteFile(pathInPersist, []byte(content), 0660); err != nil {
+		if err := os.WriteFile(pathInPersist, []byte(content), mode); err != nil {
 			return fmt.Errorf("write %s: %v", path, err)
 		}
 
 		return nil
 	}
 
-	if err := writeFile("apps/SYSTEM/hostname", "j-sys-test-vm"); err != nil {
+	if err := writeFile("apps/SYSTEM/hostname", "j-sys-test-vm", 0660); err != nil {
 		return withErr(err)
 	}
 
-	// many places blow up without this.
+	// many places blow up without this. needs to be readable to all users.
 	// https://xkcd.com/221/
-	if err := writeFile("apps/SYSTEM/machine-id", "f5610b0c906aa304e98ea0fa6609649c\n"); err != nil {
+	if err := writeFile("apps/SYSTEM/machine-id", "f5610b0c906aa304e98ea0fa6609649c\n", 0664); err != nil {
 		return withErr(err)
 	}
 
@@ -172,6 +204,7 @@ func writeBoilerplateFiles(tmpMountpointPersist string) error {
 		"apps/SYSTEM/backlight-state",
 		"apps/SYSTEM/rfkill-state",
 		"apps/SYSTEM/lowdiskspace-check-rules",
+		"apps/OS-checkout", // most likely this will be a mountpoint
 		fmt.Sprintf("apps/OS-diff/%s", sysVersion),
 		fmt.Sprintf("apps/OS-diff/%s-work", sysVersion),
 		"apps/docker/data",
@@ -203,6 +236,4 @@ func writeBoilerplateFiles(tmpMountpointPersist string) error {
 	}
 
 	return nil
-}
-
 }

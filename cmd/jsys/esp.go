@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +34,7 @@ const (
 )
 
 func espFormat(ctx context.Context, sysLabel string) error {
-	if err := requireRoot(); err != nil {
+	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
 

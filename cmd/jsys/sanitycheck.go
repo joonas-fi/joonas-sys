@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/spf13/cobra"
 )
 
@@ -22,6 +23,11 @@ func sanityCheckEntrypoint() *cobra.Command {
 }
 
 func sanityCheck(ctx context.Context) error {
+	// some places of access, like /sysroot/lost+found, require root
+	if _, err := userutil.RequireRoot(); err != nil {
+		return err
+	}
+
 	filesThatShouldExist := []string{
 		"/persist/apps/SYSTEM_nobackup/backlight-state",
 		"/persist/apps/SYSTEM_nobackup/rfkill-state",
