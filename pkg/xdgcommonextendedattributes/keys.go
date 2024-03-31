@@ -1,3 +1,4 @@
+// https://www.freedesktop.org/wiki/CommonExtendedAttributes/
 package xdgcommonextendedattributes
 
 // These attributes are currently proposed
