@@ -210,7 +210,9 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 			}
 
 			if badLinesFixed > 0 {
-				lineCompleted(fmt.Sprintf("%d bad lines fixed", badLinesFixed))
+				if verbose {
+					lineCompleted(fmt.Sprintf("%d bad lines fixed", badLinesFixed))
+				}
 				badLinesFixed = 0
 			}
 
