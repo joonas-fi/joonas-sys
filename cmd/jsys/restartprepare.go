@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -24,10 +23,6 @@ func restartPrepareEntrypoint() *cobra.Command {
 
 				system, err := getSystemNotCurrent(sysLabel)
 				if err != nil {
-					return err
-				}
-
-				if err := os.WriteFile("/persist/apps/SYSTEM_nobackup/active_sys_id", []byte(sysLabel), 0770); err != nil {
 					return err
 				}
 

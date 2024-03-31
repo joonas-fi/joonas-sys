@@ -19,7 +19,7 @@ func main() {
 
 	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEntrypoint())
-	app.AddCommand(testInVmEntrypoint())
+	app.AddCommand(testInVMEntrypoint())
 	app.AddCommand(diffEntrypoint())
 	app.AddCommand(diffOneEntrypoint())
 	app.AddCommand(revertEntrypoint())

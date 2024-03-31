@@ -207,7 +207,7 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		"apps/SYSTEM/backlight-state",
 		"apps/SYSTEM/rfkill-state",
 		"apps/SYSTEM/lowdiskspace-check-rules",
-		"apps/OS-checkout", // most likely this will be a mountpoint
+		app(common.AppOSCheckout), // most likely this will be a mountpoint so we can piggyback off of host checkouts
 		fmt.Sprintf("apps/OS-diff/%s", sysVersion),
 		fmt.Sprintf("apps/OS-diff/%s-work", sysVersion),
 		"apps/docker/data",

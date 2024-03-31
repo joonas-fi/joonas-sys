@@ -4,8 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 )
 
 var (
@@ -57,7 +61,7 @@ func (s systemSpec) lieAboutLabelIfVirtualMachine() string {
 }
 
 func (s systemSpec) diffPath() string {
-	return fmt.Sprintf("/persist/apps/SYSTEM_nobackup/%s-diff", s.label)
+	return filepath.Join(filelocations.Sysroot.App(common.AppOSDiff), s.label)
 }
 
 func (s systemSpec) espDeviceLabel() (string, error) {

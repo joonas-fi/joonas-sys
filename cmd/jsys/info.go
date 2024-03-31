@@ -4,12 +4,14 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/acobaugh/osrelease"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/time/timeutil"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
+	"github.com/joonas-fi/joonas-sys/pkg/ostree"
+	"github.com/samber/lo"
 	"github.com/scylladb/termtables"
 	"github.com/spf13/cobra"
 )
@@ -26,12 +28,12 @@ func infoEntrypoint() *cobra.Command {
 }
 
 func info() error {
-	updatedTime, err := getSystemUpdatedTime()
+	sysID, err := readRunningSystemId()
 	if err != nil {
 		return err
 	}
 
-	sysId, err := readRunningSystemId()
+	updatedTime, err := getSystemUpdatedTime(sysID)
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func info() error {
 	// "Ubuntu 20.04.3 LTS (Focal Fossa)"
 	infoTbl.AddRow("OS", fmt.Sprintf("OS: %s %s", osRelease["NAME"], osRelease["VERSION"]))
 
-	infoTbl.AddRow("System ID", sysId)
+	infoTbl.AddRow("System ID", sysID)
 
 	fmt.Println(infoTbl.Render())
 
@@ -59,13 +61,18 @@ func info() error {
 }
 
 // due to how we use the system, update time is the same as install time
-func getSystemUpdatedTime() (time.Time, error) {
-	stat, err := os.Stat("/mnt/sys-current-rom/tmp/.joonas-os-install")
+func getSystemUpdatedTime(sysID string) (time.Time, error) {
+	withErr := func(err error) (time.Time, error) { return time.Time{}, fmt.Errorf("getSystemUpdatedTime: %w", err) }
+
+	checkouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
 	if err != nil {
-		return time.Time{}, err
+		return withErr(err)
 	}
 
-	installedTime := stat.ModTime()
+	checkout, found := lo.Find(checkouts, func(checkout ostree.CheckoutWithLabel) bool { return checkout.Dir == sysID })
+	if !found {
+		return withErr(fmt.Errorf("checkout not found for %s", sysID))
+	}
 
-	return installedTime, nil
+	return checkout.Timestamp, nil
 }
