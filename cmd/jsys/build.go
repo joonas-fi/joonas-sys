@@ -123,8 +123,8 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		return err
 	}
 
-	if !mounted {
-		return fmt.Errorf("%s is not a mountpoint. would write files to disk", treeLocation)
+	if !mounted && os.Getenv("BYPASS_MOUNTPOINT_CHECK") == "" {
+		return fmt.Errorf("%s is not a mountpoint. would write files to disk", common.BuildTreeLocation)
 	}
 
 	steps, err := loadAndValidateSteps()
