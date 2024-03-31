@@ -127,6 +127,15 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		}
 	}()
 
+	if _, err := writeBoilerplateFiles(tmpMountpointPersist); err != nil {
+		return "", err
+	}
+
+	return volatilePersistPartition, nil
+}
+
+// these minimum amount of files need to exist in order for the system to be usable
+func writeBoilerplateFiles(tmpMountpointPersist string) (string, error) {
 	writeFile := func(path string, content string) error {
 		pathInPersist := filepath.Join(tmpMountpointPersist, path)
 
@@ -181,5 +190,7 @@ func createEmptyRamBackedPersistPartition(sys systemSpec) (string, error) {
 		return "", err
 	}
 
-	return volatilePersistPartition, nil
+	return "", nil
+}
+
 }
