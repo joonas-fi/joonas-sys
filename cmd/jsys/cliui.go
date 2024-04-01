@@ -7,6 +7,7 @@ import (
 
 	. "github.com/function61/gokit/builtin"
 	"github.com/gdamore/tcell/v2"
+	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -90,7 +91,7 @@ func displayFancyUI(ctx context.Context, nextStep chan Void, steps []*Step, appe
 		}
 		yPos += 1
 
-		pbar := ProgressBar(int(float64(proc.activePhaseIdx)/float64((len(proc.phases)-1))*100), width, ProgressBarDefaultTheme())
+		pbar := tui.ProgressBar(int(float64(proc.activePhaseIdx)/float64((len(proc.phases)-1))*100), width, tui.ProgressBarDefaultTheme())
 		emitStr(s, 0, yPos, tcell.StyleDefault, pbar)
 
 		yPos += 1
@@ -285,34 +286,4 @@ func (s *Spinner) Get() string {
 	animFrameIdx := int(time.Since(s.started)/s.speed) % len(s.frames)
 
 	return s.frames[animFrameIdx]
-}
-
-func ProgressBar(pct int, barLength int, theme ProgressBarTheme) string {
-	r := make([]rune, barLength)
-
-	ratio := float64(barLength) * float64(pct) / 100.0
-
-	for i := 0; i < barLength; i++ {
-		ch := theme.Vacant
-		if float64(i+1) <= ratio {
-			ch = theme.Filled
-		}
-
-		r[i] = ch
-	}
-
-	return string(r)
-}
-
-type ProgressBarTheme struct {
-	Filled rune
-	Vacant rune
-}
-
-func ProgressBarDefaultTheme() ProgressBarTheme {
-	return ProgressBarTheme{'█', '░'}
-}
-
-func ProgressBarCirclesTheme() ProgressBarTheme {
-	return ProgressBarTheme{'⬤', '○'}
 }
