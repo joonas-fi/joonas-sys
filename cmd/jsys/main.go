@@ -5,6 +5,7 @@ import (
 
 	"github.com/function61/gokit/app/dynversion"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
@@ -38,6 +39,7 @@ func main() {
 	app.AddCommand(calendarEntrypoint())
 	app.AddCommand(tui.HREntrypoint())
 	app.AddCommand(ostree.Entrypoint())
+	app.AddCommand(debug.Entrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
