@@ -1,9 +1,9 @@
-package main
-
 // Goes through diffs to see if there's any interesting state we forgot to persist
+package sysdiff
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/function61/gokit/sliceutil"
@@ -23,7 +24,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func diffEntrypoint() *cobra.Command {
+func Entrypoints() []*cobra.Command {
+	return []*cobra.Command{
+		entrypoint(),
+		repoDiffEntrypoint(),
+		diffOneEntrypoint(),
+		&cobra.Command{
+			Use:   "revert [path]",
+			Short: "Revert a file from diffs",
+			Args:  cobra.ExactArgs(1),
+			Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+				return revert(args[0])
+			}),
+		},
+	}
+}
+
+func entrypoint() *cobra.Command {
 	maxDiffFilesFind := 100
 	ignoreDeleted := false
 
@@ -31,9 +48,9 @@ func diffEntrypoint() *cobra.Command {
 		Use:   "diff",
 		Short: "Goes through diffs to see if there's any interesting state we forgot to persist",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(diff(maxDiffFilesFind, ignoreDeleted))
-		},
+		Run: cli.RunnerNoArgs(func(_ context.Context, _ *log.Logger) error {
+			return diff(maxDiffFilesFind, ignoreDeleted)
+		}),
 	}
 
 	cmd.Flags().IntVarP(&maxDiffFilesFind, "max-diff-files-find", "m", maxDiffFilesFind, "Maximum # of diff files to report before bailing out")
@@ -46,28 +63,17 @@ func diffOneEntrypoint() *cobra.Command {
 	maxDiffFilesFind := 100
 
 	cmd := &cobra.Command{
-		Use: "diff1 [path]",
-		// Short: "Goes through diffs to see if there's any interesting state we forgot to persist",
-		Args: cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(diffOne(args[0]))
-		},
+		Use:   "diff1 [path]",
+		Short: "Diffs one file from current running system to the baseline",
+		Args:  cobra.ExactArgs(1),
+		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+			return diffOne(args[0])
+		}),
 	}
 
 	cmd.Flags().IntVarP(&maxDiffFilesFind, "max-diff-files-find", "m", maxDiffFilesFind, "Maximum # of diff files to report before bailing out")
 
 	return cmd
-}
-
-func revertEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "revert [path]",
-		Short: "Revert a file from diffs",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(revert(args[0]))
-		},
-	}
 }
 
 type diffReport struct {

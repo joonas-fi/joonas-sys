@@ -132,7 +132,7 @@ func getSystemNoEditCheck(label string) (systemSpec, error) {
 }
 
 func getSystemNotCurrent(label string) (systemSpec, error) {
-	runningSysId, err := readRunningSystemId()
+	runningSysId, err := common.ReadRunningSystemId()
 	if err != nil {
 		return systemSpec{}, err
 	}

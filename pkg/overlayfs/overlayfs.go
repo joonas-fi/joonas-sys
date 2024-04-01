@@ -1,4 +1,4 @@
-package main
+package overlayfs
 
 import (
 	"io/fs"
@@ -14,7 +14,7 @@ type overlayFs struct {
 
 // makes an "overlay FS", where files are accessed from "upper" (usually R/W) dir first, and if not exists,
 // then from "lower" (usually read-only). for semantics see https://wiki.archlinux.org/index.php/Overlay_filesystem
-func newOverlayFs(upper fs.FS, lower fs.FS) fs.FS {
+func New(upper fs.FS, lower fs.FS) fs.FS {
 	return &overlayFs{upper, lower}
 }
 

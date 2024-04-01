@@ -7,6 +7,7 @@ import (
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +72,7 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 					return err
 				}
 
-				systemLabel, err := readRunningSystemId()
+				systemLabel, err := common.ReadRunningSystemId()
 				if err != nil {
 					return err
 				}

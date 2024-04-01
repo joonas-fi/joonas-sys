@@ -27,18 +27,18 @@ func main() {
 		Version: dynversion.Version,
 	}
 
+	for _, entrypoint := range sysdiff.Entrypoints() {
+		app.AddCommand(entrypoint)
+	}
+
 	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEntrypoint())
 	app.AddCommand(testInVMEntrypoint())
-	app.AddCommand(diffEntrypoint())
-	app.AddCommand(diffOneEntrypoint())
-	app.AddCommand(revertEntrypoint())
 	app.AddCommand(espEntrypoint())
 	app.AddCommand(restartPrepareEntrypoint())
 	app.AddCommand(restartPrepareCurrentEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
-	app.AddCommand(sysdiff.Entrypoint())
 	app.AddCommand(backlight.Entrypoint())
 	app.AddCommand(lowdiskspacechecker.Entrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
