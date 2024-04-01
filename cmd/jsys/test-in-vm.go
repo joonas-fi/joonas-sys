@@ -178,7 +178,7 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		}
 
 		if err := os.WriteFile(pathInPersist, []byte(content), mode); err != nil {
-			return fmt.Errorf("write %s: %v", path, err)
+			return fmt.Errorf("write %s: %w", pathInPersist, err)
 		}
 
 		return nil
