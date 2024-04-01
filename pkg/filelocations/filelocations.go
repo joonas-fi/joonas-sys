@@ -24,8 +24,8 @@ type Root struct {
 }
 
 // "/sysroot/apps/OS-checkout/<sysid>"
-func (b Root) Checkout(sysid string) string {
-	return filepath.Join(b.CheckoutsDir(), sysid)
+func (b Root) Checkout(sysID string) string {
+	return filepath.Join(b.CheckoutsDir(), sysID)
 }
 
 // "/sysroot/apps/OS-checkout"
@@ -36,6 +36,11 @@ func (b Root) CheckoutsDir() string {
 // "/sysroot/apps/<appName>"
 func (b Root) App(appName string) string {
 	return filepath.Join(b.root, "apps", appName)
+}
+
+// "/sysroot/apps/OS-diff/<sysID>"
+func (b Root) Diff(sysID string) string {
+	return filepath.Join(b.App(common.AppOSDiff), sysID)
 }
 
 // "/sysroot"

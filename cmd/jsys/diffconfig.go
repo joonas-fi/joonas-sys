@@ -4,16 +4,14 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/function61/gokit/encoding/hcl2json"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/joonas-fi/joonas-sys/misc"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 )
 
 type item struct {
@@ -99,19 +97,6 @@ func loadConf() (*config, []string, []string, error) {
 	return conf, allowedChangeSubtrees, allowedChangeFiles, nil
 }
 
-// "sysid=v1" => "v1"
-var runningSystemIdFromKernelCommandLineRe = regexp.MustCompile("sysid=([^ ]+)")
-
 func readRunningSystemId() (string, error) {
-	kernelCommandLine, err := ioutil.ReadFile("/proc/cmdline")
-	if err != nil {
-		return "", fmt.Errorf("readRunningSystemId: %w", err)
-	}
-
-	matches := runningSystemIdFromKernelCommandLineRe.FindStringSubmatch(string(kernelCommandLine))
-	if matches == nil {
-		return "", errors.New("readRunningSystemId: failed to parse")
-	}
-
-	return matches[1], nil
+	return common.ReadRunningSystemId()
 }
