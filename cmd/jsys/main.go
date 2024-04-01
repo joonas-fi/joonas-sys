@@ -9,6 +9,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
+	"github.com/joonas-fi/joonas-sys/pkg/sysdiff"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,7 @@ func main() {
 	app.AddCommand(restartPrepareCurrentEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
+	app.AddCommand(sysdiff.Entrypoint())
 	app.AddCommand(backlightEntrypoint())
 	app.AddCommand(lowDiskSpaceCheckerEntrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
