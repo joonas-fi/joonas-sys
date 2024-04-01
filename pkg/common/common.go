@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+
+	"github.com/godbus/dbus/v5"
 )
 
 const (
@@ -32,4 +34,22 @@ func ReadRunningSystemId() (string, error) {
 	}
 
 	return matches[1], nil
+}
+
+func GetDbusConn() (*dbus.Conn, error) {
+	conn, err := dbus.SessionBusPrivate()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = conn.Auth(nil); err != nil {
+		return nil, err
+	}
+
+	// "This method must be called after authentication, but before sending any other messages to the bus."
+	if err = conn.Hello(); err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
