@@ -1,4 +1,5 @@
-package main
+// Calendar text-based UI
+package calendar
 
 import (
 	"bufio"
@@ -35,7 +36,7 @@ Creates a calendar like this:
 	20 21 22 23 24 25 26
 	27 28
 */
-func calendarEntrypoint() *cobra.Command {
+func Entrypoint() *cobra.Command {
 	interactive := false
 	weekNumbers := false
 

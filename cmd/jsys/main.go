@@ -5,6 +5,7 @@ import (
 
 	"github.com/function61/gokit/app/dynversion"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/joonas-fi/joonas-sys/pkg/calendar"
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
@@ -35,7 +36,7 @@ func main() {
 	app.AddCommand(infoEntrypoint())
 	app.AddCommand(discoverremotemachines.Entrypoint())
 	app.AddCommand(statusbar.Entrypoint())
-	app.AddCommand(calendarEntrypoint())
+	app.AddCommand(calendar.Entrypoint())
 	app.AddCommand(tui.HREntrypoint())
 	app.AddCommand(debug.Entrypoint())
 
