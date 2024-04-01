@@ -5,6 +5,7 @@ import (
 
 	"github.com/function61/gokit/app/dynversion"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/joonas-fi/joonas-sys/pkg/backlight"
 	"github.com/joonas-fi/joonas-sys/pkg/backup"
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
@@ -35,7 +36,7 @@ func main() {
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(rsyncServerEntrypoint())
 	app.AddCommand(sysdiff.Entrypoint())
-	app.AddCommand(backlightEntrypoint())
+	app.AddCommand(backlight.Entrypoint())
 	app.AddCommand(lowdiskspacechecker.Entrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
