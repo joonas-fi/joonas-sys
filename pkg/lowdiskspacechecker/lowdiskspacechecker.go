@@ -2,52 +2,53 @@
 package lowdiskspacechecker
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/esiqveland/notify"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/pkg/xattr"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
 )
 
-const (
-	rulesDir = "/sysroot/apps/SYSTEM/lowdiskspace-check-rules"
+var (
+	rulesDir = filepath.Join(filelocations.Sysroot.App(common.AppSYSTEM), "lowdiskspace-check-rules")
 )
 
 func Entrypoint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "lowdiskspace-checker [msg]",
+		Use:   "lowdiskspace-checker",
 		Short: "Shows notification if low on disk space",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(lowDiskSpaceChecker())
-		},
+		Run:   cli.RunnerNoArgs(check),
 	}
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "rules-print",
 		Short: "Shows the low disk space checker rules",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				rules, err := loadRules()
-				if err != nil {
-					return err
-				}
+		Run: cli.RunnerNoArgs(func(_ context.Context, _ *log.Logger) error {
+			rules, err := loadRules()
+			if err != nil {
+				return err
+			}
 
-				for _, rule := range rules {
-					fmt.Printf("%s: %s (%d bytes)\n", rule.label, rule.mountpoint, rule.lowThreshold)
-				}
+			for _, rule := range rules {
+				fmt.Printf("%s: %s (%d bytes)\n", rule.label, rule.mountpoint, rule.lowThreshold)
+			}
 
-				return nil
-			}())
-		},
+			return nil
+
+		}),
 	})
 
 	cmd.AddCommand(setThresholdEntrypoint())
@@ -57,9 +58,7 @@ func Entrypoint() *cobra.Command {
 		Use:   "systemd-units",
 		Short: "Write systemd units to automatically run this checker periodically",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(writeSystemdUnits())
-		},
+		Run:   cli.RunnerNoArgs(writeSystemdUnits),
 	})
 
 	return cmd
@@ -71,7 +70,7 @@ type rule struct {
 	lowThreshold int64 // bytes
 }
 
-func lowDiskSpaceChecker() error {
+func check(_ context.Context, _ *log.Logger) error {
 	rules, err := loadRules()
 	if err != nil {
 		return err
@@ -157,9 +156,9 @@ func createRuleEntrypoint() *cobra.Command {
 		Use:   "rule-create [rule-name] [target]",
 		Short: "Create low disk space rule",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(createRule(args[0], args[1]))
-		},
+		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+			return createRule(args[0], args[1])
+		}),
 	}
 }
 
@@ -171,20 +170,20 @@ func setThresholdEntrypoint() *cobra.Command {
 		Use:   "rule-set-threshold [rule-name]",
 		Short: "Set low disk space rule's threshold",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				switch {
-				case mb != 0 && gb != 0:
-					return errors.New("cannot define both --mb and --gb")
-				case mb != 0:
-					return setThreshold(args[0], gb*1024*1024)
-				case gb != 0:
-					return setThreshold(args[0], gb*1024*1024*1024)
-				default:
-					return errors.New("define either --mb or --gb")
-				}
-			}())
-		},
+		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+			ruleName := args[0]
+
+			switch {
+			case mb != 0 && gb != 0:
+				return errors.New("cannot define both --mb and --gb")
+			case mb != 0:
+				return setThreshold(ruleName, gb*1024*1024)
+			case gb != 0:
+				return setThreshold(ruleName, gb*1024*1024*1024)
+			default:
+				return errors.New("define either --mb or --gb")
+			}
+		}),
 	}
 
 	cmd.Flags().Int64VarP(&gb, "gb", "", 0, "Gigabytes")
@@ -194,7 +193,7 @@ func setThresholdEntrypoint() *cobra.Command {
 }
 
 func createRule(label string, target string) error {
-	if err := touch(ruleFile(label)); err != nil {
+	if err := osutil.CreateEmptyFile(ruleFile(label)); err != nil {
 		return err
 	}
 
@@ -214,7 +213,7 @@ func setThreshold(label string, threshold int64) error {
 }
 
 // TODO: gokit/systemdinstaller to support timers and oneshot services?
-func writeSystemdUnits() error {
+func writeSystemdUnits(_ context.Context, _ *log.Logger) error {
 	service := `[Unit]
 Description=Low disk space checker
 OnFailure=failure-notification@%n
@@ -274,15 +273,4 @@ WantedBy=timers.target
 
 func ruleFile(name string) string {
 	return filepath.Join(rulesDir, name)
-}
-
-// just makes an empty file
-// TODO: only if one doesn't already exist?
-func touch(path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-
-	return file.Close()
 }
