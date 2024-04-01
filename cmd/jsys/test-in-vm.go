@@ -143,8 +143,8 @@ func writeBoilerplateFiles(tmpMountpointPersist string) (string, error) {
 			return err
 		}
 
-		if err := os.WriteFile(pathInPersist, []byte(content), 0660); err != nil {
-			return fmt.Errorf("write %s: %v", path, err)
+		if err := os.WriteFile(pathInPersist, []byte(content), mode); err != nil {
+			return fmt.Errorf("write %s: %w", pathInPersist, err)
 		}
 
 		return nil
