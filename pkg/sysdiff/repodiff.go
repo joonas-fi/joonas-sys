@@ -1,5 +1,6 @@
-// Compare changes to running system from the build baseline in repo
 package sysdiff
+
+// Compare changes to running system from the build baseline in repo
 
 import (
 	"bytes"
@@ -19,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Entrypoint() *cobra.Command {
+func repoDiffEntrypoint() *cobra.Command {
 	verbose := false
 
 	cmd := &cobra.Command{
