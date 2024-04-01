@@ -24,8 +24,10 @@ fi
 
 # install buildx (CLI plugin that extends the docker command with the full support of the features provided by BuildKit)
 
-curl -fsSL -o /usr/bin/docker-buildx https://function61.com/app-dl/api/github.com/docker/buildx/latest_releases_asset/buildx-%2A.linux-amd64
-chmod +x /usr/bin/docker-buildx
+# /usr/lib/docker/cli-plugins/... is a location from which Docker autodiscovers CLI plugins:
+#   https://github.com/docker/buildx?tab=readme-ov-file#manual-download
 
+downloadAndInstallSingleBinaryProgram /usr/lib/docker/cli-plugins/docker-buildx \
+	"https://function61.com/app-dl/api/github.com/docker/buildx/latest_releases_asset/buildx-%2A.linux-amd64"
 
 #versioncommand: docker --version
