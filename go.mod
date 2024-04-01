@@ -40,6 +40,7 @@ require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/jfreymuth/pulse v0.1.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mmcloughlin/md4 v0.1.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
