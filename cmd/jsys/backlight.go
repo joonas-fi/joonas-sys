@@ -13,7 +13,7 @@ import (
 
 	"github.com/esiqveland/notify"
 	"github.com/function61/gokit/os/osutil"
-	"github.com/godbus/dbus/v5"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/spf13/cobra"
 )
 
@@ -175,7 +175,7 @@ func clamp(num, min, max float64) float64 {
 
 // TODO: instead subscribe via udev to brightness notifications so control + notification is decoupled?
 func notifyNewBrightness(newBrighness float64) error {
-	dbusConn, err := getDbusConn()
+	dbusConn, err := common.GetDbusConn()
 	if err != nil {
 		return err
 	}
@@ -234,24 +234,6 @@ func notifyWithConcurrentSuppression(
 	}
 
 	return nil
-}
-
-func getDbusConn() (*dbus.Conn, error) {
-	conn, err := dbus.SessionBusPrivate()
-	if err != nil {
-		return nil, err
-	}
-
-	if err = conn.Auth(nil); err != nil {
-		return nil, err
-	}
-
-	// "This method must be called after authentication, but before sending any other messages to the bus."
-	if err = conn.Hello(); err != nil {
-		return nil, err
-	}
-
-	return conn, nil
 }
 
 func progressBar(pct int, barLength int, theme progressBarTheme) string {

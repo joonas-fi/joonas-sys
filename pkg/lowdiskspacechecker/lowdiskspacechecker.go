@@ -1,6 +1,5 @@
-package main
-
 // Warns about low disk space
+package lowdiskspacechecker
 
 import (
 	"errors"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/esiqveland/notify"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/pkg/xattr"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
@@ -20,7 +20,7 @@ const (
 	rulesDir = "/sysroot/apps/SYSTEM/lowdiskspace-check-rules"
 )
 
-func lowDiskSpaceCheckerEntrypoint() *cobra.Command {
+func Entrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lowdiskspace-checker [msg]",
 		Short: "Shows notification if low on disk space",
@@ -89,7 +89,7 @@ func lowDiskSpaceChecker() error {
 
 		if availableBytes < rule.lowThreshold {
 			if err := func() error {
-				dbusConn, err := getDbusConn()
+				dbusConn, err := common.GetDbusConn()
 				if err != nil {
 					return err
 				}
