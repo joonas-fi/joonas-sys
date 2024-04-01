@@ -3,11 +3,13 @@ package tui
 // does same as https://github.com/LuRsT/hr
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/turbobob/pkg/ansicolor"
 	"github.com/function61/turbobob/pkg/powerline"
 	"github.com/spf13/cobra"
@@ -17,13 +19,11 @@ import (
 func HREntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use: "hr",
-		Run: func(_ *cobra.Command, _ []string) {
-			osutil.ExitIfError(hr())
-		},
+		Run: cli.RunnerNoArgs(hr),
 	}
 }
 
-func hr() error {
+func hr(_ context.Context, _ *log.Logger) error {
 	width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		return err
