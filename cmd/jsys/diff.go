@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,6 +70,8 @@ func revertEntrypoint() *cobra.Command {
 type diffReport struct {
 	output          io.Writer
 	totallyNewFiles int
+	overrideEqual   int
+	imageEqual      int
 	ignoreDeleted   bool
 }
 
@@ -83,13 +87,18 @@ func (d *diffReport) TotallyNewFile(entryPathCanonical string) {
 	fmt.Fprintf(d.output, " N %s\n", entryPathCanonical)
 }
 
-func (d *diffReport) ModifiedFromImage(entryPathCanonical string) {
+func (d *diffReport) ImageModified(entryPathCanonical string) {
 	d.totallyNewFiles++
 
 	fmt.Fprintf(d.output, "IM %s\n", entryPathCanonical)
 }
 
+func (d *diffReport) ImageEqual(entryPathCanonical string) {
+	d.imageEqual++
+}
+
 func (d *diffReport) OverrideEqual(entryPathCanonical string) {
+	d.overrideEqual++
 	// fmt.Fprintf(d.output, "OVERRIDE equal: %s\n", entryPathCanonical)
 }
 
@@ -136,6 +145,12 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 
 	report := &diffReport{output: os.Stdout, ignoreDeleted: ignoreDeleted}
 
+	// we're running as root, but even root cannot access everything.
+	// one such case is FUSE filesystems.
+	errCannotAccess := 0
+
+	errDirChangedToSymlink := []string{}
+
 	var walkOneDir func(string, string) error
 	walkOneDir = func(dirCanonical string, dirDiff string) error {
 		entries, err := ioutil.ReadDir(dirDiff)
@@ -165,25 +180,61 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 				}
 			case (entry.Mode() & os.ModeCharDevice) != 0: // assuming whiteout file (= deleted marker)
 				report.Deleted(entryPath.Canonical())
-			case (entry.Mode() & os.ModeSymlink) != 0:
+			case isSymlink(entry):
 				// deleted symlink is already handled by a whiteout file, so we have create / modify to handle
+
+				overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
+				if err != nil {
+					return fmt.Errorf("Exists: %w", err)
+				}
 
 				imageExists, err := osutil.Exists(entryPath.Image())
 				if err != nil {
-					return err
+					return fmt.Errorf("Exists: %w", err)
 				}
 
-				if !imageExists { // symlink added
-					report.TotallyNewFile(entryPath.Canonical())
-				} else { // modified or modified-then-reverted-to-no-change
-					// TODO: detect modified-then-reverted-to-no-change
+				if overrideExists || imageExists { // modified or modified-then-reverted-to-no-change
+					equal, err := func() (bool, error) {
+						imageOrOverride := func() string {
+							if overrideExists {
+								return entryPath.OverridesWorkdir()
+							} else {
+								return entryPath.Image()
+							}
+						}()
 
-					report.ModifiedFromImage(entryPath.Canonical())
+						// diff is a symlink, and image exists.
+						// in some rare cases image is not a symlink (think dir replaced with symlink)
+						imageStat, err := os.Lstat(imageOrOverride)
+						if err != nil {
+							return false, err
+						}
+
+						if !isSymlink(imageStat) {
+							errDirChangedToSymlink = append(errDirChangedToSymlink, entryPath.Canonical())
+							return false, nil
+						}
+
+						// if equal => modified-then-reverted-to-no-change
+						return symlinksEqual(entryPath.Diff(), imageOrOverride)
+					}()
+					if err != nil {
+						return err
+					}
+
+					if equal {
+						report.ImageEqual(entryPath.Canonical())
+					} else {
+						report.ImageModified(entryPath.Canonical())
+					}
+				} else {
+					report.TotallyNewFile(entryPath.Canonical())
 				}
 			default: // regular file
 				overrideExists, err := osutil.Exists(entryPath.OverridesWorkdir())
 				if err != nil {
-					return err
+					errCannotAccess++
+					continue
 				}
 
 				imageExists, err := osutil.Exists(entryPath.Image())
@@ -192,9 +243,9 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 				}
 
 				if overrideExists {
-					equal, err := compareFiles(entryPath.Diff(), entryPath.OverridesWorkdir())
+					equal, err := filesEqual(entryPath.Diff(), entryPath.OverridesWorkdir())
 					if err != nil {
-						return err
+						return fmt.Errorf("filesEqual: %w", err)
 					}
 
 					if equal {
@@ -203,7 +254,16 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 						report.OverrideOutOfDate(entryPath.Canonical())
 					}
 				} else if imageExists {
-					report.ModifiedFromImage(entryPath.Canonical())
+					equal, err := filesEqual(entryPath.Diff(), entryPath.Image())
+					if err != nil {
+						return err
+					}
+
+					if equal {
+						report.ImageEqual(entryPath.Canonical())
+					} else {
+						report.ImageModified(entryPath.Canonical())
+					}
 				} else {
 					report.TotallyNewFile(entryPath.Canonical())
 				}
@@ -217,11 +277,27 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 		return err
 	}
 
+	if errCannotAccess > 0 {
+		log.Printf("WARN: errCannotAccess=%d", errCannotAccess)
+	}
+
+	for _, item := range errDirChangedToSymlink {
+		log.Printf("WARN: errDirChangedToSymlink (changes not analyzed): %s", item)
+	}
+
+	if report.overrideEqual > 0 {
+		log.Printf("WARN: overrideEqual=%d", report.overrideEqual)
+	}
+
+	if report.imageEqual > 0 {
+		log.Printf("WARN: imageEqual=%d (modified without actually modified? just modification timestamp?)", report.imageEqual)
+	}
+
 	return nil
 }
 
 type dirBases struct {
-	diff             string // "/persist/apps/SYSTEM_nobackup/system_a-diff"
+	diff             string // "/sysroot/apps/OS-diff/<sysID>"
 	overridesWorkdir string // "/persist/work/joonas-sys/overrides"
 	image            string // "/mnt/sys-current-rom"
 }
@@ -255,7 +331,7 @@ func (e *entryPathBuilder) Image() string {
 	return filepath.Join(e.dirs.image, e.Canonical())
 }
 
-// "/persist/apps/SYSTEM_nobackup/system_a-diff/etc/timezone"
+// "/sysroot/apps/OS-diff/<sysID>/etc/timezone"
 func (e *entryPathBuilder) Diff() string {
 	return filepath.Join(e.dirs.diff, e.Canonical())
 }
@@ -265,7 +341,8 @@ func (e *entryPathBuilder) OverridesWorkdir() string {
 	return filepath.Join(e.dirs.overridesWorkdir, e.Canonical())
 }
 
-func compareFiles(pathA string, pathB string) (bool, error) {
+func filesEqual(pathA string, pathB string) (bool, error) {
+	// TODO: implementation could be optimized to stop reading on first different byte
 	contentA, err := os.ReadFile(pathA)
 	if err != nil {
 		return false, err
@@ -277,6 +354,20 @@ func compareFiles(pathA string, pathB string) (bool, error) {
 	}
 
 	return bytes.Equal(contentA, contentB), nil
+}
+
+func symlinksEqual(pathA string, pathB string) (bool, error) {
+	linkA, err := os.Readlink(pathA)
+	if err != nil {
+		return false, err
+	}
+
+	linkB, err := os.Readlink(pathB)
+	if err != nil {
+		return false, err
+	}
+
+	return linkA == linkB, nil
 }
 
 func diffOne(entryPathCanonical string) error {
@@ -388,4 +479,8 @@ func revert(entryPathCanonical string) error {
 	}
 
 	return os.Remove(entryPath.Diff())
+}
+
+func isSymlink(info fs.FileInfo) bool {
+	return (info.Mode() & os.ModeSymlink) != 0
 }
