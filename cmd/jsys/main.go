@@ -5,6 +5,7 @@ import (
 
 	"github.com/function61/gokit/app/dynversion"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func main() {
 	app.AddCommand(lowDiskSpaceCheckerEntrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
-	app.AddCommand(sshConfigGeneratorEntrypoint())
+	app.AddCommand(discoverremotemachines.Entrypoint())
 	app.AddCommand(statusbar.Entrypoint())
 	app.AddCommand(calendarEntrypoint())
 	app.AddCommand(tui.HREntrypoint())

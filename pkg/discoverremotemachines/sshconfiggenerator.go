@@ -1,4 +1,4 @@
-package main
+package discoverremotemachines
 
 // Generates SSH client configuration file with hostnames filled from Tailscale network
 
@@ -17,9 +17,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func sshConfigGeneratorEntrypoint() *cobra.Command {
+func Entrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "sshconfig-generate",
+		Use:   "discover-remote-machines",
 		Short: "Generate SSH config from Tailscale devices list",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
