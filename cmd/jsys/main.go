@@ -8,6 +8,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/backup"
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
+	"github.com/joonas-fi/joonas-sys/pkg/lowdiskspacechecker"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/joonas-fi/joonas-sys/pkg/statusbar"
 	"github.com/joonas-fi/joonas-sys/pkg/sysdiff"
@@ -35,7 +36,7 @@ func main() {
 	app.AddCommand(rsyncServerEntrypoint())
 	app.AddCommand(sysdiff.Entrypoint())
 	app.AddCommand(backlightEntrypoint())
-	app.AddCommand(lowDiskSpaceCheckerEntrypoint())
+	app.AddCommand(lowdiskspacechecker.Entrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
 	app.AddCommand(infoEntrypoint())
 	app.AddCommand(discoverremotemachines.Entrypoint())
