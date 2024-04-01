@@ -7,6 +7,7 @@ import (
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
+	"github.com/joonas-fi/joonas-sys/pkg/backup"
 	"github.com/spf13/cobra"
 )
 
@@ -102,7 +103,7 @@ func sanityCheck(ctx context.Context) error {
 		"/sysroot/apps/flatpak",
 		"/sysroot/apps/flatpak-appdata",
 	} {
-		excludedFromBackup, err := isExcludedFromBackup(shouldExcludeFromBackup)
+		excludedFromBackup, err := backup.IsExcluded(shouldExcludeFromBackup)
 		if err != nil {
 			return err
 		}
