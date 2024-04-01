@@ -1,9 +1,11 @@
-package main
+// Commands for backlight control (increase/decrease brightness)
+package backlight
 
 import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -12,12 +14,10 @@ import (
 	"time"
 
 	"github.com/esiqveland/notify"
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/spf13/cobra"
 )
-
-// Commands for backlight control (increase/decrease brightness)
 
 const (
 	// points to the backlight interface, e.g. "/sys/class/backlight/intel_backlight"
@@ -29,19 +29,19 @@ const (
 	desktopNotificationPreviousIDFile = "backlightctl/desktop-notification-previous-id"
 )
 
-func backlightEntrypoint() *cobra.Command {
+func Entrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backlight",
 		Short: "Backlight management (screen/keyboard/...)",
 	}
 
-	cmd.AddCommand(backlightKeyboardEntrypoint())
-	cmd.AddCommand(backlightScreenEntrypoint())
+	cmd.AddCommand(keyboardEntrypoint())
+	cmd.AddCommand(screenEntrypoint())
 
 	return cmd
 }
 
-func backlightKeyboardEntrypoint() *cobra.Command {
+func keyboardEntrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "keyboard",
 		Short: "Keyboard backlight",
@@ -51,15 +51,13 @@ func backlightKeyboardEntrypoint() *cobra.Command {
 		Use:   "cycle",
 		Short: "Cycle keyboard backlight (off/medium/high)",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(keyboardBacklightCycle())
-		},
+		Run:   cli.RunnerNoArgs(keyboardBacklightCycle),
 	})
 
 	return cmd
 }
 
-func backlightScreenEntrypoint() *cobra.Command {
+func screenEntrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "screen",
 		Short: "Screen backlight",
@@ -69,18 +67,18 @@ func backlightScreenEntrypoint() *cobra.Command {
 		Use:   "increase",
 		Short: "Increase brightness",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(backlightAdjustBy(context.Background(), 0.10))
-		},
+		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+			return backlightAdjustBy(ctx, 0.10)
+		}),
 	})
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "decrease",
 		Short: "Decrease brightness",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(backlightAdjustBy(context.Background(), -0.10))
-		},
+		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+			return backlightAdjustBy(ctx, -0.10)
+		}),
 	})
 
 	return cmd
@@ -88,7 +86,7 @@ func backlightScreenEntrypoint() *cobra.Command {
 
 // cycles values between 0 and max_brightness. this is sensible only when the numbers are mapped to
 // "modes", i.e. 0 => off, 1 => medium, 2 => high etc.
-func keyboardBacklightCycle() error {
+func keyboardBacklightCycle(_ context.Context, _ *log.Logger) error {
 	brightnessPath := filepath.Join(keyboardBacklightDevice, "brightness")
 
 	max, err := readIntFile(filepath.Join(keyboardBacklightDevice, "max_brightness"))
