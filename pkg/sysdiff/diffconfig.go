@@ -1,4 +1,4 @@
-package main
+package sysdiff
 
 // Configuration for the diff tool
 
@@ -11,7 +11,7 @@ import (
 	"github.com/function61/gokit/encoding/hcl2json"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/joonas-fi/joonas-sys/misc"
-	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/overlayfs"
 )
 
 type item struct {
@@ -27,7 +27,7 @@ func loadConf() (*config, []string, []string, error) {
 	// open with this priority:
 	// 1) if ./misc/<file> exists locally
 	// 2) from embedded FS
-	confFiles := newOverlayFs(os.DirFS("./misc/"), misc.Files)
+	confFiles := overlayfs.New(os.DirFS("./misc/"), misc.Files)
 
 	hcl, err := confFiles.Open("state-diff-config.hcl")
 	if err != nil {
@@ -95,8 +95,4 @@ func loadConf() (*config, []string, []string, error) {
 	}
 
 	return conf, allowedChangeSubtrees, allowedChangeFiles, nil
-}
-
-func readRunningSystemId() (string, error) {
-	return common.ReadRunningSystemId()
 }
