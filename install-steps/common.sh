@@ -35,6 +35,9 @@ function downloadAndInstallSingleBinaryProgram { # Go 😍
 	local destination="$1"
 	local downloadUrl="$2"
 
+	# make sure parent directory exists
+	mkdir --parents $(dirname "$destination")
+
 	curl --location --fail --silent --output "$destination" "$downloadUrl"
 
 	chmod +x "$destination"
