@@ -13,6 +13,8 @@ import (
 
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/prometheus/procfs"
 	"github.com/spf13/cobra"
 )
@@ -288,7 +290,7 @@ func isMounted(mountpoint string) (bool, error) {
 }
 
 func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
-	backgroundFromCurrentSystem := "/persist/apps/SYSTEM_nobackup/background.png"
+	backgroundFromCurrentSystem := filepath.Join(filelocations.Sysroot.App(common.AppSYSTEM), "background.png")
 
 	backgroundExists, err := osutil.Exists(backgroundFromCurrentSystem)
 	if err != nil {

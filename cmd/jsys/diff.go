@@ -17,6 +17,8 @@ import (
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/spf13/cobra"
 )
@@ -110,16 +112,16 @@ func (d *diffReport) OverrideOutOfDate(entryPathCanonical string) {
 
 func dirBasesForRunningSystemId() (*dirBases, error) {
 	// resolving diffs for currently running system. if needed, we could add a CLI flag for override
-	runningSysId, err := readRunningSystemId()
+	runningSysID, err := common.ReadRunningSystemId()
 	if err != nil {
 		return nil, err
 	}
 
 	return &dirBases{
 		// root differences to system N descend from here
-		diff:             fmt.Sprintf("/persist/apps/SYSTEM_nobackup/%s-diff/", runningSysId),
+		diff:             filelocations.Sysroot.Diff(runningSysID),
 		overridesWorkdir: "/persist/work/joonas-sys/overrides",
-		image:            "/mnt/sys-current-rom",
+		image:            filelocations.Sysroot.Checkout(runningSysID),
 	}, nil
 }
 

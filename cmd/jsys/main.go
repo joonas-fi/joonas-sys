@@ -9,6 +9,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
+	"github.com/joonas-fi/joonas-sys/pkg/statusbar"
 	"github.com/joonas-fi/joonas-sys/pkg/sysdiff"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
