@@ -1,6 +1,9 @@
 #!/bin/bash -eu
 
-nickname=$(echo -e "home\nssrc\nunikie" | fzf);
+# take in possible '$ tailscale' alias
+# . ~/.bash_aliases
 
-exec tailscale switch "$nickname"
+nickname=$(echo -e "home\nssrc\n" | fzf);
+
+docker exec -it tailscale_tailscale_1 tailscale switch "$nickname"
 
