@@ -2,6 +2,8 @@ package statusbar
 
 // Processes click events sent from i3bar to us (via out stdin).
 
+// TODO: merge with i3barprotocol?
+
 import (
 	"bufio"
 	"context"
