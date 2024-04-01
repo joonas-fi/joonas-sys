@@ -11,6 +11,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/debug"
 	"github.com/joonas-fi/joonas-sys/pkg/discoverremotemachines"
 	"github.com/joonas-fi/joonas-sys/pkg/lowdiskspacechecker"
+	"github.com/joonas-fi/joonas-sys/pkg/notificationdedup"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/joonas-fi/joonas-sys/pkg/statusbar"
 	"github.com/joonas-fi/joonas-sys/pkg/sysdiff"
@@ -49,6 +50,9 @@ func main() {
 	app.AddCommand(tui.HREntrypoint())
 	app.AddCommand(debug.Entrypoint())
 	app.AddCommand(ostree.Entrypoint())
+
+	app.AddCommand(notificationdedup.Entrypoint())
+	app.AddCommand(notificationdedup.WorkerEntrypoint())
 
 	osutil.ExitIfError(app.Execute())
 }
