@@ -13,3 +13,9 @@ const (
 	Creator              = "user.xdg.creator"                 // Reserved but not yet defined. The string "user" has a different meaning in ROX Contact Manager (creating application) compared with Dublin core (creating person/entity).
 	Publisher            = "user.xdg.publisher"               // Name of the creating application. See also the Publisher element in Dublin core.
 )
+
+// https://www.freedesktop.org/wiki/CommonExtendedAttributes/#proposedcontrolattributes
+
+const (
+	RobotsBackup = "user.xdg.robots.backup"
+)
