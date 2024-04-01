@@ -2,10 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"os"
 	"os/exec"
 
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
+	rsyncdconfig "github.com/gokrazy/rsync/pkg/config"
+	"github.com/gokrazy/rsync/pkg/rsyncd"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +27,35 @@ func rsyncServerEntrypoint() *cobra.Command {
 	}
 }
 
+func rsyncServerV2(ctx context.Context) error {
+	listener, err := net.Listen("tcp", "0.0.0.0:873")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Pro-tip: on remote run $ jsys flash --remote ${SYSTEM_ID}")
+
+	rsyncServer := rsyncd.NewServer(
+		rsyncdconfig.NewModule("jsys", common.BuildTreeLocation, nil),
+		rsyncdconfig.NewModule("EFI", "misc/esp/EFI", nil))
+
+	if err := rsyncServer.Serve(ctx, listener); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func rsyncServer(ctx context.Context) error {
+	if os.Getenv("OLD_RSYNC") == "" {
+		return rsyncServerV2(ctx)
+	} else {
+		return rsyncServerLegacy(ctx)
+	}
+}
+
+// TODO: serve on top of tailscale userspace networking as a temporary tagged service?
+func rsyncServerLegacy(ctx context.Context) error {
 	// after starting this, the remote computer can be flashed with:
 	//   $ REMOTE=rsync://192.168.1.123/ ./jsys_linux-amd64 flash system_b
 
@@ -29,6 +63,8 @@ func rsyncServer(ctx context.Context) error {
 	if err := requireRoot(); err != nil {
 		return err
 	}
+
+	fmt.Println("Pro-tip: on remote run $ jsys flash --remote ${SYSTEM_ID}")
 
 	tempConfFile := "/tmp/jsys-rsyncd.conf"
 	if err := os.WriteFile(tempConfFile, []byte(`
