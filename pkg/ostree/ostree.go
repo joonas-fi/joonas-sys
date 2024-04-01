@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	ostreeBranchNameX8664 = "app/fi.joonas.os/x86_64"
+	ostreeBranchNameX8664 = "deploy/app/fi.joonas.os/x86_64/stable"
 )
 
 func Entrypoint() *cobra.Command {
@@ -72,6 +72,8 @@ func commitEntrypoint() *cobra.Command {
 		Short: "Commit current build to OSTree",
 		Args:  cobra.ExactArgs(1),
 		Run: cli.Runner(func(ctx context.Context, args []string, logger *log.Logger) error {
+			subject := args[0]
+
 			if _, err := userutil.RequireRoot(); err != nil {
 				return err
 			}
@@ -97,7 +99,7 @@ func commitEntrypoint() *cobra.Command {
 			// commit writes the revision to stdout
 			revisionOutput := &bytes.Buffer{}
 
-			commitOutput := exec.CommandContext(ctx, "ostree", "commit", "--branch="+ostreeBranchNameX8664, "--subject="+args[0], common.BuildTreeLocation)
+			commitOutput := exec.CommandContext(ctx, "ostree", "commit", "--branch="+ostreeBranchNameX8664, "--subject="+subject, common.BuildTreeLocation)
 			commitOutput.Stdout = io.MultiWriter(os.Stdout, revisionOutput)
 			commitOutput.Stderr = os.Stderr
 			if err := commitOutput.Run(); err != nil {
@@ -128,7 +130,7 @@ func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) erro
 
 	commitShort := commit[0:7] // 7 hexits is unique enough
 
-	checkoutPath := "/sysroot/apps/OS-checkout/" + commitShort
+	checkoutPath := filelocations.Sysroot.Checkout(commitShort)
 
 	exists, err := osutil.Exists(checkoutPath)
 	if err != nil {
@@ -165,7 +167,7 @@ func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) erro
 
 	fmt.Printf("checked out to %s\n", checkoutPath)
 
-	logger.Printf("pro-tip: run $ %s test-in-vm --nu in-ram", os.Args[0])
+	logger.Printf("pro-tip: run $ %s test-in-vm", os.Args[0])
 
 	return nil
 }
@@ -173,8 +175,9 @@ func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) erro
 var showCommentRe = regexp.MustCompile(`\n    (.+)`)
 
 type CheckoutWithLabel struct {
-	Dir   string // "ae39405"
-	Label string // "ae39405 - 2023-05-28T13:06:07+03:00 - fix virtio-fsd"
+	Dir       string // "ae39405"
+	Label     string // "ae39405 - 2023-05-28T13:06:07+03:00 - fix virtio-fsd"
+	Timestamp time.Time
 }
 
 func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, error) {
@@ -213,7 +216,8 @@ func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, err
 	})
 
 	sort.Slice(checkoutsWithTimestamps, func(i, j int) bool {
-		return checkoutsWithTimestamps[i].timestamp.Before(checkoutsWithTimestamps[j].timestamp)
+		// newest to oldest
+		return checkoutsWithTimestamps[i].timestamp.After(checkoutsWithTimestamps[j].timestamp)
 	})
 
 	return lo.Map(checkoutsWithTimestamps, func(x direntryWithTimestamp, _ int) CheckoutWithLabel {
@@ -227,8 +231,9 @@ func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, err
 		}
 
 		return CheckoutWithLabel{
-			Dir:   x.Name(),
-			Label: strings.Join(labelComponents, " - "),
+			Dir:       x.Name(),
+			Label:     strings.Join(labelComponents, " - "),
+			Timestamp: x.timestamp,
 		}
 	}), nil
 }
