@@ -16,6 +16,7 @@ import (
 	"github.com/esiqveland/notify"
 	"github.com/function61/gokit/app/cli"
 	"github.com/joonas-fi/joonas-sys/pkg/common"
+	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -188,7 +189,7 @@ func notifyNewBrightness(newBrighness float64) error {
 			ReplacesID:    replacesID,
 			Summary:       "🔆",
 			ExpireTimeout: 2500 * time.Millisecond,
-			Body:          progressBar(int(newBrighness*100), 40, progressBarDefaultTheme()),
+			Body:          tui.ProgressBar(int(newBrighness*100), 40, tui.ProgressBarDefaultTheme()),
 		})
 	})
 }
@@ -232,32 +233,6 @@ func notifyWithConcurrentSuppression(
 	}
 
 	return nil
-}
-
-func progressBar(pct int, barLength int, theme progressBarTheme) string {
-	r := make([]rune, barLength)
-
-	ratio := float64(barLength) * float64(pct) / 100.0
-
-	for i := 0; i < barLength; i++ {
-		ch := theme.Vacant
-		if float64(i+1) <= ratio {
-			ch = theme.Filled
-		}
-
-		r[i] = ch
-	}
-
-	return string(r)
-}
-
-type progressBarTheme struct {
-	Filled rune
-	Vacant rune
-}
-
-func progressBarDefaultTheme() progressBarTheme {
-	return progressBarTheme{'█', '░'}
 }
 
 // returns XDG_RUNTIME_DIR which usually is /run/user/<uid> (e.g. /run/user/1000)
