@@ -8,14 +8,14 @@
 # - bootstrap process (install joonas-sys on a new machine), like lsblk, fdisk and mkfs.ext4
 
 copy_exec /sbin/blkid
-copy_exec /sbin/mke2fs
-copy_exec /sbin/fsck
-copy_exec /sbin/fsck.f2fs
-copy_exec /sbin/fsck.ext2
-copy_exec /sbin/fsck.ext3
-copy_exec /sbin/fsck.ext4
-copy_exec /bin/fsck.btrfs
-copy_exec /sbin/logsave
-copy_exec /sbin/mkfs.ext4
+# copy_exec /sbin/mke2fs
+# copy_exec /sbin/fsck
+# copy_exec /sbin/fsck.f2fs
+# copy_exec /sbin/fsck.ext2
+# copy_exec /sbin/fsck.ext3
+# copy_exec /sbin/fsck.ext4
+# copy_exec /bin/fsck.btrfs
+# copy_exec /sbin/logsave
+# copy_exec /sbin/mkfs.ext4
 copy_exec /usr/bin/lsblk
-copy_exec /usr/sbin/fdisk
+# copy_exec /usr/sbin/fdisk
