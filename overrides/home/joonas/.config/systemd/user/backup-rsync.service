@@ -4,5 +4,5 @@ OnFailure=failure-notification@%n
 
 [Service]
 Type=oneshot
-ExecStart=/persist/apps/rsync-run.sh
+ExecStart=sudo jsys backup --refresh-excludes
 
