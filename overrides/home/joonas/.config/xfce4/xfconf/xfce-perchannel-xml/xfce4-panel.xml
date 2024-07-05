@@ -4,7 +4,7 @@
   <property name="plugins" type="empty">
     <property name="clipman" type="empty">
       <property name="settings" type="empty">
-        <property name="add-primary-clipboard" type="bool" value="true"/>
+        <property name="add-primary-clipboard" type="bool" value="false"/>
       </property>
     </property>
   </property>
