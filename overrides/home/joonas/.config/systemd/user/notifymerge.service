@@ -1,0 +1,8 @@
+[Unit]
+Description=Desktop notification merger
+
+[Service]
+ExecStart=/usr/bin/hautomo-client notification-merge
+
+[Install]
+WantedBy=multi-user.target

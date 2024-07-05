@@ -1,0 +1,5 @@
+[Socket]
+ListenStream=/run/user/%U/org.freedesktop.Notifications.Notify_merge.sock
+
+[Install]
+WantedBy=sockets.target
