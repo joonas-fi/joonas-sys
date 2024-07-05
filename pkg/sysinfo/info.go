@@ -1,14 +1,16 @@
-package main
-
 // Shows information about the installed system
+package sysinfo
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/acobaugh/osrelease"
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/time/timeutil"
+	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/samber/lo"
@@ -16,19 +18,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func infoEntrypoint() *cobra.Command {
+func Entrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "info",
 		Short: "Show system information",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(info())
-		},
+		Run:   cli.RunnerNoArgs(info),
 	}
 }
 
-func info() error {
-	sysID, err := readRunningSystemId()
+func info(ctx context.Context, _ *log.Logger) error {
+	sysID, err := common.ReadRunningSystemId()
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
 	"github.com/joonas-fi/joonas-sys/pkg/statusbar"
 	"github.com/joonas-fi/joonas-sys/pkg/sysdiff"
+	"github.com/joonas-fi/joonas-sys/pkg/sysinfo"
 	"github.com/joonas-fi/joonas-sys/pkg/tui"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +41,7 @@ func main() {
 	app.AddCommand(backlight.Entrypoint())
 	app.AddCommand(lowdiskspacechecker.Entrypoint())
 	app.AddCommand(sanityCheckEntrypoint())
-	app.AddCommand(infoEntrypoint())
+	app.AddCommand(sysinfo.Entrypoint())
 	app.AddCommand(discoverremotemachines.Entrypoint())
 	app.AddCommand(backup.Entrypoint())
 	app.AddCommand(statusbar.Entrypoint())
