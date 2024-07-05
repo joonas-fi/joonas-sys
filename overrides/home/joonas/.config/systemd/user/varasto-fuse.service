@@ -5,6 +5,6 @@ Description=Varasto FUSE server
 WantedBy=default.target
 
 [Service]
-ExecStart=sh -c 'temp="$(mktemp -u)" && mkfifo "$temp" && cat "$temp" | /usr/bin/sto fuse serve'
+ExecStart=/usr/bin/sto fuse serve
 Restart=always
 RestartSec=10s
