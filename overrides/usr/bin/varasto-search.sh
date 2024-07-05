@@ -8,5 +8,5 @@ idAndPath="$(cat ~/.config/varasto/collection-index.txt | rofi -dmenu -i -p 'Var
 # "<id> <path>" => "<id>"
 id="$(echo -n "$idAndPath" | cut -d ' ' -f 1)"
 
-sensible-browser "https://varasto.home.fn61.net/coll/${id}"
+xdg-open "https://varasto.home.fn61.net/coll/${id}"
 
