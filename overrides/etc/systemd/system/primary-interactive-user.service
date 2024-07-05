@@ -1,0 +1,9 @@
+[Unit]
+Description=Symlink primary/interactive user so we can access /run/user.primary-interactive/...
+
+[Service]
+Type=oneshot
+ExecStart=ln -s /run/user/1000 /run/user.primary-interactive
+
+[Install]
+WantedBy=multi-user.target
