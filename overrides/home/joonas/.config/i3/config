@@ -56,8 +56,10 @@ font pango:monospace 8
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 #font pango:DejaVu Sans Mono 8
 
-# Use Mouse+$mod to drag floating windows to their wanted position
-floating_modifier $mod
+# Use Mouse+ a modifier to drag floating windows to their wanted position.
+# usually people use whatever `$mod` is, but with us hijacking the `$mod` press for dmenu makes this not work.
+# one can drag windows by their title bar but not all (most?) floating windows have title bars with our config.
+floating_modifier Ctrl
 
 # start a terminal
 bindsym $mod+Return exec alacritty
