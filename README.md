@@ -1,3 +1,6 @@
+⬆️ For table of contents, click the above icon
+
+
 My personal system installation (Ubuntu + programs & conf I use) as code. You might be
 familiar with "dotfiles" - this is a bit further. :) (Because I'm a giant nerd.)
 
@@ -95,6 +98,10 @@ As a result:
 The most interesting location is [install-steps/](install-steps/).
 The scripts are run in order and most often use the package manager to install software and/or run custom commands.
 
+(Notice the distinct lack of "configuration management tools" like Ansible/Chef.. turns out you can
+make do with simple shell scripts if you don't need the "convergence" properties configuration management
+tooling. I.e. installing a system once is far easier than making changes to ever-living system.)
+
 Second most interesting directory tree is [overrides/](overrides/), which contains all customized
 files I want to be present in the image:
 
@@ -115,7 +122,7 @@ can begin now that we have a working package manager.
 
 There are roughly three categories of data:
 
-| Type of file | Source of data | Stored in | Example |
+| Type of file | Source of data | Stored in | Example |
 |--------------|--------|-----------|---------|
 | Static file installed by an application | OS package manager | System image | Executable or config file that you didn't change |
 | File that only needs to be changed rarely | This repository | System image | Application's config file that you customized, like [Firefox customizations](overrides/usr/lib/firefox/browser/defaults/preferences/user.js) |
@@ -138,6 +145,15 @@ Why this approach?
 This might seem like much added complexity to you, and that's a fair argument. But I'm thinking I'm
 just paying the price beforehand, because it's easier to do it now than later ("Leaning in to the
 pain"). Let me explain..
+
+
+### Maintaining multiple computers
+
+An unexpected side effect came from building my system programmatically: I can provision it on multiple
+computers. **It feels really nice** moving from my desktop to my laptop and it behaving exactly the
+same. Same programs, same settings, same keyboard shortcuts. Same SSH accessibility etc.
+
+I plan to have my third computer (media PC) added soon.
 
 
 ### Intermingled state
@@ -299,7 +315,7 @@ $ bin/systree-to-raw-image.sh
 $ bin/test-in-vm.sh
 ```
 
-(NOTE: `$ sudo` probaby required.)
+(NOTE: `$ sudo` probably required.)
 
 
 ### Build environment portability
