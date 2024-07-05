@@ -3,7 +3,7 @@
 	"windowmanager_show_project_emoji_icons": true,
 	"dev_ingress_settings": {
 		"domain": "dev.fn61.net",
-		"network": "fn61"
+		"network": "bridge"
 	},
 	"project_quality": {
 		"file_rules": [
@@ -16,17 +16,22 @@
 			},
 			{
 				"path": "LICENSE",
-				"must_exist": true
+				"must_exist": true,
+				"conditions": [{ "enable": false, "repo_origin": "*/tiiuae/*" }]
 			},
 			{
 				"path": "docs/security.md",
-				"must_exist": false
+				"must_exist": false,
+				"conditions": [{ "enable": true, "repo_origin": "*/function61/*" }],
+				"_notes": "Was moved to org-wide function61/.github repo"
 			},
 			{
 				"path": ".github/workflows/build.yml",
 				"must_contain": [
 					"in-ci-autodetect-settings",
-					"turbobob-latest-stable-linux-amd64"
+					"turbobob-latest-stable-linux-amd64",
+					"--no-progress-meter",
+					"actions/checkout@v4"
 				],
 				"must_not_contain": [
 					"unfortunately there"
@@ -50,7 +55,7 @@
 			}
 		],
 		"builder_uses_expect": {
-			"docker://fn61/buildkit-golang": "docker://fn61/buildkit-golang:20220115_1318_71191646"
+			"docker://fn61/buildkit-golang": "docker://fn61/buildkit-golang:20240405_0714_856c11bd"
 		}
 	},
 	"code_editor":  {"cmd": ["subl", "--new-window", "$PROJECT_ROOT"]},
