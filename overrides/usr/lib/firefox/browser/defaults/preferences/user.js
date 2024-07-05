@@ -15,3 +15,15 @@ pref('browser.aboutConfig.showWarning', false);
 
 // https://stackoverflow.com/a/47353456
 pref('datareporting.policy.firstRunURL', '');
+
+pref('browser.shell.checkDefaultBrowser', false);
+
+// https://wiki.mozilla.org/Firefox/Normandy/PreferenceRollout
+// pref('app.normandy.first_run', false);
+
+pref('app.shield.optoutstudies.enabled', false);
+
+pref('datareporting.healthreport.uploadEnabled', false);
+
+// no need, since we "fresh-install" weekly
+pref('extensions.update.autoUpdateDefault', false);
