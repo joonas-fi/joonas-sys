@@ -262,4 +262,4 @@ bindsym $mod+Print exec com.uploadedlobster.peek
 
 gaps inner 20
 
-smart_gaps on
+# smart_gaps on
