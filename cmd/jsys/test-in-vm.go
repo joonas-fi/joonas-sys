@@ -26,6 +26,7 @@ import (
 
 func testInVMEntrypoint() *cobra.Command {
 	rescue := false
+	wipe := false
 
 	cmd := &cobra.Command{
 		Use:   "test-in-vm",
@@ -33,17 +34,18 @@ func testInVMEntrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(func() error {
-				return testInVM(osutil.CancelOnInterruptOrTerminate(nil), rescue)
+				return testInVM(osutil.CancelOnInterruptOrTerminate(nil), rescue, wipe)
 			}())
 		},
 	}
 
 	cmd.Flags().BoolVarP(&rescue, "rescue", "", rescue, "Enter rescue (AKA single-user) mode: no GUI or network.")
+	cmd.Flags().BoolVarP(&wipe, "wipe", "", wipe, "Wipe state (diffs) before boot")
 
 	return cmd
 }
 
-func testInVM(ctx context.Context, rescue bool) error {
+func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
@@ -69,6 +71,12 @@ func testInVM(ctx context.Context, rescue bool) error {
 	//
 	// VM's sysroot is actually encapsulated in our sysroot's app directory
 	vmSysroot := filelocations.WithRoot(filelocations.Sysroot.App("OS-test-in-VM"))
+
+	if wipe {
+		if err := os.RemoveAll(vmSysroot.Diff(sysID)); err != nil {
+			return err
+		}
+	}
 
 	if err := writeBoilerplateFiles(vmSysroot, sysID); err != nil {
 		return err
