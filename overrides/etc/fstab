@@ -1,2 +1,2 @@
 
-LABEL=persist   /persist  ext4  errors=remount-ro 0 1
+LABEL=persist   /  ext4  errors=remount-ro 0 1
