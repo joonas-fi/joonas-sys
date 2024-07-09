@@ -43,6 +43,11 @@ func (b Root) Diff(sysID string) string {
 	return filepath.Join(b.App(common.AppOSDiff), sysID)
 }
 
+// "/sysroot/apps/OS-diff/<sysID>-work"
+func (b Root) DiffWork(sysID string) string {
+	return filepath.Join(b.App(common.AppOSDiff), sysID+"-work")
+}
+
 // "/sysroot"
 // please use only as-is (don't use this to derive other values)
 func (b Root) Root() string {

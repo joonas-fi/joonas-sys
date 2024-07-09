@@ -58,9 +58,9 @@ func testInVM(ctx context.Context, rescue bool) error {
 		return err
 	}
 
-	checkout := filepath.Join(filelocations.Sysroot.CheckoutsDir(), sysrootCheckouts[idx].Dir)
-
 	sysID := sysrootCheckouts[idx].Dir
+
+	checkout := filelocations.Sysroot.Checkout(sysID)
 
 	// cannot be in /tmp because then our topology would be:
 	// host: overlayfs -> virtiofsd

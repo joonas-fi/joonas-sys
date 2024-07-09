@@ -70,7 +70,6 @@ func flashEFIEntrypoint() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			idx, _, err := promptUISelect("Version", lo.Map(sysrootCheckouts, func(x ostree.CheckoutWithLabel, _ int) string { return x.Label }))
 			if err != nil {
 				return err
@@ -78,12 +77,19 @@ func flashEFIEntrypoint() *cobra.Command {
 
 			sysID := sysrootCheckouts[idx].Dir
 
+			// create diff and diff-work dirs. system is unbootable without these.
+			for _, dir := range []string{filelocations.Sysroot.Diff(sysID), filelocations.Sysroot.DiffWork(sysID)} {
+				if err := os.MkdirAll(dir, 0755); err != nil {
+					return err
+				}
+			}
+
 			cmdline := fmt.Sprintf("sysid=%s rw", sysID)
 
 			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
 			vol2 := "--volume=/tmp/ukifybuild:/workspace"
 
-			ukifyBuild := exec.CommandContext(ctx, "docker", "run", "--rm", "-t", vol1, vol2, "ukify", "build",
+			ukifyBuild := exec.CommandContext(ctx, "docker", "run", "--rm", "-t", vol1, vol2, "ghcr.io/joonas-fi/joonas-sys-ukify:latest", "build",
 				"--linux=/sysroot/boot/vmlinuz",
 				"--initrd=/sysroot/boot/initrd.img",
 				"--cmdline="+cmdline,
