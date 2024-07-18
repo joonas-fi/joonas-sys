@@ -1,0 +1,11 @@
+# /etc/modules: kernel modules to load at boot time.
+#
+# This file contains the names of kernel modules that should be loaded
+# at boot time, one per line. Lines beginning with "#" are ignored.
+#
+
+# for USB/IP server
+usbip_host
+# for USB/IP client
+vhci-hcd
+
