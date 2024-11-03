@@ -1,5 +1,6 @@
 ⬆️ For table of contents, click the above icon
 
+![](docs/logo.webp)
 
 My personal system installation (Ubuntu + programs & conf I use) as code. You might be
 familiar with "dotfiles" - this is a bit further. :) (Because I'm a giant nerd.)
