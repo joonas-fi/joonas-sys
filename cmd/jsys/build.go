@@ -74,7 +74,7 @@ func buildWrapped(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI
 		return err
 	}
 
-	fmt.Printf("pro-tip: to commit, run:\n  %s ostree commit 'summary of changes'\n", os.Args[0])
+	fmt.Printf("pro-tip: to commit, run:\n  %s ostree commit [--checkout] 'summary of changes'\n", os.Args[0])
 
 	return nil
 }
