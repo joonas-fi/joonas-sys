@@ -77,14 +77,13 @@ func flashEFIEntrypoint() *cobra.Command {
 
 			sysID := sysrootCheckouts[idx].Dir
 
-			// create diff and diff-work dirs. system is unbootable without these.
-			for _, dir := range []string{filelocations.Sysroot.Diff(sysID), filelocations.Sysroot.DiffWork(sysID)} {
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					return err
-				}
+			// create diff dir (system is unbootable without this)
+			if err := os.MkdirAll(filelocations.Sysroot.Diff(sysID), 0755); err != nil {
+				return err
 			}
 
-			cmdline := fmt.Sprintf("sysid=%s rw", sysID)
+			// TODO: discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+			cmdline := append(createKernelCmdline(sysID), "root=LABEL=persist")
 
 			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
 			vol2 := "--volume=/tmp/ukifybuild:/workspace"
@@ -92,7 +91,7 @@ func flashEFIEntrypoint() *cobra.Command {
 			ukifyBuild := exec.CommandContext(ctx, "docker", "run", "--rm", "-t", vol1, vol2, "ghcr.io/joonas-fi/joonas-sys-ukify:latest", "build",
 				"--linux=/sysroot/boot/vmlinuz",
 				"--initrd=/sysroot/boot/initrd.img",
-				"--cmdline="+cmdline,
+				"--cmdline="+strings.Join(cmdline, " "),
 				"--output=/workspace/BOOTx64.efi")
 			if output, err := ukifyBuild.CombinedOutput(); err != nil {
 				return fmt.Errorf("ukify: %w: %s", err, string(output))
@@ -399,4 +398,8 @@ func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
 	}
 
 	return nil
+}
+
+func createKernelCmdline(sysID string) []string {
+	return []string{"sysid=" + sysID, "rw"}
 }

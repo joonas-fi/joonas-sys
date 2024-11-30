@@ -37,7 +37,7 @@ mkdir -p /sysroot
 # move real root
 mount --no-mtab -o move "$rootmnt" "/sysroot" || panic "failed mounting $treeSysroot"
 
-mount -t overlay overlay -olowerdir="/sysroot/apps/OS-checkout/${sysId},upperdir=/sysroot/apps/OS-diff/${sysId},workdir=/sysroot/apps/OS-diff/${sysId}-work" /root
+mount -t overlay overlay -olowerdir="/sysroot/apps/OS-checkout/${sysId},upperdir=/sysroot/apps/OS-diff/${sysId},workdir=/sysroot/apps/OS-diff-work" /root
 
 mkdir -p /root/sysroot
 

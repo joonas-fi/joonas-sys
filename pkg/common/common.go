@@ -15,6 +15,7 @@ const (
 	AppSYSTEM     = "SYSTEM"
 	AppOSCheckout = "OS-checkout"
 	AppOSDiff     = "OS-diff"
+	AppOSDiffWork = "OS-diff-work"
 )
 
 // "sysid=v1" => "v1"

@@ -78,6 +78,10 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 		}
 	}
 
+	if err := os.MkdirAll(vmSysroot.DiffWork(), 0755); err != nil {
+		return err
+	}
+
 	if err := writeBoilerplateFiles(vmSysroot, sysID); err != nil {
 		return err
 	}
@@ -114,7 +118,7 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 		return virtiofsd.Run()
 	})
 
-	kernelCmdline := []string{"rootfstype=virtiofs", "root=vroot", "sysid=" + sysID, "rw"}
+	kernelCmdline := append([]string{"rootfstype=virtiofs", "root=vroot"}, createKernelCmdline(sysID)...)
 	if rescue {
 		kernelCmdline = append(kernelCmdline, "systemd.unit=rescue.target")
 	}
