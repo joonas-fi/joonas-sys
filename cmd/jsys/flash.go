@@ -77,14 +77,13 @@ func flashEFIEntrypoint() *cobra.Command {
 
 			sysID := sysrootCheckouts[idx].Dir
 
-			// create diff and diff-work dirs. system is unbootable without these.
-			for _, dir := range []string{filelocations.Sysroot.Diff(sysID), filelocations.Sysroot.DiffWork(sysID)} {
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					return err
-				}
+			// create diff dir (system is unbootable without this)
+			if err := os.MkdirAll(filelocations.Sysroot.Diff(sysID), 0755); err != nil {
+				return err
 			}
 
-			cmdline := fmt.Sprintf("sysid=%s rw", sysID)
+			// TODO: discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+			cmdline := fmt.Sprintf("root=LABEL=persist sysid=%s rw", sysID)
 
 			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
 			vol2 := "--volume=/tmp/ukifybuild:/workspace"

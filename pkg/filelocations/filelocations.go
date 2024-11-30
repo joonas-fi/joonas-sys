@@ -43,9 +43,11 @@ func (b Root) Diff(sysID string) string {
 	return filepath.Join(b.App(common.AppOSDiff), sysID)
 }
 
-// "/sysroot/apps/OS-diff/<sysID>-work"
-func (b Root) DiffWork(sysID string) string {
-	return filepath.Join(b.App(common.AppOSDiff), sysID+"-work")
+// This is referenced from initramfs (when mounting the overlay).
+//
+// "/sysroot/apps/OS-diff-work"
+func (b Root) DiffWork() string {
+	return filepath.Join(b.App(common.AppOSDiffWork))
 }
 
 // "/sysroot"

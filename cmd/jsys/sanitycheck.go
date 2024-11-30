@@ -8,6 +8,7 @@ import (
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/joonas-fi/joonas-sys/pkg/backup"
+	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/spf13/cobra"
 )
 
@@ -63,6 +64,7 @@ func sanityCheck(ctx context.Context) error {
 		"/sysroot/apps/mcfly",
 		"/sysroot/apps/git config", // usually symlink to Varasto, sometimes may be local "fork" (custom Git author for client work on client laptop)
 		"/sysroot/swapfile",
+		filelocations.Sysroot.DiffWork(),
 		"/dev/cpu_temp",
 		"/dev/kvm", // assert KVM support enabled. details: ticket #38
 	}
