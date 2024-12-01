@@ -39,6 +39,30 @@ func Entrypoint() *cobra.Command {
 	}
 
 	cmd.AddCommand(&cobra.Command{
+		Use:   "pull",
+		Short: "Pull updates from joonas-sys",
+		Args:  cobra.NoArgs,
+		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+			if _, err := userutil.RequireRoot(); err != nil {
+				return err
+			}
+
+			logOutput := exec.CommandContext(ctx, "ostree", "pull", "fi.joonas.os", ostreeBranchNameX8664)
+			logOutput.Stdout = os.Stdout
+			logOutput.Stderr = os.Stderr
+			if err := logOutput.Run(); err != nil {
+				return err
+			}
+
+			fmt.Println("done. pro-tip:")
+			fmt.Println("  $ jsys ostree log")
+			fmt.Println("  $ jsys ostree checkout <commit>")
+
+			return nil
+		}),
+	})
+
+	cmd.AddCommand(&cobra.Command{
 		Use:   "log",
 		Short: "Show commits",
 		Args:  cobra.NoArgs,
