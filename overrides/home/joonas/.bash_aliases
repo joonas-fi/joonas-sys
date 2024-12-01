@@ -183,7 +183,8 @@ ncdu() {
 	# need to pass locale for non-ASCII chars to work
 
 	if [[ $# -eq 0 ]]; then
-		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "/host$(_pwd_symlinksresolved)"
+		docker run --rm --net=none -it -v "$(pwd):/workspace" ghcr.io/r-xs-fi/ncdu
+		# docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "/host$(_pwd_symlinksresolved)"
 	else
 		docker run --rm --net=none -it -v "/:/host:ro" -e LANG joonas/ncdu "$@"
 	fi
