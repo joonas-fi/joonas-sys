@@ -245,6 +245,10 @@ neofetch() {
 	docker run --rm -it --network=host -v /etc/os-release:/etc/os-release:ro joonas/neofetch "$@"
 }
 
+ffmpeg() {
+	docker run --rm -it --net=none -v "$(pwd):/workspace" ghcr.io/r-xs-fi/ffmpeg "$@"
+}
+
 yulelog() {
 	docker run --rm -it --net=none joonas/yulelog "$@"
 }
