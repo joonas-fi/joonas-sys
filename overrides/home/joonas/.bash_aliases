@@ -17,6 +17,9 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
 
+# e as in "edit in favourite editor")
+alias e="hx"
+
 # mnemonic: "cd directory"
 alias cdd="cd \$(find . -type d | fzf)"
 
@@ -238,7 +241,7 @@ doge() {
 }
 
 tokei() {
-	docker run --rm -it -v --net=none "$(pwd):/workspace" joonas/tokei "$@"
+	docker run --rm -it --net=none -v "$(pwd):/workspace" joonas/tokei "$@"
 }
 
 neofetch() {
