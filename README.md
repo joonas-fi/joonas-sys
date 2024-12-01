@@ -48,6 +48,15 @@ Summary:
 
 ![](docs/system-files-layout.drawio.png)
 
+The above is managed by:
+
+```shell
+$ jsys ostree pull
+```
+
+> [!TIP]
+> The command outputs enough help to guide with the rest.
+
 > [!WARNING]
 > From below this is outdated.
 

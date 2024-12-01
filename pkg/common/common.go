@@ -14,6 +14,7 @@ const (
 
 	AppSYSTEM     = "SYSTEM"
 	AppOSCheckout = "OS-checkout"
+	AppOSRepo     = "OS-repo"
 	AppOSDiff     = "OS-diff"
 	AppOSDiffWork = "OS-diff-work"
 )
