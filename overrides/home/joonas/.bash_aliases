@@ -265,3 +265,8 @@ lolcat() {
 	# --force -> Force color even when stdout is not a tty
 	docker run --rm -i --net=none joonas/lolcat --force "$@"
 }
+
+scooter() {
+	docker run --rm -it --net=none -v "$(pwd):/workspace" --user=$(id -u):$(id -g) ghcr.io/r-xs-fi/scooter:latest "$@"
+}
+
