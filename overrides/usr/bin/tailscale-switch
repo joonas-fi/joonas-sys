@@ -5,5 +5,5 @@
 
 nickname=$(echo -e "home\nssrc\n" | fzf);
 
-docker exec -it tailscale_tailscale_1 tailscale switch "$nickname"
+exec tailscale switch "$nickname"
 
