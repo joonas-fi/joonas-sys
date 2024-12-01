@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -66,6 +67,11 @@ func flashEFIEntrypoint() *cobra.Command {
 		Short: "Flash EFI boot partition with target sysid",
 		Args:  cobra.NoArgs,
 		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+			espMounted, err := osutil.Exists("/boot/efi/EFI/")
+			if err != nil || !espMounted {
+				return errors.New("/boot/efi not mounted")
+			}
+
 			sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
 			if err != nil {
 				return err
@@ -96,6 +102,9 @@ func flashEFIEntrypoint() *cobra.Command {
 			if output, err := ukifyBuild.CombinedOutput(); err != nil {
 				return fmt.Errorf("ukify: %w: %s", err, string(output))
 			}
+
+			fmt.Println("pro-tip: (NOTE: take backup of target first)")
+			fmt.Println("  $ cp /tmp/ukifybuild/BOOTx64.efi /boot/efi/EFI/BOOT/BOOTx64.efi")
 
 			return nil
 		}),
