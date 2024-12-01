@@ -52,10 +52,6 @@ lazygit() {
 	printf "\e]2;-\a"
 }
 
-tailscale() {
-	docker exec -it tailscale_tailscale_1 tailscale "$@"
-}
-
 alpine() {
 	docker run --rm -it --network=host -v "$(pwd):/workspace" --workdir /workspace alpine "$@"
 }
