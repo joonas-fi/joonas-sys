@@ -221,6 +221,10 @@ telnet() {
 	docker run --rm -it joonas/telnet "$@"
 }
 
+whois() {
+	docker run --rm -it ghcr.io/r-xs-fi/whois "$@"
+}
+
 mapscii() {
 	docker run --rm -it joonas/telnet mapscii.me
 }
