@@ -191,7 +191,7 @@ func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) erro
 
 	fmt.Printf("checked out to %s\n", checkoutPath)
 
-	logger.Printf("pro-tip: run $ %s test-in-vm", os.Args[0])
+	logger.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash efi", os.Args[0], os.Args[0])
 
 	return nil
 }
