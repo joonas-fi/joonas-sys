@@ -5,18 +5,32 @@
 My personal system installation (Ubuntu + programs & conf I use) as code. You might be
 familiar with "dotfiles" - this is a bit further. :) (Because I'm a giant nerd.)
 
+You can also think of this as my research into how an OS and applications should be configured to maximize:
+
+- usability
+- stability
+	* nothing breaks during normal daily use. I get to opt in to when things update.
+- state separation
+	* I know exactly where files that I care about are. They're under `/sysroot`.
+	All other files in their traditional places like `/home/<username>` are not interesting.
+	You just have to declare total bankrupty on how current sw operates and writes their files because there
+	is no useful state separation.
+- security
+	* mainly by compartmentalization but also by [memory safety](docs/memory-safety-roadmap.md).
+- simplicity and understandability via minimalism
+	* move as much as possible to containers (containers have well-defined boundaries)
+	* not needing update and uninstall during OS normal operation. Remember, we install from scratch
+	  and don't update. There's tremendous amount of complexity in updating software: Microsoft's MSI,
+	  Linux's initramfs hooks, boot partition versioned kernels and initrd's... It all just gets
+	  simpler if software doesn't need update/remove/versioning capabilities.
 This is not a generic operating system ("distro") that could help you - it's my personalized system,
 i.e. difference between an OS and an OS installation after one has set it up for her liking. But I'm
 sharing this to share ideas & for other people to get inspired!
 
-In summary, running these scripts produces:
+In summary, running these tools contain:
 
 - An image for system partition with up-to-date Ubuntu installation + apps I use + config I use
-- An image of boot partition
-
-These two image files can be taken to a totally new computer, boot it with a USB stick containing the
-images and use an utility in the USB stick to write the image partitions to the disk and have the
-system exactly the way I'm used to using it!
+- Tool for updating bootloader to point to the new system image
 
 
 Further documentation
@@ -26,7 +40,7 @@ Further documentation
 	* This brings important context into why I'm specifically doing things that may seem hard!
 - [Manual steps to do after updates](docs/manual-steps.md)
 - [Installing on a new system](docs/installing-on-a-new-system.md)
-- [Memory safety roadmap](docs/memory-safety-roadmap.md)
+- [Boot process](docs/boot-process.md)
 
 
 How does it work
@@ -47,7 +61,50 @@ Summary:
 * All configuration comes from this repo ("system state as code").
 
 
-### Partitioning
+### Filesystem layout
+
+Partitions:
+
+1. Boot partition (more [details](docs/boot-process.md))
+2. Root partition
+
+The root partition physically **doesn't** (at root) look like your
+[typical Linux filesystem hierarchy](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
+but instead one is projected at early boot process with [chroot](https://en.wikipedia.org/wiki/Chroot)-like
+mechanism (actually implemented with [OverlayFS](https://en.wikipedia.org/wiki/OverlayFS)) from
+selected *checkout* in OS-checkout dir.
+
+tl;dr:
+
+- the typical filesystem hierarchy lives at `/sysroot/OS-checkout/$CHECKOUT`
+- any writes on top of the typical filesystem hierarchy are written to `/sysroot/OS-diff/$CHECKOUT`
+
+This makes my root partition quite beautifully organized:
+
+```console
+$ tree -L 2 /sysroot/
+/sysroot/
+├── apps
+│   ├── Desktop
+│   ├── docker
+│   ├── flatpak
+│   ├── flatpak-appdata
+│   ├── git config
+│   ├── mcfly
+│   ├── netplan
+│   ├── OS-checkout
+│   ├── OS-diff
+│   ├── OS-repo
+│   ├── ssh-client
+│   ├── ssh-server
+│   ├── SYSTEM
+│   ├── tailscale-state
+│   ├── wireguard-tunnels
+│   ├── work
+│   └── zoxide
+├── lost+found
+└── swapfile
+```
 
 ![](docs/system-files-layout.drawio.png)
 
@@ -60,41 +117,15 @@ $ jsys ostree pull
 > [!TIP]
 > The command outputs enough help to guide with the rest.
 
-> [!WARNING]
-> From below this is outdated.
-
-Overview as a drawing:
-
-![](docs/overview.png)
-
-Same in text:
-
-It might be easiest to begin by explaining my partition layout:
-
-```
-sda           8:0    0 894.3G  0 disk
-├─sda1        8:1    0   256M  0 part /boot/efi
-├─sda2        8:2    0  47.7G  0 part
-├─sda3        8:3    0  47.7G  0 part /persist/sys-current-rom
-└─sda4        8:4    0 798.8G  0 part /persist
-```
-
-First partition is UEFI system partition (AKA "ESP") - the bootloader (which is responsible for
-starting the OS). `sda2` and `sda3` are equal sized active/passive **readonly** system images.
-
-The persist partition is actually important data (work files, application state), i.e. it doesn't contain
-my installed programs or anything a random program decides to write somewhere, even in my `/home`
-directory.
-
 
 ### No updates to the system
 
 I disable updates in my OS and the programs (Firefox etc.), but I run these steps weekly:
 
-1. Build & flash a freshly-installed kernel+drivers+programs+settings into the passive partition
-2. (Optionally) Test the new passive partition's system in a VM
-3. Switch roles of active-passive partitions (the old passive becomes the new active)
-4. Reboot into the new active partition
+1. Checkout a freshly-installed kernel+drivers+programs+settings
+2. (Optionally) Test the new checkout's system in a VM
+3. Point the bootloader to the new checkout
+4. Reboot into the new active system
 
 As a result:
 
@@ -144,7 +175,7 @@ There are roughly three categories of data:
 |--------------|--------|-----------|---------|
 | Static file installed by an application | OS package manager | System image | Executable or config file that you didn't change |
 | File that only needs to be changed rarely | This repository | System image | Application's config file that you customized, like [Firefox customizations](overrides/usr/lib/firefox/browser/defaults/preferences/user.js) |
-| Persistent data, state that changes often | User generated | `/persist` partition | Application's state directories (example: [Docker](overrides/var/lib/docker)) & files, work files, photographs you took etc. |
+| Persistent data, state that changes often | User generated | Under `/sysroot` | Application's state directories (example: [Docker](overrides/var/lib/docker)) & files, work files, photographs you took etc. |
 
 There's one special case: secret files - like your SSH private keys or other sensitive data, which
 basically is rarely-changing data (therefore could be stored in repo), but for security reasons
@@ -157,69 +188,34 @@ be a symlink ("redirect") to `/persist/ssh/id_rsa`, so:
 - and not have to configure the software to look for the file in my special location.
 
 
-Long-term goals
----------------
+### Distribution
 
-To serve me well:
+I.e. how the updates are distributed to all my computers.
 
-- Solve state management
-- Reduce complexity - there's tremendous complexity in updating software:
-	* Microsoft's MSI
-	* Linux's initramfs hooks
-	* boot partition versioned kernels and initrd's
-	* It all just gets simpler if software doesn't need update/remove/versioning capabilities.
-- Minimal operating system itself, move as much to containers like Docker or Snapd (or minimal-dependency binaries like Go can produce)
-- Get rid of as much C/C++ (= memory unsafe) code as possible to increase security
+The versioning is handled by [OSTree](https://ostreedev.github.io/ostree/introduction/) which could
+be summarized as "git for operating system binaries".
+[Flatpak is also built on top of OSTree](https://docs.flatpak.org/en/latest/under-the-hood.html).
 
+```mermaid
+flowchart TD
+    subgraph "Builder"
+        builder[$ jsys build]
+        push[$ rclone]
+    end
+    subgraph "S3 bucket ☁️"
+        remote[OSTree remote]
+    end
+    subgraph "computer"
+        local[OSTree local repo]
+        jsysflash[$ jsys flash]
+        checkouts["/sysroot/OS-checkout/$VERSION"]
+    end
 
-How to use
-----------
+    push -. take result of .-> builder
+    push -- push/sync --> remote
+    remote -- $ ostree pull --> local
+    local -. checkout a version into use .-> jsysflash
+    jsysflash -- write --> checkouts
 
-How I use these tools to manage my system.
-
-
-### Process
-
-I do this weekly:
-
-![](docs/process.png)
-
-NOTE: there is no hard requirement to build the systree in RAM, but I do it so:
-
-- I don't end up writing to my passive partition if the build process fails (wrecks the previously
-  good partition)
-- Reduce unnecessary I/O - after successful build I [rsync](https://en.wikipedia.org/wiki/Rsync) only
-  the difference from RAM to the passive partition and thus reduce SSD wear.
-- Sure I could use spare space in `/persist` to host a temporary loopback partition to circumvent the
-  failed build problem, but I have enough RAM, RAM is faster and it reduces unnecessary disk I/O.
-
-
-### Scripts
-
-WARNING: these are not safe to run unless you understand what they do first. Some scripts write to
-partitions, some scripts modify your boot partition.. Again, I'm sharing these for educational use,
-not as safe usable programs for anyone else!
-
-The whole process centers around these:
-
-``` console
-$ bin/build-systree.sh
-$ bin/systree-to-raw-image.sh
-$ bin/test-in-vm.sh
 ```
-
-(NOTE: `$ sudo` probably required.)
-
-
-### Build environment portability
-
-The above build process should work on pretty much any distro, you only need Docker installed
-(, and qemu if you want to test the built system in a VM).
-
-
-
-Additional reading
-------------------
-
-- [Erase your darlings](https://grahamc.com/blog/erase-your-darlings) (powerful thought: "Leaning in to the pain")
 
