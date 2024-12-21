@@ -26,7 +26,6 @@ import (
 )
 
 var (
-	// /sysroot/apps/backup-rsync
 	appPath            = filelocations.Sysroot.App("backup-rsync")
 	backupExcludesFile = filepath.Join(appPath, "excludes.conf")
 	backupPasswordFile = filepath.Join(appPath, "password")
@@ -65,9 +64,9 @@ func backup(ctx context.Context, dryRun bool) error {
 		return err
 	}
 
-	// if /persist mount would be empty due to an error (say, HDD crash),
+	// if persist hierarchy would be empty due to an error (say, HDD crash),
 	// it could also trigger removing backups. this would make us pretty sad pandas.
-	sane, err := osutil.Exists("/persist/work")
+	sane, err := osutil.Exists(filelocations.Sysroot.App("work"))
 	if err != nil {
 		return err
 	}
@@ -89,7 +88,7 @@ func backup(ctx context.Context, dryRun bool) error {
 		"--env=RSYNC_PASSWORD",
 		"--user=0:0", // root (the rsync image defaults to unprivileged user)
 		"-v", backupExcludesFile + ":/excludes.conf:ro",
-		"-v", "/persist:/persist:ro",
+		"-v", fmt.Sprintf("%[1]s:%[1]s:ro", filelocations.Sysroot.Root()),
 		"joonas/rsync",
 		"-av",
 		"--delete",
@@ -100,7 +99,7 @@ func backup(ctx context.Context, dryRun bool) error {
 	}
 
 	args = append(args,
-		"/persist/", // source
+		filelocations.Sysroot.Root()+"/",             // source
 		"rsync://joonas@192.168.1.105/volume/backup", // destination
 	)
 
@@ -181,7 +180,7 @@ func backupExcludeObject(path string) error {
 
 // to opt out a dir, run:
 //
-//	$ setfattr -n user.xdg.robots.backup -v false /persist/apps/lsw_nobackup
+//	$ setfattr -n user.xdg.robots.backup -v false /dir
 func IsExcluded(path string) (bool, error) {
 	// we can' directly "get" the xattr because if it doesn't exist it errors with an error whose
 	// concrete type we can't assert (was it "not exist" error or an actual error?)

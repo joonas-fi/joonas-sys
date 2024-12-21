@@ -122,7 +122,7 @@ func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarning
 	}
 
 	system, err := func() (systemSpec, error) {
-		// ignore would be needed in preinstallation environment where we don't have /persist available
+		// ignore would be needed in preinstallation environment where we don't have persist hierarchy available
 		// (and by extension, active_sys_id)
 		if ignoreWarnings {
 			return getSystemNoEditCheck(sysLabel)

@@ -3,7 +3,7 @@
 source common.sh
 
 
-# programmatic steps related to having / be overlayfs that redirects writes to /persist/sys_N_diffs
+# programmatic steps related to having / be overlayfs that redirects writes to special persistence place
 #
 # most of the important things are already done in scripts in our overrides/etc/initramfs-tools/
 

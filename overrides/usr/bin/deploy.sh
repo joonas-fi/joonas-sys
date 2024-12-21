@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-cd /persist/apps/deployer
+cd /sysroot/apps/deployer
 
 # deployments/joonas.fi-blog/ => joonas.fi-blog
 # joonas.fi-blog => (keep as-is)

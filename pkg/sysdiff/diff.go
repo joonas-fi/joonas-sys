@@ -126,7 +126,7 @@ func dirBasesForRunningSystemId() (*dirBases, error) {
 	return &dirBases{
 		// root differences to system N descend from here
 		diff:             filelocations.Sysroot.Diff(runningSysID),
-		overridesWorkdir: "/persist/work/joonas-sys/overrides",
+		overridesWorkdir: filepath.Join(filelocations.Sysroot.App("work"), "joonas-sys/overrides"),
 		image:            filelocations.Sysroot.Checkout(runningSysID),
 	}, nil
 }
@@ -307,7 +307,7 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 
 type dirBases struct {
 	diff             string // "/sysroot/apps/OS-diff/<sysID>"
-	overridesWorkdir string // "/persist/work/joonas-sys/overrides"
+	overridesWorkdir string // "~/work/joonas-sys/overrides"
 	image            string // "/mnt/sys-current-rom"
 }
 
@@ -345,7 +345,7 @@ func (e *entryPathBuilder) Diff() string {
 	return filepath.Join(e.dirs.diff, e.Canonical())
 }
 
-// "/persist/work/joonas-sys/overrides/etc/timezone"
+// "~/work/joonas-sys/overrides/etc/timezone"
 func (e *entryPathBuilder) OverridesWorkdir() string {
 	return filepath.Join(e.dirs.overridesWorkdir, e.Canonical())
 }

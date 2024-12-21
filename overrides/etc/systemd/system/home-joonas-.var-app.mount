@@ -6,7 +6,7 @@
 # - https://discourse.flathub.org/t/how-to-store-var-on-a-different-hard-disk/2395/5
 
 [Mount]
-What=/persist/apps/flatpak-appdata
+What=/sysroot/apps/flatpak-appdata
 Where=/home/joonas/.var/app
 Type=none
 Options=bind
