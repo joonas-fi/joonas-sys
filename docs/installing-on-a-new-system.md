@@ -1,97 +1,125 @@
 Installing on a new system
 ==========================
 
-Steps for installing joonas-sys on a new system.
+## Overview
 
-It is assumed that you have a USB stick that you want to install the readonly system on, and use the
-computer's full disk to host the `/persist`. I found out a
-[small form-factor USB flash memory](https://www.samsung.com/us/computing/memory-storage/usb-flash-drives/usb-3-1-flash-drive-fit-plus-256gb-muf-256ab-am/)
-to be nice.
+- Install regular Ubuntu on the system
+- Use the tools provided by Ubuntu to "Infect" the Ubuntu with joonas-sys and then boot into it
 
-Mount the USB stick on a different computer.
+## Install regular Ubuntu on the system
+
+no instructions needed here
+
+## Install joonas-sys
+
+### Copy jsys binary
+
+Copy `$ jsys` to the system
 
 
-Partitioning
-------------
+### Create the directory structures
 
-Partition the USB stick.
+Make the running Ubuntu system fake it has a sysroot mount point pointing to the final sysroot even though there isn't one yet.
 
-512 MB for the ESP. The remaining will be 50-50 % split to active/passive partitions.
-
-```
-$ gdisk /dev/DISK
-> o (for new partition table)
-
-> n (for new partition)
-> last sector: +512M
-> hex code: EF00
-```
-
-Now for the two data partitions. The next partition you create, it suggests the last sector to fill
-the rest of the drive, like this:
-
-> Last sector (1050624-125313249, default = 125313249) or {+-}size{KMGTP}:
-
-If you subtract 125313249-1050624, you get 124262625 as the suggested partition size. Let's halve that:
-
-124262625/2=62131312. Therefore enter 1050624 + 62131312 as the last sector.
-
-You'll now have something like this:
+It should look like this:
 
 ```
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1            2048         1050623   512.0 MiB   EF00  EFI system partition
-   2         1050624        62131312   29.1 GiB    8300  Linux filesystem
-   3        62132224       125313249   30.1 GiB    8300  Linux filesystem
+/sysroot
+├── apps -> /apps
+└── lost+found -> /lost+found
 ```
 
-Make filesystems
------------------
 
-```
-$ mkfs.fat -F32 -n ESP-USB-FIT /dev/sdc1
-$ mkfs.ext4 -L system_a /dev/sdc2
-$ mkfs.ext4 -L system_b /dev/sdc3
-```
-
-The system-to-be-provisioned is known as system label `provision` in system tooling.
-Make sure system registry points to correct devices!
-
-Now create ESP template: `$ jsys esp-create-template provision`
-
-Then flash the system: `$ jsys flash provision`
-
-
-Create persist partition on the new computer
---------------------------------------------
-
-Now plug the USB stick to the new computer. You'll be greeted by the bootloader.
-
-If you tried to boot into `system_a`, the boot process would panic because there isn't a
-`/persist` partition yet. We need to create it.
-
-Boot into `system_a`'s initramfs to create the partition.
-You have `$ lsblk` and `$ mkfs.ext4` at your disposal.
-
-Format persist partition: `$ mkfs.ext4 -L persist /dev/SOMETHING`
-
-Mount the persist partition at `/persist`
-
-Write a hostname to `/persist/apps/SYSTEM_nobackup/hostname` 
-
-Docker doesn't start without this:
-
-```
-$ mkdir -p /persist/apps/docker/data_nobackup
+```shell
+sudo mkdir /sysroot
+sudo mkdir /apps
+sudo ln -s /apps /sysroot/apps
+sudo ln -s /lost+found /sysroot/lost+found
 ```
 
-A quick `$ poweroff` later and you should be able to boot into the new computer.
+Then start creating the important "apps":
+
+```shell
+sudo mkdir -p /sysroot/apps/SYSTEM/{backlight-state,rfkill-state,lowdiskspace-check-rules}
+
+sudo mkdir -p /sysroot/apps/{work,zoxide,flatpak,flatpak-appdata,netplan,mcfly,git\ config,Desktop,ssh-server,OS-diff-work}
+
+sudo ssh-keygen -t ed25519 -f /sysroot/apps/ssh-server/ssh_host_ed25519_key -N ""
+
+sudo mkdir -p /sysroot/apps/{varasto/varasto-work,docker/config,docker/data}
+
+sudo cp /etc/hostname /sysroot/apps/SYSTEM/hostname
+sudo cp /etc/machine-id /sysroot/apps/SYSTEM/machine-id
+
+# need to be user-writable
+sudo chown 1000:1000 /sysroot/apps/{zoxide,mcfly,flatpak-appdata}
+
+sudo touch /sysroot/swapfile  # FIXME: invalid, not created with mkswap
+
+sudo jsys lowdiskspace-checker rule-create root /
+sudo jsys lowdiskspace-checker rule-set-threshold --gb 20 root
+
+sudo curl -fsSL -o /sysroot/apps/SYSTEM/background.png https://github.com/user-attachments/assets/0d22f401-d4be-4d23-89ea-85d1ef789815
+
+sudo mkdir /sysroot/apps/{OS-checkout,OS-diff,OS-repo}
+
+sudo setfattr -n user.xdg.robots.backup -v false /sysroot/lost+found /sysroot/apps/{SYSTEM,OS-checkout,OS-diff,OS-repo,docker/data,flatpak,flatpak-appdata}
+
+```
 
 
-Persist partition finishing touches
------------------------------------
+### Make bootable
 
-Set wallpaper at `/persist/apps/SYSTEM_nobackup/background.png`
+```shell
+cd /sysroot/apps/OS-repo
+sudo ostree init --repo=. && sudo ostree remote add --repo=. --no-gpg-verify fi.joonas.os https://fi-joonas-os.ams3.digitaloceanspaces.com/ostree/
+sudo jsys ostree pull
+sudo jsys flash efi
+sudo cp /tmp/ukifybuild/BOOTx64.efi /boot/efi/EFI/BOOT/BOOTx64.efi
+```
 
-Symlink `/persist/apps/SYSTEM_nobackup/cpu_temp` to `/sys/class/hwmon/hwmon<NUM>temp<NUM>_input`
-that represents your CPU temp.
+Ensure that the root partition's filesystem label is the one the cmdline looks by:
+
+```shell
+sudo tune2fs -L persist /dev/nvme...
+```
+
+### After first boot
+
+Ensure that it reaches internet.
+
+Clean up other dirs than `apps` (or `lost+found`) from `/sysroot` as the Ubuntu is no longer needed.
+
+Log in to Tailscale:
+
+```shell
+sudo tailscale up
+```
+
+Ensure function22 is running.
+
+Fix Flatpak if needed:
+
+```shell
+sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+sudo chown $(id -u):$(id -g) ~/.var/app
+```
+
+Get access to web:
+
+```shell
+ sudo flatpak install --assumeyes flathub org.mozilla.firefox
+```
+
+Configure Varasto:
+
+- Go create new auth token
+
+Run:
+
+```shell
+sto config init https://$HOSTNAME $TOKEN /sto
+# because Varasto doesn't write to symlink target but replaces symlink, one has to fix this
+sudo mv ~/.config/varasto/client-config.json /sysroot/apps/varasto/client-config.json
+ln -s /sysroot/apps/varasto/client-config.json ~/.config/varasto/client-config.json
+```
