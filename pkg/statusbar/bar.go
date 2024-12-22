@@ -131,9 +131,11 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		return networkPoller(ctx, internetFacingLinkIdxAtomic, latestNetworkItem)
 	})
 
-	tasks.Start("micmonitor", func(ctx context.Context) error {
-		return micMonitorTask(ctx, requestRefresh)
-	})
+	/*
+		tasks.Start("micmonitor", func(ctx context.Context) error {
+			return micMonitorTask(ctx, requestRefresh)
+		})
+	*/
 
 	tasks.Start("powermonitor", func(ctx context.Context) error {
 		return powerMonitor(ctx, requestRefresh)
