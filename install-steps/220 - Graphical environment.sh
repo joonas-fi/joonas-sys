@@ -29,17 +29,11 @@ rm /etc/gdm3/custom.conf
 # - gvfs-fuse = GVFS files to work in non-GIO (= POSIX) programs
 # - xdg-utils = xdg-mime (for setting default programs for file types)
 DEBIAN_FRONTEND=noninteractive apt install -y \
-	gdm3 \
-	xfce4 \
-	xfce4-screensaver \
-	xfce4-notifyd \
+	sway \
 	xdg-utils \
-	slick-greeter \
 	gvfs-backends \
 	gvfs-fuse \
 	alsa \
-	compton \
-	xwallpaper \
 	ttf-ancient-fonts \
 	fonts-firacode \
 	fonts-noto-color-emoji \

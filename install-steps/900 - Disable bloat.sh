@@ -4,7 +4,7 @@ source common.sh
 
 
 # I don't care about manual regeneration
-systemctl disable man-db.timer
+# systemctl disable man-db.timer
 
 # log rotation unnecessary for short-lived systems
 systemctl disable logrotate.timer

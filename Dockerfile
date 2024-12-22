@@ -1,6 +1,6 @@
 # using latest LTS. they are released every two years:
 # https://wiki.ubuntu.com/Releases
-FROM ubuntu:mantic
+FROM ubuntu:noble
 
 # debootstrap bootstraps (= minimal base with APT so you can build from there) another
 # file tree for installing Ubuntu inside it. Basically from an existing Ubuntu installation you can
