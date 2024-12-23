@@ -6,7 +6,7 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20240405_0714_856c11bd",
+			"uses": "docker://fn61/buildkit-golang:20240913_1923_331687a0",
 			"commands": {
 				"build": ["build-go-project.sh", "--directory=cmd/jsys/", "--binary-basename=jsys"],
 				"dev": ["bash"]
