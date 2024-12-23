@@ -14,6 +14,7 @@ import (
 
 	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/user/userutil"
 	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
 	"github.com/joonas-fi/joonas-sys/pkg/ostree"
@@ -23,6 +24,7 @@ import (
 )
 
 const (
+	espMountpoint        = "/boot/efi"
 	tmpMountpointEsp     = "/tmp/jsys-esp"
 	tmpMountpointSystem  = "/tmp/jsys-system"
 	tmpMountpointPersist = "/tmp/jsys-persist"
@@ -54,14 +56,30 @@ func flashEntrypoint() *cobra.Command {
 }
 
 func flashEFIEntrypoint() *cobra.Command {
-	return &cobra.Command{
+	commit := false
+
+	cmd := &cobra.Command{
 		Use:   "efi",
 		Short: "Flash EFI boot partition with target sysid",
 		Args:  cobra.NoArgs,
 		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
-			espMounted, err := osutil.Exists("/boot/efi/EFI/")
+			if _, err := userutil.RequireRoot(); err != nil {
+				return err
+			}
+
+			bootloaderDestination := filepath.Join(espMountpoint, "EFI/BOOT/BOOTx64.efi")
+
+			espMounted, err := osutil.Exists(bootloaderDestination)
 			if err != nil || !espMounted {
-				return errors.New("/boot/efi not mounted")
+				const mountSource = "/dev/disk/by-partlabel/EFI\\x20system\\x20partition"
+
+				slog.Warn("ESP not mounted",
+					"mountpoint", espMountpoint,
+					"mounting", mountSource)
+
+				if output, err := exec.CommandContext(ctx, "mount", mountSource, espMountpoint).CombinedOutput(); err != nil {
+					return fmt.Errorf("mount: %w: %s", err, string(output))
+				}
 			}
 
 			sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
@@ -95,12 +113,32 @@ func flashEFIEntrypoint() *cobra.Command {
 				return fmt.Errorf("ukify: %w: %s", err, string(output))
 			}
 
-			fmt.Println("pro-tip: (NOTE: take backup of target first)")
-			fmt.Println("  $ cp /tmp/ukifybuild/BOOTx64.efi /boot/efi/EFI/BOOT/BOOTx64.efi")
+			if commit {
+				if err := os.Rename(bootloaderDestination, bootloaderDestination+".old"); err != nil {
+					return err
+				}
+
+				if err := osutil.CopyFile("/tmp/ukifybuild/BOOTx64.efi", bootloaderDestination); err != nil {
+					return err
+				}
+
+				if err := os.WriteFile(filepath.Join("/boot/efi/", "active-system-version.txt"), []byte(sysID), 0644); err != nil {
+					return err
+				}
+
+				slog.Info("new bootloader now live", "bootloader", bootloaderDestination)
+			} else {
+				fmt.Println("pro-tip: (NOTE: take backup of target first)")
+				fmt.Println("  $ cp /tmp/ukifybuild/BOOTx64.efi " + bootloaderDestination)
+			}
 
 			return nil
 		}),
 	}
+
+	cmd.Flags().BoolVarP(&commit, "commit", "", commit, "Write the bootloader, effectively making the change live")
+
+	return cmd
 }
 
 func isMounted(mountpoint string) (bool, error) {
