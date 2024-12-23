@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/user/userutil"
@@ -16,43 +16,47 @@ func restartPrepareEntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "restart-prepare [system]",
 		Short: "Prepare quick kexec-based restart into new active system",
-		Args:  cobra.ExactArgs(1),
-		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
-			sysLabel := args[0]
-
+		Args:  cobra.NoArgs,
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if _, err := userutil.RequireRoot(); err != nil {
 				return err
 			}
 
-			system, err := getSystemNotCurrent(sysLabel)
-			if err != nil {
-				return err
-			}
+			return errors.New("TODO") // regressed
 
-			// TODO: grab these from ESP instead?
-			if err := mountSystem(system); err != nil {
-				return fmt.Errorf("mountSystem: %w", err)
-			}
+			/*
+				sysLabel := args[0]
 
-			newKernelLocation := filepath.Join(tmpMountpointSystem, "/boot/vmlinuz")
-			newInitrdLocation := filepath.Join(tmpMountpointSystem, "/boot/initrd.img")
+				system, err := getSystemNotCurrent(sysLabel)
+				if err != nil {
+					return err
+				}
 
-			kernelCommandLine := fmt.Sprintf("root=LABEL=%s ro", system.label)
+				// TODO: grab these from ESP instead?
+				if err := mountSystem(system); err != nil {
+					return fmt.Errorf("mountSystem: %w", err)
+				}
 
-			// loads new image/initrd/cmdline into the old kernel for kexec'ing later, not just yet, but soon.
-			kexecOutput, err := exec.CommandContext(ctx, "kexec", "--load",
-				"--initrd="+newInitrdLocation,
-				"--command-line="+kernelCommandLine,
-				newKernelLocation,
-			).CombinedOutput()
+				newKernelLocation := filepath.Join(tmpMountpointSystem, "/boot/vmlinuz")
+				newInitrdLocation := filepath.Join(tmpMountpointSystem, "/boot/initrd.img")
 
-			if err != nil {
-				return fmt.Errorf("kexec: %w: %s", err, kexecOutput)
-			}
+				kernelCommandLine := fmt.Sprintf("root=LABEL=%s ro", system.label)
 
-			if err := unmount(tmpMountpointSystem); err != nil {
-				return fmt.Errorf("unmount system: %w", err)
-			}
+				// loads new image/initrd/cmdline into the old kernel for kexec'ing later, not just yet, but soon.
+				kexecOutput, err := exec.CommandContext(ctx, "kexec", "--load",
+					"--initrd="+newInitrdLocation,
+					"--command-line="+kernelCommandLine,
+					newKernelLocation,
+				).CombinedOutput()
+
+				if err != nil {
+					return fmt.Errorf("kexec: %w: %s", err, kexecOutput)
+				}
+
+				if err := unmount(tmpMountpointSystem); err != nil {
+					return fmt.Errorf("unmount system: %w", err)
+				}
+			*/
 
 			fmt.Println(
 				"succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec")

@@ -121,3 +121,18 @@ func (bs *bellSkipper) Write(b []byte) (int, error) {
 func (bs *bellSkipper) Close() error {
 	return os.Stderr.Close()
 }
+
+func createAndTruncateFile(path string, size int64) error {
+	exists, err := osutil.Exists(path)
+	if err != nil {
+		return fmt.Errorf("createAndTruncateFile: %w", err)
+	}
+
+	if !exists { // file needs to exist before we can call truncate
+		if err := createEmptyFile(path); err != nil {
+			return err
+		}
+	}
+
+	return os.Truncate(path, size)
+}
