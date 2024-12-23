@@ -5,11 +5,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"time"
 
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/spf13/cobra"
@@ -20,11 +21,9 @@ func espEntrypoint() *cobra.Command {
 		Use:   "esp-create-template [system]",
 		Short: "Creates ESP partition template structure",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(espFormat(
-				osutil.CancelOnInterruptOrTerminate(nil),
-				args[0]))
-		},
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			return espFormat(ctx, args[0])
+		}),
 	}
 }
 
@@ -54,7 +53,7 @@ func espFormatInternal(ctx context.Context, sys systemSpec) error {
 
 	if !exists {
 		if sys.espDeviceCanCreateIfNotFound {
-			log.Println("ESP device doesn't exist - creating")
+			slog.Info("ESP device doesn't exist - creating")
 
 			if err := createEmptyInRamEspDevice(ctx, sys); err != nil {
 				return err

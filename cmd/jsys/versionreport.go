@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -8,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -17,9 +18,9 @@ func versionReportEntrypoint() *cobra.Command {
 		Use:   "versions",
 		Short: "Prints software versions that were installed",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(versionReport())
-		},
+		Run: cli.WrapRun(func(_ context.Context, _ []string) error {
+			return versionReport()
+		}),
 	}
 }
 

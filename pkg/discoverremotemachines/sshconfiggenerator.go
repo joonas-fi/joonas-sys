@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/tailscale-discovery/pkg/tailscalediscoveryclient"
 	"github.com/spf13/cobra"
@@ -22,10 +22,9 @@ func Entrypoint() *cobra.Command {
 		Use:   "discover-remote-machines",
 		Short: "Generate SSH config from Tailscale devices list",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(generateSSHAndPulseAudioConfigs(
-				osutil.CancelOnInterruptOrTerminate(nil)))
-		},
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
+			return generateSSHAndPulseAudioConfigs(ctx)
+		}),
 	}
 }
 

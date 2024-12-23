@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/joonas-fi/joonas-sys/pkg/backup"
@@ -17,10 +18,9 @@ func sanityCheckEntrypoint() *cobra.Command {
 		Use:   "sanitycheck",
 		Short: "Check that important files are where the should be",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(sanityCheck(
-				osutil.CancelOnInterruptOrTerminate(nil)))
-		},
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
+			return sanityCheck(ctx)
+		}),
 	}
 }
 

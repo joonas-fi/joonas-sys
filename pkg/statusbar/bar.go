@@ -8,13 +8,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os/exec"
 	"sync/atomic"
 
+	"github.com/function61/gokit/app/cli"
 	. "github.com/function61/gokit/builtin"
-	"github.com/function61/gokit/log/logex"
-	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/sync/taskrunner"
 	"github.com/spf13/cobra"
 	"github.com/vishvananda/netlink"
@@ -25,18 +24,12 @@ func Entrypoint() *cobra.Command {
 		Use:   "statuswidgets",
 		Short: "Extends i3status with custom widgets",
 		Args:  cobra.NoArgs,
-		Run: func(_ *cobra.Command, _ []string) {
-			rootLogger := logex.StandardLogger()
-
-			osutil.ExitIfError(logic(
-				osutil.CancelOnInterruptOrTerminate(rootLogger),
-				rootLogger))
-		},
+		Run:   cli.WrapRun(func(ctx context.Context, _ []string) error { return logic(ctx) }),
 	}
 }
 
 // we augment i3status with additional elements
-func logic(ctx context.Context, logger *log.Logger) error {
+func logic(ctx context.Context) error {
 	latestNetworkItem := &atomic.Value{} // *barItem
 
 	// used as key to netlink.LinkByIndex(...)
@@ -45,7 +38,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 		return err
 	}
 
-	tasks := taskrunner.New(ctx, logger)
+	tasks := taskrunner.New(ctx, slog.Default())
 
 	// i3 sends click events via our stdin
 	tasks.Start("clickevents", func(ctx context.Context) error {
@@ -53,26 +46,26 @@ func logic(ctx context.Context, logger *log.Logger) error {
 			switch click.Name {
 			case "inetbw":
 				if err := startInteractiveShellCommandInDialog("nethogs", "nethogs"); err != nil {
-					log.Printf("%v", err) // has enough error context
+					slog.Error("", "err", err) // has enough error context
 				}
 			case "tztime":
 				if err := startInteractiveShellCommandInDialog("cal", "jsys cal --interactive --weeknumbers"); err != nil {
-					log.Printf("%v", err) // has enough error context
+					slog.Error("", "err", err) // has enough error context
 				}
 			case "disk_info":
 				if err := startInteractiveShellCommandInDialog("lfs", "lfs; read"); err != nil {
-					log.Printf("%v", err) // has enough error context
+					slog.Error("", "err", err) // has enough error context
 				}
 			case "cpu_usage":
 				if err := startInteractiveShellCommandInDialog("htop", "htop"); err != nil {
-					log.Printf("%v", err) // has enough error context
+					slog.Error("", "err", err) // has enough error context
 				}
 			case "memory":
 				if err := startInteractiveShellCommandInDialog("free", "free --mega --human; read"); err != nil {
-					log.Printf("%v", err) // has enough error context
+					slog.Error("", "err", err) // has enough error context
 				}
 			default:
-				log.Printf("unmapped click '%s'", click.Name)
+				slog.Warn("unmapped click", "name", click.Name)
 			}
 		})
 	})
@@ -116,7 +109,7 @@ func logic(ctx context.Context, logger *log.Logger) error {
 					return errors.New("routesUpdated channel closed, WTF") // this actually happens
 				}
 
-				log.Println("routes updated")
+				slog.Info("routes updated")
 
 				// update the internet facing link index atomic, so it will be picked up by
 				// networkPoller() during next poll

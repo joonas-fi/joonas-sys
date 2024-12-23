@@ -4,7 +4,6 @@ package sysinfo
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/acobaugh/osrelease"
@@ -23,11 +22,11 @@ func Entrypoint() *cobra.Command {
 		Use:   "info",
 		Short: "Show system information",
 		Args:  cobra.NoArgs,
-		Run:   cli.RunnerNoArgs(info),
+		Run:   cli.WrapRun(info),
 	}
 }
 
-func info(ctx context.Context, _ *log.Logger) error {
+func info(ctx context.Context, _ []string) error {
 	sysID, err := common.ReadRunningSystemId()
 	if err != nil {
 		return err

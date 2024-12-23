@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,9 +39,9 @@ func Entrypoint() *cobra.Command {
 		Use:   "backup",
 		Short: "Backup files using rsync",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, logger *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if refreshExcludes {
-				if err := backupExcludedDirs(ctx, logger); err != nil {
+				if err := backupExcludedDirs(ctx, nil); err != nil {
 					return err
 				}
 			}
@@ -109,7 +109,7 @@ func backup(ctx context.Context, dryRun bool) error {
 
 	// TODO: realtime progress updates?
 	if output, err := exec.CommandContext(ctx, "notify-send", "Backup starting").CombinedOutput(); err != nil {
-		log.Printf("notify-send: %v: %s", err, string(output))
+		slog.Error("notify-send", "err", err, "output", string(output))
 	}
 
 	started := time.Now()
@@ -121,7 +121,7 @@ func backup(ctx context.Context, dryRun bool) error {
 	notifyMsg := fmt.Sprintf("Backup completed in %s", timeutil.HumanizeDuration(time.Since(started)))
 
 	if output, err := exec.CommandContext(ctx, "notify-send", notifyMsg).CombinedOutput(); err != nil {
-		log.Printf("notify-send: %v: %s", err, string(output))
+		slog.Error("notify-send", "err", err, "output", string(output))
 	}
 
 	return nil
@@ -132,14 +132,14 @@ func excludedDirsEntrypoint() *cobra.Command {
 		Use:   "excluded-dirs",
 		Short: "Scans the tree-to-backup for excluded dirs & writes them to excludes.conf file",
 		Args:  cobra.NoArgs,
-		Run:   cli.RunnerNoArgs(backupExcludedDirs),
+		Run:   cli.WrapRun(backupExcludedDirs),
 	}
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "add [path]",
 		Short: "Add a directory (or a file) to backup excludes",
 		Args:  cobra.ExactArgs(1),
-		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, args []string) error {
 			return backupExcludeObject(args[0])
 		}),
 	})
@@ -147,7 +147,7 @@ func excludedDirsEntrypoint() *cobra.Command {
 	return cmd
 }
 
-func backupExcludedDirs(ctx context.Context, _ *log.Logger) error {
+func backupExcludedDirs(ctx context.Context, _ []string) error {
 	// f.ex. reading lost+found xattrs requires root
 	if _, err := userutil.RequireRoot(); err != nil {
 		return err

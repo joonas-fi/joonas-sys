@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/user/userutil"
 	rsyncdconfig "github.com/gokrazy/rsync/pkg/config"
 	"github.com/gokrazy/rsync/pkg/rsyncd"
@@ -20,10 +20,9 @@ func rsyncServerEntrypoint() *cobra.Command {
 		Use:   "rsync-server",
 		Short: "Serve the systree over rsync so it can be flashed from a remote computer",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(rsyncServer(
-				osutil.CancelOnInterruptOrTerminate(nil)))
-		},
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
+			return rsyncServer(ctx)
+		}),
 	}
 }
 

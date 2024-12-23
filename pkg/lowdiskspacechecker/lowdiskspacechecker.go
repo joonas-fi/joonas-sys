@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -29,14 +28,14 @@ func Entrypoint() *cobra.Command {
 		Use:   "lowdiskspace-checker",
 		Short: "Shows notification if low on disk space",
 		Args:  cobra.NoArgs,
-		Run:   cli.RunnerNoArgs(check),
+		Run:   cli.WrapRun(check),
 	}
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "rules-print",
 		Short: "Shows the low disk space checker rules",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(_ context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, _ []string) error {
 			rules, err := loadRules()
 			if err != nil {
 				return err
@@ -58,7 +57,7 @@ func Entrypoint() *cobra.Command {
 		Use:   "systemd-units",
 		Short: "Write systemd units to automatically run this checker periodically",
 		Args:  cobra.NoArgs,
-		Run:   cli.RunnerNoArgs(writeSystemdUnits),
+		Run:   cli.WrapRun(writeSystemdUnits),
 	})
 
 	return cmd
@@ -70,7 +69,7 @@ type rule struct {
 	lowThreshold int64 // bytes
 }
 
-func check(_ context.Context, _ *log.Logger) error {
+func check(_ context.Context, _ []string) error {
 	rules, err := loadRules()
 	if err != nil {
 		return err
@@ -156,7 +155,7 @@ func createRuleEntrypoint() *cobra.Command {
 		Use:   "rule-create [rule-name] [target]",
 		Short: "Create low disk space rule",
 		Args:  cobra.ExactArgs(2),
-		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, args []string) error {
 			return createRule(args[0], args[1])
 		}),
 	}
@@ -170,7 +169,7 @@ func setThresholdEntrypoint() *cobra.Command {
 		Use:   "rule-set-threshold [rule-name]",
 		Short: "Set low disk space rule's threshold",
 		Args:  cobra.ExactArgs(1),
-		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, args []string) error {
 			ruleName := args[0]
 
 			switch {
@@ -213,7 +212,7 @@ func setThreshold(label string, threshold int64) error {
 }
 
 // TODO: gokit/systemdinstaller to support timers and oneshot services?
-func writeSystemdUnits(_ context.Context, _ *log.Logger) error {
+func writeSystemdUnits(_ context.Context, _ []string) error {
 	service := `[Unit]
 Description=Low disk space checker
 OnFailure=failure-notification@%n

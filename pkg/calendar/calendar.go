@@ -4,9 +4,10 @@ package calendar
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"math"
 	"os"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"time"
 
 	"github.com/apcera/termtables"
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/noamt/go-cldr/supplemental"
 	"github.com/spf13/cobra"
 	"golang.org/x/text/language"
@@ -44,44 +45,42 @@ func Entrypoint() *cobra.Command {
 		Use:   "cal [month-number | year]",
 		Short: "Displays a calendar",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				locale, err := getLocaleForTime()
+		Run: cli.WrapRun(func(_ context.Context, args []string) error {
+			locale, err := getLocaleForTime()
+			if err != nil {
+				return err
+			}
+
+			switch {
+			case len(args) == 1 && len(args[0]) == 4: // year
+				year, err := strconv.Atoi(args[0])
 				if err != nil {
 					return err
 				}
 
-				switch {
-				case len(args) == 1 && len(args[0]) == 4: // year
-					year, err := strconv.Atoi(args[0])
-					if err != nil {
-						return err
-					}
-
-					return calendarPrintYear(year, *locale, os.Stdout, weekNumbers)
-				case len(args) == 1: // custom month (probably different than the running one)
-					now, err := time.Parse("2006-01", args[0])
-					if err != nil {
-						return err
-					}
-
-					return calendarPrint(now, "January 2006", *locale, false, os.Stdout, weekNumbers)
-				default:
-					now := time.Now()
-
-					if interactive {
-						return calendarNavigateInteractive(now, func(ts time.Time) error { // called many times
-							// only do when for the *now* month
-							highlightCurrentDay := ts.Equal(now)
-
-							return calendarPrint(ts, "January 2006", *locale, highlightCurrentDay, os.Stdout, weekNumbers)
-						})
-					}
-
-					return calendarPrint(now, "January 2006", *locale, true, os.Stdout, weekNumbers)
+				return calendarPrintYear(year, *locale, os.Stdout, weekNumbers)
+			case len(args) == 1: // custom month (probably different than the running one)
+				now, err := time.Parse("2006-01", args[0])
+				if err != nil {
+					return err
 				}
-			}())
-		},
+
+				return calendarPrint(now, "January 2006", *locale, false, os.Stdout, weekNumbers)
+			default:
+				now := time.Now()
+
+				if interactive {
+					return calendarNavigateInteractive(now, func(ts time.Time) error { // called many times
+						// only do when for the *now* month
+						highlightCurrentDay := ts.Equal(now)
+
+						return calendarPrint(ts, "January 2006", *locale, highlightCurrentDay, os.Stdout, weekNumbers)
+					})
+				}
+
+				return calendarPrint(now, "January 2006", *locale, true, os.Stdout, weekNumbers)
+			}
+		}),
 	}
 
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", interactive, "Navigate months with keyboard")
@@ -348,13 +347,14 @@ func calendarNavigateInteractive(now time.Time, render func(time.Time) error) er
 			return err
 		}
 
-		switch fmt.Sprintf("%x", key) {
+		seq := fmt.Sprintf("%x", key)
+		switch seq {
 		case "1b5b440a": // left
 			monthOffset--
 		case "1b5b430a": // right
 			monthOffset++
 		default:
-			log.Printf("unknown sequence: %x", key)
+			slog.Info("unknown sequence", "seq", seq)
 		}
 	}
 }

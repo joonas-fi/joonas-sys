@@ -6,14 +6,15 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 
+	"github.com/function61/gokit/app/cli"
 	. "github.com/function61/gokit/builtin"
-	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/function61/gokit/sync/taskrunner"
@@ -32,11 +33,9 @@ func testInVMEntrypoint() *cobra.Command {
 		Use:   "test-in-vm",
 		Short: "Tests new system version in a VM",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				return testInVM(osutil.CancelOnInterruptOrTerminate(nil), rescue, wipe)
-			}())
-		},
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
+			return testInVM(ctx, rescue, wipe)
+		}),
 	}
 
 	cmd.Flags().BoolVarP(&rescue, "rescue", "", rescue, "Enter rescue (AKA single-user) mode: no GUI or network.")
@@ -104,7 +103,7 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 
 	virtioFSDSockPath := "/tmp/jsys-virtiofsd.sock"
 
-	tasks := taskrunner.New(ctx, logex.StandardLogger())
+	tasks := taskrunner.New(ctx, slog.Default())
 
 	tasks.Start("FS", func(ctx context.Context) error {
 		virtiofsd := exec.CommandContext(ctx, "virtiofsd",

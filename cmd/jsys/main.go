@@ -1,10 +1,7 @@
 package main
 
 import (
-	"os"
-
-	"github.com/function61/gokit/app/dynversion"
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/joonas-fi/joonas-sys/pkg/backlight"
 	"github.com/joonas-fi/joonas-sys/pkg/backup"
 	"github.com/joonas-fi/joonas-sys/pkg/calendar"
@@ -22,9 +19,7 @@ import (
 
 func main() {
 	app := &cobra.Command{
-		Use:     os.Args[0],
-		Short:   "Management tools for joonas-sys",
-		Version: dynversion.Version,
+		Short: "Management tools for joonas-sys",
 	}
 
 	for _, entrypoint := range sysdiff.Entrypoints() {
@@ -54,5 +49,5 @@ func main() {
 	app.AddCommand(notificationdedup.Entrypoint())
 	app.AddCommand(notificationdedup.WorkerEntrypoint())
 
-	osutil.ExitIfError(app.Execute())
+	cli.Execute(app)
 }

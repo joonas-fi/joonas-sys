@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,15 +40,15 @@ func flashEntrypoint() *cobra.Command {
 		Use:   "flash [system]",
 		Short: "Flashes systree to storage",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(flash(
-				osutil.CancelOnInterruptOrTerminate(nil),
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			return flash(
+				ctx,
 				args[0],
 				ostreeRef,
 				ignoreWarnings,
 				remote,
-				autoRemove))
-		},
+				autoRemove)
+		}),
 	}
 
 	cmd.Flags().BoolVarP(&ignoreWarnings, "ignore-warnings", "", ignoreWarnings, "Ignore any warnings")
@@ -66,7 +66,7 @@ func flashEFIEntrypoint() *cobra.Command {
 		Use:   "efi",
 		Short: "Flash EFI boot partition with target sysid",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			espMounted, err := osutil.Exists("/boot/efi/EFI/")
 			if err != nil || !espMounted {
 				return errors.New("/boot/efi not mounted")
@@ -160,7 +160,7 @@ func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarning
 
 	if !exists {
 		if system.systemDeviceCanCreateIfNotFound {
-			log.Println("RAM device doesn't exist - creating & formatting")
+			slog.Info("RAM device doesn't exist - creating & formatting")
 
 			if err := createAndTruncateFile(system.systemDevice, 10*gb); err != nil {
 				return err
@@ -179,7 +179,7 @@ func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarning
 	}
 	defer func() {
 		if err := unmount(tmpMountpointSystem); err != nil {
-			log.Printf("unmount system: %v", err)
+			slog.Error("unmount system", "err", err)
 		}
 	}()
 
@@ -216,7 +216,7 @@ func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarning
 		}
 
 		if !espDeviceExists {
-			log.Println("ESP doesn't exist and we are allowed to create it - creating")
+			slog.Info("ESP doesn't exist and we are allowed to create it - creating")
 
 			if err := espFormatInternal(ctx, system); err != nil {
 				return err
@@ -229,7 +229,7 @@ func flash(ctx context.Context, sysLabel string, ostreeRef string, ignoreWarning
 	}
 	defer func() {
 		if err := unmount(tmpMountpointEsp); err != nil {
-			log.Printf("unmount ESP: %v", err)
+			slog.Error("unmount ESP", "err", err)
 		}
 	}()
 
@@ -347,7 +347,7 @@ func mountIfNeeded(device string, mountpoint string) error {
 		if err != nil {
 			return err
 		} else {
-			log.Printf("already mounted: %s", mountpoint)
+			slog.Info("already mounted", "mountpoint", mountpoint)
 			return nil
 		}
 	}

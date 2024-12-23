@@ -8,7 +8,7 @@ import (
 	"crypto/sha1"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,23 +21,21 @@ import (
 )
 
 func repoDiffEntrypoint() *cobra.Command {
-	verbose := false
-
 	cmd := &cobra.Command{
 		Use:   "repo-diff",
 		Short: "Show differences in current system compared to in repo's overrides/ dir",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(_ context.Context, _ *log.Logger) error {
-			return repoDiff(verbose)
+		Run: cli.WrapRun(func(_ context.Context, _ []string) error {
+			return repoDiff()
 		}),
 	}
 
-	cmd.Flags().BoolVarP(&verbose, "verbose", "v", verbose, "Log more details")
+	cli.AddLogLevelControls(cmd.Flags())
 
 	return cmd
 }
 
-func repoDiff(verbose bool) error {
+func repoDiff() error {
 	sysID, err := common.ReadRunningSystemId()
 	if err != nil {
 		return err
@@ -77,9 +75,7 @@ func repoDiff(verbose bool) error {
 		}
 
 		if !exists {
-			if verbose {
-				log.Printf("not overridden: %s", canonicalName)
-			}
+			slog.Debug("not overridden", "canonicalName", canonicalName)
 		} else {
 			same, err := isSameFile(pathInOverrides, fileInDiffs)
 			if err != nil {
@@ -87,11 +83,9 @@ func repoDiff(verbose bool) error {
 			}
 
 			if same {
-				if verbose {
-					log.Printf("overridden but same: %s", canonicalName)
-				}
+				slog.Debug("overridden but same", "canonicalName", canonicalName)
 			} else {
-				log.Printf("overridden and different: %s", canonicalName)
+				slog.Info("overridden and different", "canonicalName", canonicalName)
 			}
 		}
 

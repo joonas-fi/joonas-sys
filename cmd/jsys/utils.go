@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -15,7 +15,7 @@ import (
 )
 
 func waitForFileAvailable(ctx context.Context, file string) error {
-	started := time.Now()
+	errorLogger := retry.ErrorsToLogger(slog.With("op", "waitForFileAvailable"))
 
 	return retry.Retry(ctx, func(ctx context.Context) error {
 		exists, err := osutil.Exists(file)
@@ -28,11 +28,7 @@ func waitForFileAvailable(ctx context.Context, file string) error {
 		} else {
 			return fmt.Errorf("not yet available: %s", file)
 		}
-	}, retry.DefaultBackoff(), func(err error) {
-		if time.Since(started) >= 3*time.Second { // don't spam user with expected error messages (the first attempts are expected to fail)
-			log.Println(err.Error())
-		}
-	})
+	}, retry.DefaultBackoff(), retry.IgnoreErrorsWithin(3*time.Second, errorLogger))
 }
 
 // shell equivalent: "$ rm -f". os.RemoveAll() is very close to we want, but it can be dangerous

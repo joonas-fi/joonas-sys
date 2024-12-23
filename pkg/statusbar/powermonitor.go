@@ -5,7 +5,7 @@ package statusbar
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"path/filepath"
 	"sync"
 	"time"
@@ -21,14 +21,14 @@ func powerMonitor(ctx context.Context, requestRefresh func()) error {
 
 		batteryLowItems, err := powerMonitorGetWarnings(ctx)
 		if err != nil {
-			log.Printf("powerMonitor: %v", err)
+			slog.Error("powerMonitor", "err", err)
 			return
 		}
 
 		if len(batteryLowItems) > 0 {
 			// we don't yet support multiple.
 			if len(batteryLowItems) > 1 {
-				log.Printf("WARN: got > batteryLowItems: %d", len(batteryLowItems))
+				slog.Warn("got more than one batteryLowItem", "count", len(batteryLowItems))
 			}
 
 			setBatteryLowItem(&batteryLowItems[0]) // FIXME

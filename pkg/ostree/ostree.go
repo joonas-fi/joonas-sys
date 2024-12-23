@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,7 +42,7 @@ func Entrypoint() *cobra.Command {
 		Use:   "pull",
 		Short: "Pull updates from joonas-sys",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if _, err := userutil.RequireRoot(); err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func Entrypoint() *cobra.Command {
 		Use:   "log",
 		Short: "Show commits",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			logOutput := exec.CommandContext(ctx, "ostree", "log", ostreeBranchNameX8664)
 			logOutput.Stdout = os.Stdout
 			logOutput.Stderr = os.Stderr
@@ -80,8 +80,8 @@ func Entrypoint() *cobra.Command {
 		Use:   "checkout <commit>",
 		Short: "Checks out a root filesystem from a commit",
 		Args:  cobra.ExactArgs(1),
-		Run: cli.Runner(func(ctx context.Context, args []string, logger *log.Logger) error {
-			return checkoutRootFS(ctx, args[0], logger)
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			return checkoutRootFS(ctx, args[0])
 		}),
 	})
 
@@ -95,7 +95,7 @@ func commitEntrypoint() *cobra.Command {
 		Use:   "commit <subject>",
 		Short: "Commit current build to OSTree",
 		Args:  cobra.ExactArgs(1),
-		Run: cli.Runner(func(ctx context.Context, args []string, logger *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
 			subject := args[0]
 
 			if _, err := userutil.RequireRoot(); err != nil {
@@ -111,9 +111,11 @@ func commitEntrypoint() *cobra.Command {
 			// usually devtmpfs is mounted on /dev (so those are not even stored on disk).
 			// OSTree only supports regular files and symlinks.
 			if len(devEntries) > 0 {
-				log.Println("removing files in /dev")
+				slog.Info("removing files in /dev")
 
 				for _, devEntry := range devEntries {
+					slog.Debug("removing file in /dev", "file", devEntry.Name())
+
 					if err := os.RemoveAll(filepath.Join(common.BuildTreeLocation, "/dev", devEntry.Name())); err != nil {
 						return err
 					}
@@ -133,9 +135,10 @@ func commitEntrypoint() *cobra.Command {
 			commidID := revisionOutput.String()
 
 			if checkout {
-				return checkoutRootFS(ctx, commidID, logger)
+				return checkoutRootFS(ctx, commidID)
 			} else {
-				logger.Printf("pro-tip: run $ %s ostree checkout %s", os.Args[0], commidID)
+				slog.Info("committed", "commidID", commidID)
+				fmt.Printf("pro-tip: run $ %s ostree checkout %s\n", os.Args[0], commidID)
 			}
 
 			return nil
@@ -147,7 +150,7 @@ func commitEntrypoint() *cobra.Command {
 	return cmd
 }
 
-func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) error {
+func checkoutRootFS(ctx context.Context, commit string) error {
 	if _, err := userutil.RequireRoot(); err != nil {
 		return err
 	}
@@ -189,9 +192,9 @@ func checkoutRootFS(ctx context.Context, commit string, logger *log.Logger) erro
 		return err
 	}
 
-	fmt.Printf("checked out to %s\n", checkoutPath)
+	slog.Info("checked out to", "checkoutPath", checkoutPath)
 
-	logger.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash efi", os.Args[0], os.Args[0])
+	fmt.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash efi\n", os.Args[0], os.Args[0])
 
 	return nil
 }

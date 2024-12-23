@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -52,7 +51,7 @@ func keyboardEntrypoint() *cobra.Command {
 		Use:   "cycle",
 		Short: "Cycle keyboard backlight (off/medium/high)",
 		Args:  cobra.NoArgs,
-		Run:   cli.RunnerNoArgs(keyboardBacklightCycle),
+		Run:   cli.WrapRun(keyboardBacklightCycle),
 	})
 
 	return cmd
@@ -68,7 +67,7 @@ func screenEntrypoint() *cobra.Command {
 		Use:   "increase",
 		Short: "Increase brightness",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			return backlightAdjustBy(ctx, 0.10)
 		}),
 	})
@@ -77,7 +76,7 @@ func screenEntrypoint() *cobra.Command {
 		Use:   "decrease",
 		Short: "Decrease brightness",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(ctx context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			return backlightAdjustBy(ctx, -0.10)
 		}),
 	})
@@ -87,7 +86,7 @@ func screenEntrypoint() *cobra.Command {
 
 // cycles values between 0 and max_brightness. this is sensible only when the numbers are mapped to
 // "modes", i.e. 0 => off, 1 => medium, 2 => high etc.
-func keyboardBacklightCycle(_ context.Context, _ *log.Logger) error {
+func keyboardBacklightCycle(_ context.Context, _ []string) error {
 	brightnessPath := filepath.Join(keyboardBacklightDevice, "brightness")
 
 	max, err := readIntFile(filepath.Join(keyboardBacklightDevice, "max_brightness"))

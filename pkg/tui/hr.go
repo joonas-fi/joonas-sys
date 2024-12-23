@@ -5,7 +5,6 @@ package tui
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -19,11 +18,11 @@ import (
 func HREntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use: "hr",
-		Run: cli.RunnerNoArgs(hr),
+		Run: cli.WrapRun(hr),
 	}
 }
 
-func hr(_ context.Context, _ *log.Logger) error {
+func hr(_ context.Context, _ []string) error {
 	width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		return err

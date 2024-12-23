@@ -9,7 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +33,7 @@ func Entrypoints() []*cobra.Command {
 			Use:   "revert [path]",
 			Short: "Revert a file from diffs",
 			Args:  cobra.ExactArgs(1),
-			Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+			Run: cli.WrapRun(func(_ context.Context, args []string) error {
 				return revert(args[0])
 			}),
 		},
@@ -48,7 +48,7 @@ func entrypoint() *cobra.Command {
 		Use:   "diff",
 		Short: "Goes through diffs to see if there's any interesting state we forgot to persist",
 		Args:  cobra.NoArgs,
-		Run: cli.RunnerNoArgs(func(_ context.Context, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, _ []string) error {
 			return diff(maxDiffFilesFind, ignoreDeleted)
 		}),
 	}
@@ -66,7 +66,7 @@ func diffOneEntrypoint() *cobra.Command {
 		Use:   "diff1 [path]",
 		Short: "Diffs one file from current running system to the baseline",
 		Args:  cobra.ExactArgs(1),
-		Run: cli.Runner(func(_ context.Context, args []string, _ *log.Logger) error {
+		Run: cli.WrapRun(func(_ context.Context, args []string) error {
 			return diffOne(args[0])
 		}),
 	}
@@ -287,19 +287,19 @@ func diff(maxDiffFilesFind int, ignoreDeleted bool) error {
 	}
 
 	if errCannotAccess > 0 {
-		log.Printf("WARN: errCannotAccess=%d", errCannotAccess)
+		slog.Warn("errCannotAccess", "count", errCannotAccess)
 	}
 
 	for _, item := range errDirChangedToSymlink {
-		log.Printf("WARN: errDirChangedToSymlink (changes not analyzed): %s", item)
+		slog.Warn("errDirChangedToSymlink (changes not analyzed)", "item", item)
 	}
 
 	if report.overrideEqual > 0 {
-		log.Printf("WARN: overrideEqual=%d", report.overrideEqual)
+		slog.Warn("overrideEqual", "count", report.overrideEqual)
 	}
 
 	if report.imageEqual > 0 {
-		log.Printf("WARN: imageEqual=%d (modified without actually modified? just modification timestamp?)", report.imageEqual)
+		slog.Warn("imageEqual (modified without actually modified? just modification timestamp?)", "count", report.imageEqual)
 	}
 
 	return nil

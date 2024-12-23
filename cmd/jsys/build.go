@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/function61/gokit/app/cli"
 	. "github.com/function61/gokit/builtin"
 	"github.com/function61/gokit/encoding/jsonfile"
 	"github.com/function61/gokit/os/osutil"
@@ -41,24 +42,23 @@ func buildEntrypoint() *cobra.Command {
 		Use:   "build",
 		Short: "Builds the system tree (so it can be flashed somewhere)",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
-				started := time.Now()
-				defer func() {
-					duration := time.Since(started)
-					if duration > 1*time.Second { // fast failures are not interesting
-						fmt.Printf("finished in %s\n", duration)
-					}
-				}()
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			started := time.Now()
+			defer func() {
+				duration := time.Since(started)
+				if duration > 1*time.Second { // fast failures are not interesting
+					fmt.Printf("finished in %s\n", duration)
+				}
+			}()
 
-				return buildWrapped(
-					osutil.CancelOnInterruptOrTerminate(nil),
-					keep,
-					rm,
-					verbose,
-					fancyUI)
-			}())
-		},
+			return buildWrapped(
+				ctx,
+				keep,
+				rm,
+				verbose,
+				fancyUI)
+
+		}),
 	}
 
 	cmd.Flags().BoolVarP(&keep, "keep", "", keep, "Keep current tree (if one exists)")
@@ -317,7 +317,7 @@ func runIfNotAlreadyCompleted(step *Step, run func() error) error {
 func buildSysBuilderImage(ctx context.Context, verbose bool) error {
 	// this can take a long time if Docker doesn't already have this cached,
 	// better tell the user we're doing something
-	log.Println("buildSysBuilderImage starting")
+	slog.Info("buildSysBuilderImage starting")
 
 	dockerBuild := exec.CommandContext(ctx,
 		"docker",
