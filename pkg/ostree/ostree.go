@@ -75,6 +75,7 @@ func Entrypoint() *cobra.Command {
 	})
 
 	cmd.AddCommand(commitEntrypoint())
+	cmd.AddCommand(pushEntrypoint())
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "checkout <commit>",
