@@ -114,16 +114,8 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 			if err := removeDirectoryChildren(common.BuildTreeLocation); err != nil {
 				return err
 			}
-
-			if err := createRamdisk(); err != nil {
-				return err
-			}
 		default:
 			return errors.New("current systree exists. cannot continue")
-		}
-	} else {
-		if err := createRamdisk(); err != nil {
-			return err
 		}
 	}
 
@@ -132,8 +124,10 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 		return err
 	}
 
-	if !mounted && os.Getenv("BYPASS_MOUNTPOINT_CHECK") == "" {
-		return fmt.Errorf("%s is not a mountpoint. would write files to disk", common.BuildTreeLocation)
+	if !mounted {
+		if err := createRamdisk(); err != nil {
+			return err
+		}
 	}
 
 	steps, err := loadAndValidateSteps()
