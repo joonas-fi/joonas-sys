@@ -26,6 +26,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	builderImageName = "joonas-sys-builder"
+)
+
 type Step struct {
 	ScriptName   string // "426 - LibreOffice.sh"
 	FriendlyName string // ScriptName -> "LibreOffice"
@@ -60,6 +64,31 @@ func buildEntrypoint() *cobra.Command {
 
 		}),
 	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "debug",
+		Short: "Get shell inside the build container's chroot",
+		Args:  cobra.NoArgs,
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			workdir, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+
+			// when the container is ran without arguments, it drops you to debug shell
+			shell := exec.CommandContext(ctx, "docker", "run", "--rm", "-it",
+				fmt.Sprintf("--volume=%[1]s:%[1]s:slave", common.BuildTreeLocation),
+				fmt.Sprintf("--volume=%s:/repo", workdir),
+				"--privileged",
+				"--entrypoint=/repo/bin/run-step-in-container.sh",
+				builderImageName)
+			shell.Stdin = os.Stdin
+			shell.Stdout = os.Stdout
+			shell.Stderr = os.Stderr
+
+			return shell.Run()
+		}),
+	})
 
 	cmd.Flags().BoolVarP(&keep, "keep", "", keep, "Keep current tree (if one exists)")
 	cmd.Flags().BoolVarP(&rm, "rm", "", rm, "Remove current tree (if one exists)")
@@ -199,7 +228,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 				"--volume", fmt.Sprintf("%s:/repo", workdir), // shouldn't use ADD in Dockerfile, because we have secrets.env
 				"--privileged",
 				"--shm-size=1024M", // if default 64M, Nvidia driver installation (via DKMS) fails due to compiler segfault (I guess by null pointer dereference by not checking SHM alloc success?)
-				"joonas-sys-builder",
+				builderImageName,
 				step.ScriptName,
 			)
 
@@ -221,7 +250,7 @@ func build(ctx context.Context, keep bool, rm bool, verbose bool, fancyUI bool) 
 
 			return nil
 		}); err != nil {
-			// echo -e "Build failed. For interactive debugging:\n    $ docker run --rm -it -v \"${treeLocation}:${treeLocation}:slave\" -v \"\$(pwd):/repo\" --privileged joonas-sys-builder"
+			// echo -e "Build failed. For interactive debugging:\n    $ docker run --rm -it -v \"${treeLocation}:${treeLocation}:slave\" -v \"\$(pwd):/repo\" --privileged $BUILDER_IMAGE_NAME"
 			return fmt.Errorf("step '%s' failed: %w", step.FriendlyName, err)
 		}
 
@@ -322,7 +351,7 @@ func buildSysBuilderImage(ctx context.Context, verbose bool) error {
 	dockerBuild := exec.CommandContext(ctx,
 		"docker",
 		"build",
-		"-t", "joonas-sys-builder",
+		"-t", builderImageName,
 		".")
 
 	if verbose {
