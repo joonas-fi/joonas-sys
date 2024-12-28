@@ -12,7 +12,12 @@ if [ ! -f "${chrootLocation}/etc/os-release" ]; then
 
 	# debootstrap will end up with almost-empty sources list. copy list from
 	# our builder Docker image
-	cp /etc/apt/sources.list "${chrootLocation}/etc/apt/sources.list"
+	if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+		# recent Ubuntu moved the list to this path
+		cp /etc/apt/sources.list.d/ubuntu.sources "${chrootLocation}/etc/apt/sources.list.d/"
+	else
+		cp /etc/apt/sources.list "${chrootLocation}/etc/apt/sources.list"
+	fi
 
 	echo "# Copied APT sources.list"
 fi
