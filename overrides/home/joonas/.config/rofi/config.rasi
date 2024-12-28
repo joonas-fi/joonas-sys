@@ -1,3 +1,5 @@
+// documentation: https://davatorium.github.io/rofi/CONFIG/
+
 configuration {
 /*	modi: "window,run,ssh";*/
 /*	width: 50;*/
@@ -101,6 +103,8 @@ configuration {
 /*	kb-row-first: "Home,KP_Home";*/
 /*	kb-row-last: "End,KP_End";*/
 	kb-row-select: "Tab";
+	// this new action was bound by default to tab so it conflicted with the above.
+	kb-element-next: "";
 /*	kb-screenshot: "Alt+S";*/
 /*	kb-ellipsize: "Alt+period";*/
 /*	kb-toggle-case-sensitivity: "grave,dead_grave";*/
