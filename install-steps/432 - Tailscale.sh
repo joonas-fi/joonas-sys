@@ -4,8 +4,11 @@ source common.sh
 
 # Tailscale makes secure networking easy
 
-curl -fsSL -o /usr/share/keyrings/tailscale-archive-keyring.gpg https://pkgs.tailscale.com/stable/ubuntu/focal.noarmor.gpg
-curl -fsSL -o /etc/apt/sources.list.d/tailscale.list https://pkgs.tailscale.com/stable/ubuntu/focal.tailscale-keyring.list
+# to get "$VERSION_CODENAME" i.e. Ubuntu release (focal/jammy/oracular...)
+. /etc/os-release
+
+curl -fsSL -o /usr/share/keyrings/tailscale-archive-keyring.gpg https://pkgs.tailscale.com/stable/ubuntu/$VERSION_CODENAME.noarmor.gpg
+curl -fsSL -o /etc/apt/sources.list.d/tailscale.list https://pkgs.tailscale.com/stable/ubuntu/$VERSION_CODENAME.tailscale-keyring.list
 
 apt update
 apt install -y tailscale

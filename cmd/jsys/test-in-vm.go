@@ -206,6 +206,7 @@ func writeBoilerplateFiles(root filelocations.Root, sysVersion string) error {
 		app("varasto"),
 		app("Desktop"),
 		app("mcfly"),
+		app("tailscale"),
 	} {
 		alreadyExists, err := osutil.Exists(path(dirToCreate))
 		if err != nil {

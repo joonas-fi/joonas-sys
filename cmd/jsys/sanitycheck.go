@@ -55,13 +55,14 @@ func sanityCheck(ctx context.Context) error {
 		"/sysroot/apps/Desktop",
 		"/sysroot/apps/ssh-server/ssh_host_ed25519_key",
 		"/sysroot/apps/varasto/varasto-work",
-		"/sysroot/apps/zoxide", // zoxide directory history
+		filelocations.Sysroot.App("zoxide"), // zoxide directory history
 		"/sysroot/apps/docker/config",
 		"/sysroot/apps/docker/data",
 		"/sysroot/apps/flatpak",
 		"/sysroot/apps/flatpak-appdata",
 		"/sysroot/apps/netplan",
-		"/sysroot/apps/mcfly",
+		filelocations.Sysroot.App("mcfly"),
+		filelocations.Sysroot.App("tailscale"),
 		"/sysroot/apps/git config", // usually symlink to Varasto, sometimes may be local "fork" (custom Git author for client work on client laptop)
 		"/sysroot/swapfile",
 		filelocations.Sysroot.DiffWork(),
