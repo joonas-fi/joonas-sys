@@ -1,0 +1,10 @@
+[Unit]
+ConditionHost=htpc
+
+[Mount]
+What=LABEL=amy
+Where=/mnt/varasto/amy
+Options=defaults,nofail,noatime
+
+[Install]
+WantedBy=multi-user.target

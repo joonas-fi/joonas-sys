@@ -1,0 +1,10 @@
+[Unit]
+ConditionHost=htpc
+
+[Mount]
+What=LABEL=Leela
+Where=/mnt/varasto/leela
+Options=defaults,nofail,noatime
+
+[Install]
+WantedBy=multi-user.target

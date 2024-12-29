@@ -1,0 +1,10 @@
+[Unit]
+ConditionHost=htpc
+
+[Mount]
+What=LABEL=nibbler
+Where=/mnt/varasto/nibbler
+Options=defaults,nofail,noatime
+
+[Install]
+WantedBy=multi-user.target

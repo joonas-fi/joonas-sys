@@ -1,0 +1,10 @@
+[Unit]
+ConditionHost=htpc
+
+[Mount]
+What=LABEL=hypnotoad
+Where=/mnt/varasto/hypnotoad
+Options=defaults,nofail,noatime
+
+[Install]
+WantedBy=multi-user.target
