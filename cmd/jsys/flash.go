@@ -98,16 +98,13 @@ func flashEFIEntrypoint() *cobra.Command {
 				return err
 			}
 
-			// TODO: discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
-			cmdline := append(createKernelCmdline(sysID), "root=LABEL=persist")
-
 			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
 			vol2 := "--volume=/tmp/ukifybuild:/workspace"
 
 			ukifyBuild := exec.CommandContext(ctx, "docker", "run", "--rm", "-t", vol1, vol2, "ghcr.io/joonas-fi/joonas-sys-ukify:latest", "build",
 				"--linux=/sysroot/boot/vmlinuz",
 				"--initrd=/sysroot/boot/initrd.img",
-				"--cmdline="+strings.Join(cmdline, " "),
+				"--cmdline="+strings.Join(createKernelCmdline(sysID), " "),
 				"--output=/workspace/BOOTx64.efi")
 			if output, err := ukifyBuild.CombinedOutput(); err != nil {
 				return fmt.Errorf("ukify: %w: %s", err, string(output))
@@ -122,7 +119,7 @@ func flashEFIEntrypoint() *cobra.Command {
 					return err
 				}
 
-				if err := os.WriteFile(filepath.Join("/boot/efi/", "active-system-version.txt"), []byte(sysID), 0644); err != nil {
+				if err := os.WriteFile(activeSystemVersionPath(), []byte(sysID), 0644); err != nil {
 					return err
 				}
 
@@ -183,5 +180,21 @@ func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
 }
 
 func createKernelCmdline(sysID string) []string {
+	// TODO: discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+	// specifically SD_GPT_ROOT_X86_64
+	//
+	// linux implementation of PARTUUID:
+	//   https://github.com/torvalds/linux/blob/059dd502b263d8a4e2a84809cf1068d6a3905e6f/block/early-lookup.c#L226
+	cmdline := append(createKernelCmdlineWithoutRootDiskOption(sysID), "root=LABEL=persist")
+	// cmdline := append(createKernelCmdlineWithoutRootDiskOption(sysID), "root=PARTUUID="+gpt.LinuxRootX86_64)
+	// import github.com/diskfs/go-diskfs/partition/gpt
+	return cmdline
+}
+
+func createKernelCmdlineWithoutRootDiskOption(sysID string) []string {
 	return []string{"sysid=" + sysID, "rw"}
+}
+
+func activeSystemVersionPath() string {
+	return filepath.Join(espMountpoint, "active-system-version.txt")
 }

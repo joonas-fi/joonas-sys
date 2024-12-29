@@ -117,7 +117,7 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 		return virtiofsd.Run()
 	})
 
-	kernelCmdline := append([]string{"rootfstype=virtiofs", "root=vroot"}, createKernelCmdline(sysID)...)
+	kernelCmdline := append([]string{"rootfstype=virtiofs", "root=vroot"}, createKernelCmdlineWithoutRootDiskOption(sysID)...)
 	if rescue {
 		kernelCmdline = append(kernelCmdline, "systemd.unit=rescue.target")
 	}

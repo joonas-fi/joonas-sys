@@ -29,7 +29,6 @@ func main() {
 	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEntrypoint())
 	app.AddCommand(testInVMEntrypoint())
-	app.AddCommand(restartPrepareEntrypoint())
 	app.AddCommand(restartPrepareCurrentEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(backlight.Entrypoint())
