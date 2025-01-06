@@ -37,6 +37,14 @@ mkdir -p /sysroot
 # move real root
 mount --no-mtab -o move "$rootmnt" "/sysroot" || panic "failed mounting $treeSysroot"
 
+# implies `/sysroot/apps` is encrypted
+if [ -d /sysroot/.fscrypt ]; then
+	# the above log msg thing doesn't yield a newline
+	echo
+
+	fscrypt unlock /sysroot/apps || true
+fi
+
 mount -t overlay overlay -olowerdir="/sysroot/apps/OS-checkout/${sysId},upperdir=/sysroot/apps/OS-diff/${sysId},workdir=/sysroot/apps/OS-diff-work" /root
 
 mkdir -p /root/sysroot

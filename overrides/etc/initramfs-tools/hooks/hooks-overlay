@@ -1,21 +1,21 @@
-#!/bin/sh
+#!/bin/sh -eu
 
 . /usr/share/initramfs-tools/scripts/functions
 . /usr/share/initramfs-tools/hook-functions
 
-# these binaries used by:
-# - our "init-bottom-overlay" script (fsck, used to use but not anymore. TODO: remove)
-# - bootstrap process (install joonas-sys on a new machine), like lsblk, fdisk and mkfs.ext4
+# these binaries used by our "init-bottom-overlay" script
+# (or for debug in case init script fails and we drop to shell)
 
-copy_exec /sbin/blkid
-# copy_exec /sbin/mke2fs
-# copy_exec /sbin/fsck
-# copy_exec /sbin/fsck.f2fs
-# copy_exec /sbin/fsck.ext2
-# copy_exec /sbin/fsck.ext3
-# copy_exec /sbin/fsck.ext4
-# copy_exec /bin/fsck.btrfs
-# copy_exec /sbin/logsave
-# copy_exec /sbin/mkfs.ext4
 copy_exec /usr/bin/lsblk
-# copy_exec /usr/sbin/fdisk
+copy_exec /usr/bin/base64
+
+# initramfs is also built in early stage of our bootstrap where fscrypt is not yet available.
+if [ -f /usr/bin/fscrypt ]; then
+	copy_exec /usr/bin/fscrypt
+
+	# the darn fscrypt requires fscrypt.conf to be present even in initramfs
+	mkdir -p "${DESTDIR}/etc"
+	cp /etc/fscrypt.conf "${DESTDIR}/etc/fscrypt.conf"
+	# for some reason this doesn't work
+	# copy_file config /etc/fscrypt.conf
+fi
