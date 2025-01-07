@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"sync/atomic"
 
@@ -24,7 +25,16 @@ func Entrypoint() *cobra.Command {
 		Use:   "statuswidgets",
 		Short: "Extends i3status with custom widgets",
 		Args:  cobra.NoArgs,
-		Run:   cli.WrapRun(func(ctx context.Context, _ []string) error { return logic(ctx) }),
+		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
+			err := IgnoreErrorIfCanceled(ctx, logic(ctx))
+			if err != nil {
+				errWrite := os.WriteFile("/tmp/jsys-statusbar-last-fail-reason.txt", []byte(err.Error()), 0600)
+				if errWrite != nil {
+					slog.Error("write of fail reason", "errWrite", errWrite)
+				}
+			}
+			return err
+		}),
 	}
 }
 
