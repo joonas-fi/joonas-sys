@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"sync/atomic"
+	"time"
 
 	"github.com/function61/gokit/app/cli"
 	. "github.com/function61/gokit/builtin"
@@ -102,7 +103,13 @@ func logic(ctx context.Context) error {
 
 	// each time the routing table changes is is a natural time to refresh the link list and see which
 	// one of them is the internet-facing one.
-	tasks.Start("routesubscriber", func(ctx context.Context) error {
+	routeSubscriber := func(ctx context.Context) error {
+		// since this task can crash (see `retryForever()` callsite) we should get the truth at the start
+		// because the start might be a consequence of a crash that could have updated the truth
+		if err := storeDefaultLinkIndex(internetFacingLinkIdxAtomic); err != nil {
+			return err
+		}
+
 		routesUpdated := make(chan netlink.RouteUpdate, 1)
 		stopSubscription := make(chan struct{})
 		defer close(stopSubscription)
@@ -128,6 +135,12 @@ func logic(ctx context.Context) error {
 				}
 			}
 		}
+	}
+
+	tasks.Start("routesubscriber", func(ctx context.Context) error {
+		// the dumbass `netlink.RouteSubscribe` can actually close the channel which will result in
+		// having to re-subscribe. retrying this task forever was the most pragmatic fix.
+		return retryForever(ctx, routeSubscriber)
 	})
 
 	tasks.Start("networkpoll", func(ctx context.Context) error {
@@ -193,4 +206,22 @@ func startInteractiveShellCommandInDialog(description string, shellCommand strin
 	}
 
 	return nil
+}
+
+func retryForever(ctx context.Context, task func(context.Context) error) error {
+	for {
+		err := task(ctx)
+		if err == nil {
+			return nil
+		}
+
+		select {
+		case <-ctx.Done(): // asked to stop, so the stop of `task` was expected
+			return nil
+		default:
+			slog.Error("retryForever task errored; retrying", "err", err)
+
+			time.Sleep(1 * time.Second) // don't hammer at full speed
+		}
+	}
 }
