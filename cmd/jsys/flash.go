@@ -98,6 +98,10 @@ func flashEFIEntrypoint() *cobra.Command {
 				return err
 			}
 
+			if err := os.MkdirAll(filelocations.Sysroot.DiffWork(), 0755); err != nil {
+				return err
+			}
+
 			vol1 := fmt.Sprintf("--volume=%s:/sysroot", filelocations.Sysroot.Checkout(sysID))
 			vol2 := "--volume=/tmp/ukifybuild:/workspace"
 
