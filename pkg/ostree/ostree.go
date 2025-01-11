@@ -86,6 +86,8 @@ func Entrypoint() *cobra.Command {
 		}),
 	})
 
+	cmd.AddCommand(checkoutsCleanupEntrypoint())
+
 	return cmd
 }
 
