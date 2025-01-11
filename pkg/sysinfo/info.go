@@ -50,7 +50,7 @@ func info(ctx context.Context, _ []string) error {
 		timeutil.HumanizeDuration(time.Since(updatedTime))))
 
 	// "Ubuntu 20.04.3 LTS (Focal Fossa)"
-	infoTbl.AddRow("OS", fmt.Sprintf("OS: %s %s", osRelease["NAME"], osRelease["VERSION"]))
+	infoTbl.AddRow("OS", fmt.Sprintf("%s %s", osRelease["NAME"], osRelease["VERSION"]))
 
 	infoTbl.AddRow("System ID", sysID)
 
