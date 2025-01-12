@@ -49,7 +49,7 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 		return err
 	}
 
-	sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
+	sysrootCheckouts, err := ostree.ListVersions(filelocations.Sysroot)
 	if err != nil {
 		return err
 	}
@@ -59,9 +59,12 @@ func testInVM(ctx context.Context, rescue bool, wipe bool) error {
 		return err
 	}
 
-	sysID := sysrootCheckouts[idx].Dir
+	checkout, err := ostree.EnsureCheckedOut(ctx, sysrootCheckouts[idx])
+	if err != nil {
+		return err
+	}
 
-	checkout := filelocations.Sysroot.Checkout(sysID)
+	sysID := sysrootCheckouts[idx].CommitShort
 
 	// cannot be in /tmp because then our topology would be:
 	// host: overlayfs -> virtiofsd

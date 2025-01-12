@@ -63,12 +63,12 @@ func info(ctx context.Context, _ []string) error {
 func getSystemUpdatedTime(sysID string) (time.Time, error) {
 	withErr := func(err error) (time.Time, error) { return time.Time{}, fmt.Errorf("getSystemUpdatedTime: %w", err) }
 
-	checkouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
+	checkouts, err := ostree.ListVersions(filelocations.Sysroot)
 	if err != nil {
 		return withErr(err)
 	}
 
-	checkout, found := lo.Find(checkouts, func(checkout ostree.CheckoutWithLabel) bool { return checkout.Dir == sysID })
+	checkout, found := lo.Find(checkouts, func(checkout ostree.CheckoutWithLabel) bool { return checkout.CommitShort == sysID })
 	if !found {
 		return withErr(fmt.Errorf("checkout not found for %s", sysID))
 	}

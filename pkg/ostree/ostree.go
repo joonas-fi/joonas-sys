@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -67,7 +66,7 @@ func Entrypoint() *cobra.Command {
 			}
 
 			fmt.Printf(
-				"done. got head:\n  %s %s\npro-tip: $ jsys ostree checkout\n",
+				"done. got head:\n  %s %s\n",
 				commit.GetTimestamp().Format(time.RFC3339),
 				commit.Subject)
 
@@ -117,7 +116,13 @@ func Entrypoint() *cobra.Command {
 		Short: "Checks out a root filesystem from a commit",
 		Args:  cobra.ExactArgs(1),
 		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
-			return checkoutRootFS(ctx, args[0])
+			if err := checkoutRootFS(ctx, args[0]); err != nil {
+				return err
+			}
+
+			fmt.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash\n", os.Args[0], os.Args[0])
+
+			return nil
 		}),
 	})
 
@@ -175,10 +180,9 @@ func commitEntrypoint() *cobra.Command {
 			}
 
 			if checkout {
-				return CheckoutRootFS(ctx, commitID)
+				return checkoutRootFS(ctx, commitID)
 			} else {
 				slog.Info("committed", "commitID", commitID)
-				fmt.Printf("pro-tip: run $ %s ostree checkout %s\n", os.Args[0], commitID)
 			}
 
 			return nil
@@ -223,18 +227,24 @@ func checkoutRootFS(ctx context.Context, commit string) error {
 
 	slog.Info("checked out to", "checkoutPath", checkoutPath)
 
-	fmt.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash\n", os.Args[0], os.Args[0])
-
 	return nil
 }
 
 type CheckoutWithLabel struct {
-	Dir       string // "ae39405"
-	Label     string // "ae39405 - 2023-05-28T13:06:07+03:00 - fix virtio-fsd"
-	Timestamp time.Time
+	CommitShort string // "ae39405"
+	Commit      string // "ae39405..." (set only if sourced from ostree commit log and not from actual checkouts)
+	Label       string // "ae39405 - 2023-05-28T13:06:07+03:00 - fix virtio-fsd"
+	Timestamp   time.Time
 }
 
-func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, error) {
+// returns true if this represents a commit that has been checked out.
+// if not, returns the commit id so we can checkout based on that.
+func (c CheckoutWithLabel) CheckedOut() (string, bool) {
+	checkedOut := c.Commit == ""
+	return c.Commit, checkedOut
+}
+
+func listVersionsFromCheckouts(root filelocations.Root) ([]CheckoutWithLabel, error) {
 	versionsEntries, err := os.ReadDir(root.CheckoutsDir())
 	if err != nil {
 		return nil, err
@@ -269,11 +279,6 @@ func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, err
 		}
 	})
 
-	sort.Slice(checkoutsWithTimestamps, func(i, j int) bool {
-		// newest to oldest
-		return checkoutsWithTimestamps[i].timestamp.After(checkoutsWithTimestamps[j].timestamp)
-	})
-
 	return lo.Map(checkoutsWithTimestamps, func(x direntryWithTimestamp, _ int) CheckoutWithLabel {
 		labelComponents := []string{x.Name()}
 
@@ -285,9 +290,10 @@ func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, err
 		}
 
 		return CheckoutWithLabel{
-			Dir:       x.Name(),
-			Label:     strings.Join(labelComponents, " - "),
-			Timestamp: x.timestamp,
+			CommitShort: x.Name(),
+			Commit:      "", // needs to be empty for checkouts
+			Label:       checkedOutIndicator(true) + strings.Join(labelComponents, " - "),
+			Timestamp:   x.timestamp,
 		}
 	}), nil
 }

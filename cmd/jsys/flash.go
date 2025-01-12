@@ -47,16 +47,16 @@ func flashEFIEntrypoint() *cobra.Command {
 			if err != nil || !espMounted {
 				const mountSource = "/dev/disk/by-partlabel/EFI\\x20system\\x20partition"
 
-				slog.Warn("ESP not mounted",
-					"mountpoint", espMountpoint,
-					"mounting", mountSource)
+				slog.Warn("ESP not mounted; mounting",
+					"to", espMountpoint,
+					"from", mountSource)
 
 				if output, err := exec.CommandContext(ctx, "mount", mountSource, espMountpoint).CombinedOutput(); err != nil {
 					return fmt.Errorf("mount: %w: %s", err, string(output))
 				}
 			}
 
-			sysrootCheckouts, err := ostree.GetCheckoutsSortedByDate(filelocations.Sysroot)
+			sysrootCheckouts, err := ostree.ListVersions(filelocations.Sysroot)
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,11 @@ func flashEFIEntrypoint() *cobra.Command {
 				return err
 			}
 
-			sysID := sysrootCheckouts[idx].Dir
+			if _, err = ostree.EnsureCheckedOut(ctx, sysrootCheckouts[idx]); err != nil {
+				return err
+			}
+
+			sysID := sysrootCheckouts[idx].CommitShort
 
 			// create diff dir (system is unbootable without this)
 			if err := os.MkdirAll(filelocations.Sysroot.Diff(sysID), 0755); err != nil {
@@ -102,6 +106,8 @@ func flashEFIEntrypoint() *cobra.Command {
 				}
 
 				slog.Info("new bootloader now live", "bootloader", bootloaderDestination)
+
+				fmt.Printf("pro-tip:\n  $ %s %s\n", os.Args[0], restartPrepareCurrentEntrypoint().Use)
 			} else {
 				fmt.Println("pro-tip: (NOTE: take backup of target first)")
 				fmt.Println("  $ cp /tmp/ukifybuild/BOOTx64.efi " + bootloaderDestination)
