@@ -27,7 +27,7 @@ func main() {
 	}
 
 	app.AddCommand(buildEntrypoint())
-	app.AddCommand(flashEntrypoint())
+	app.AddCommand(flashEFIEntrypoint())
 	app.AddCommand(testInVMEntrypoint())
 	app.AddCommand(restartPrepareCurrentEntrypoint())
 	app.AddCommand(versionReportEntrypoint())

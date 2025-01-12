@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -30,37 +29,12 @@ const (
 	tmpMountpointPersist = "/tmp/jsys-persist"
 )
 
-func flashEntrypoint() *cobra.Command {
-	ignoreWarnings := false
-	remote := false
-	autoRemove := false
-	ostreeRef := ""
-
-	cmd := &cobra.Command{
-		Use:   "flash [system]",
-		Short: "Flashes systree to storage",
-		Args:  cobra.ExactArgs(1),
-		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
-			return errors.New("regressed")
-		}),
-	}
-
-	cmd.Flags().BoolVarP(&ignoreWarnings, "ignore-warnings", "", ignoreWarnings, "Ignore any warnings")
-	cmd.Flags().BoolVarP(&remote, "remote", "", remote, "Use known remote (192.168.1.104)")
-	cmd.Flags().BoolVarP(&autoRemove, "auto-remove", "", autoRemove, "Automatically remove previous diff")
-	cmd.Flags().StringVarP(&ostreeRef, "ostree", "", ostreeRef, "OSTree ref to checkout")
-
-	cmd.AddCommand(flashEFIEntrypoint())
-
-	return cmd
-}
-
 func flashEFIEntrypoint() *cobra.Command {
 	commit := false
 
 	cmd := &cobra.Command{
-		Use:   "efi",
-		Short: "Flash EFI boot partition with target sysid",
+		Use:   "flash",
+		Short: "Flash EFI boot partition with target version",
 		Args:  cobra.NoArgs,
 		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if _, err := userutil.RequireRoot(); err != nil {
