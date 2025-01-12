@@ -2,16 +2,13 @@
 package ostree
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -22,14 +19,17 @@ import (
 	"github.com/function61/gokit/os/user/userutil"
 	"github.com/joonas-fi/joonas-sys/pkg/common"
 	"github.com/joonas-fi/joonas-sys/pkg/filelocations"
+	"github.com/joonas-fi/joonas-sys/pkg/gostree"
 	"github.com/joonas-fi/joonas-sys/pkg/xdgcommonextendedattributes"
 	"github.com/pkg/xattr"
 	"github.com/samber/lo"
+	"github.com/scylladb/termtables"
 	"github.com/spf13/cobra"
 )
 
 const (
 	ostreeBranchNameX8664 = "deploy/app/fi.joonas.os/x86_64/stable"
+	ostreeRemoteName      = "fi.joonas.os"
 )
 
 func Entrypoint() *cobra.Command {
@@ -47,16 +47,29 @@ func Entrypoint() *cobra.Command {
 				return err
 			}
 
-			logOutput := exec.CommandContext(ctx, "ostree", "pull", "fi.joonas.os", ostreeBranchNameX8664)
+			logOutput := exec.CommandContext(ctx, "ostree", "pull", ostreeRemoteName, ostreeBranchNameX8664)
 			logOutput.Stdout = os.Stdout
 			logOutput.Stderr = os.Stderr
 			if err := logOutput.Run(); err != nil {
 				return err
 			}
 
-			fmt.Println("done. pro-tip:")
-			fmt.Println("  $ jsys ostree log")
-			fmt.Println("  $ jsys ostree checkout <commit>")
+			repo := gostree.Open(filelocations.Sysroot.App(common.AppOSRepo))
+
+			commitID, err := repo.ResolveRef(ostreeBranchNameX8664, remoteNameParam())
+			if err != nil {
+				return err
+			}
+
+			commit, err := repo.ReadCommit(commitID)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf(
+				"done. got head:\n  %s %s\npro-tip: $ jsys ostree checkout\n",
+				commit.GetTimestamp().Format(time.RFC3339),
+				commit.Subject)
 
 			return nil
 		}),
@@ -67,10 +80,32 @@ func Entrypoint() *cobra.Command {
 		Short: "Show commits",
 		Args:  cobra.NoArgs,
 		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
-			logOutput := exec.CommandContext(ctx, "ostree", "log", ostreeBranchNameX8664)
-			logOutput.Stdout = os.Stdout
-			logOutput.Stderr = os.Stderr
-			return logOutput.Run()
+			repo := gostree.Open(filelocations.Sysroot.App(common.AppOSRepo))
+
+			commitID, err := repo.ResolveRef(ostreeBranchNameX8664, remoteNameParam())
+			if err != nil {
+				return err
+			}
+			commitLog, err := repo.ReadParentCommits(commitID)
+			if err != nil {
+				return err
+			}
+
+			commitLogTbl := termtables.CreateTable()
+
+			commitLogTbl.AddHeaders("Date", "Subject", "Subject")
+
+			for _, commit := range commitLog {
+				commitLogTbl.AddRow(
+					commitShort(commit.ID),
+					commit.GetTimestamp().Format("2006-01-02 15:04"),
+					commit.Subject,
+				)
+			}
+
+			fmt.Println(commitLogTbl.Render())
+
+			return nil
 		}),
 	})
 
@@ -125,23 +160,25 @@ func commitEntrypoint() *cobra.Command {
 				}
 			}
 
-			// commit writes the revision to stdout
-			revisionOutput := &bytes.Buffer{}
-
 			commitOutput := exec.CommandContext(ctx, "ostree", "commit", "--branch="+ostreeBranchNameX8664, "--subject="+subject, common.BuildTreeLocation)
-			commitOutput.Stdout = io.MultiWriter(os.Stdout, revisionOutput)
+			// stdout would only show created commit ID
 			commitOutput.Stderr = os.Stderr
 			if err := commitOutput.Run(); err != nil {
 				return err
 			}
 
-			commidID := revisionOutput.String()
+			repo := gostree.Open(filelocations.Sysroot.App(common.AppOSRepo))
+
+			commitID, err := repo.ResolveRef(ostreeBranchNameX8664, remoteNameParam())
+			if err != nil {
+				return err
+			}
 
 			if checkout {
-				return checkoutRootFS(ctx, commidID)
+				return CheckoutRootFS(ctx, commitID)
 			} else {
-				slog.Info("committed", "commidID", commidID)
-				fmt.Printf("pro-tip: run $ %s ostree checkout %s\n", os.Args[0], commidID)
+				slog.Info("committed", "commitID", commitID)
+				fmt.Printf("pro-tip: run $ %s ostree checkout %s\n", os.Args[0], commitID)
 			}
 
 			return nil
@@ -158,9 +195,7 @@ func checkoutRootFS(ctx context.Context, commit string) error {
 		return err
 	}
 
-	commitShort := commit[0:7] // 7 hexits is unique enough
-
-	checkoutPath := filelocations.Sysroot.Checkout(commitShort)
+	checkoutPath := filelocations.Sysroot.Checkout(commitShort(commit))
 
 	exists, err := osutil.Exists(checkoutPath)
 	if err != nil {
@@ -177,32 +212,21 @@ func checkoutRootFS(ctx context.Context, commit string) error {
 		}
 	}
 
-	showOutput, err := exec.CommandContext(ctx, "ostree", "show", commit).Output()
+	commitObj, err := gostree.Open(filelocations.Sysroot.App(common.AppOSRepo)).ReadCommit(commit)
 	if err != nil {
 		return err
 	}
 
-	showCommentMatch := showCommentRe.FindStringSubmatch(string(showOutput))
-	commitMessage := func() string {
-		if showCommentMatch != nil {
-			return showCommentMatch[1]
-		} else {
-			return ""
-		}
-	}()
-
-	if err := xattr.Set(checkoutPath, xdgcommonextendedattributes.Comment, []byte(commitMessage)); err != nil {
+	if err := xattr.Set(checkoutPath, xdgcommonextendedattributes.Comment, []byte(commitObj.Subject)); err != nil {
 		return err
 	}
 
 	slog.Info("checked out to", "checkoutPath", checkoutPath)
 
-	fmt.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash efi\n", os.Args[0], os.Args[0])
+	fmt.Printf("pro-tip:\n  $ %s test-in-vm\nOR\n  $ %s flash\n", os.Args[0], os.Args[0])
 
 	return nil
 }
-
-var showCommentRe = regexp.MustCompile(`\n    (.+)`)
 
 type CheckoutWithLabel struct {
 	Dir       string // "ae39405"
@@ -266,4 +290,8 @@ func GetCheckoutsSortedByDate(root filelocations.Root) ([]CheckoutWithLabel, err
 			Timestamp: x.timestamp,
 		}
 	}), nil
+}
+
+func remoteNameParam() []string {
+	return []string{ostreeRemoteName}
 }
