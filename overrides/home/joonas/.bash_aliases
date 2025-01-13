@@ -261,6 +261,12 @@ go-life() {
 	docker run --rm -it --net=none joonas/go-life "$@"
 }
 
+shelldon() {
+	# adds OPENAI_API_KEY ENV
+	source /sto/id/I5CzPYOBxNs/openai.env
+	/usr/bin/shelldon "$@"
+}
+
 lolcat() {
 	# --force -> Force color even when stdout is not a tty
 	docker run --rm -i --net=none joonas/lolcat --force "$@"
