@@ -31,6 +31,7 @@ const (
 
 func flashEFIEntrypoint() *cobra.Command {
 	commit := false
+	sanityCheckBeforeFlash := true
 
 	cmd := &cobra.Command{
 		Use:   "flash",
@@ -39,6 +40,12 @@ func flashEFIEntrypoint() *cobra.Command {
 		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if _, err := userutil.RequireRoot(); err != nil {
 				return err
+			}
+
+			if sanityCheckBeforeFlash {
+				if err := sanityCheck(ctx); err != nil {
+					return fmt.Errorf("sanity check: %w", err)
+				}
 			}
 
 			bootloaderDestination := filepath.Join(espMountpoint, "EFI/BOOT/BOOTx64.efi")
@@ -118,6 +125,7 @@ func flashEFIEntrypoint() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&commit, "commit", "", commit, "Write the bootloader, effectively making the change live")
+	cmd.Flags().BoolVarP(&sanityCheckBeforeFlash, "sanity", "", sanityCheckBeforeFlash, "Do sanity check before flash")
 
 	return cmd
 }
