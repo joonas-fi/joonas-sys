@@ -30,7 +30,7 @@ const (
 )
 
 func flashEFIEntrypoint() *cobra.Command {
-	commit := false
+	writeBootloaderEntry := true
 	sanityCheckBeforeFlash := true
 
 	cmd := &cobra.Command{
@@ -99,7 +99,7 @@ func flashEFIEntrypoint() *cobra.Command {
 				return fmt.Errorf("ukify: %w: %s", err, string(output))
 			}
 
-			if commit {
+			if writeBootloaderEntry {
 				if err := os.Rename(bootloaderDestination, bootloaderDestination+".old"); err != nil {
 					return err
 				}
@@ -124,7 +124,7 @@ func flashEFIEntrypoint() *cobra.Command {
 		}),
 	}
 
-	cmd.Flags().BoolVarP(&commit, "commit", "", commit, "Write the bootloader, effectively making the change live")
+	cmd.Flags().BoolVarP(&writeBootloaderEntry, "write-bootloader", "", writeBootloaderEntry, "Write the bootloader entry, effectively making the change live")
 	cmd.Flags().BoolVarP(&sanityCheckBeforeFlash, "sanity", "", sanityCheckBeforeFlash, "Do sanity check before flash")
 
 	return cmd
