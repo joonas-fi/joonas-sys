@@ -31,13 +31,8 @@ const (
 	ostreeRemoteName      = "fi.joonas.os"
 )
 
-func Entrypoint() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "ostree",
-		Short: "OSTree + jsys management",
-	}
-
-	cmd.AddCommand(&cobra.Command{
+func PullEntrypoint() *cobra.Command {
+	return &cobra.Command{
 		Use:   "pull",
 		Short: "Pull updates from joonas-sys",
 		Args:  cobra.NoArgs,
@@ -72,7 +67,16 @@ func Entrypoint() *cobra.Command {
 
 			return nil
 		}),
-	})
+	}
+}
+
+func Entrypoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ostree",
+		Short: "OSTree + jsys management",
+	}
+
+	cmd.AddCommand(PullEntrypoint())
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "log",

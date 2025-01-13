@@ -42,6 +42,7 @@ func main() {
 	app.AddCommand(tui.HREntrypoint())
 	app.AddCommand(debug.Entrypoint())
 	app.AddCommand(ostree.Entrypoint())
+	app.AddCommand(ostree.PullEntrypoint())
 
 	app.AddCommand(notificationdedup.Entrypoint())
 	app.AddCommand(notificationdedup.WorkerEntrypoint())
