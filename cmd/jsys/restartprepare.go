@@ -31,15 +31,8 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 
 			sysID := string(sysIDbytes)
 
-			root := filelocations.Sysroot.Checkout(sysID)
-
-			kexecOutput, err := exec.CommandContext(ctx, "kexec", "--load",
-				"--command-line="+strings.Join(createKernelCmdline(sysID), " "),
-				"--initrd="+filepath.Join(root, "/boot/initrd.img"),
-				filepath.Join(root, "/boot/vmlinuz"),
-			).CombinedOutput()
-			if err != nil {
-				return fmt.Errorf("kexec: %w: %s", err, kexecOutput)
+			if err := kexecLoad(ctx, sysID); err != nil {
+				return err
 			}
 
 			fmt.Printf("succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\n")
@@ -47,4 +40,19 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 			return nil
 		}),
 	}
+}
+
+func kexecLoad(ctx context.Context, sysID string) error {
+	root := filelocations.Sysroot.Checkout(sysID)
+
+	kexecOutput, err := exec.CommandContext(ctx, "kexec", "--load",
+		"--command-line="+strings.Join(createKernelCmdline(sysID), " "),
+		"--initrd="+filepath.Join(root, "/boot/initrd.img"),
+		filepath.Join(root, "/boot/vmlinuz"),
+	).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("kexec --load: %w: %s", err, kexecOutput)
+	}
+
+	return nil
 }
