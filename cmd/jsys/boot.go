@@ -14,10 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func restartPrepareCurrentEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "restart-prepare",
-		Short: "Prepare quick kexec-based restart into currently active system",
+func bootEntrypoint() *cobra.Command {
+	now := true
+
+	cmd := &cobra.Command{
+		Use:   "boot",
+		Short: "Do quick kexec-based boot into currently active system",
 		Args:  cobra.NoArgs,
 		Run: cli.WrapRun(func(ctx context.Context, _ []string) error {
 			if _, err := userutil.RequireRoot(); err != nil {
@@ -35,11 +37,21 @@ func restartPrepareCurrentEntrypoint() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\n")
+			if now {
+				if err := kexecBoot(ctx); err != nil {
+					return err
+				}
+			} else {
+				fmt.Printf("succeeded. to reboot, issue (with sudo):\n    $ systemctl kexec\n")
+			}
 
 			return nil
 		}),
 	}
+
+	cmd.Flags().BoolVarP(&now, "now", "", now, "Boot immediately (if not do just $ kexec --load ...)")
+
+	return cmd
 }
 
 func kexecLoad(ctx context.Context, sysID string) error {
@@ -52,6 +64,14 @@ func kexecLoad(ctx context.Context, sysID string) error {
 	).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("kexec --load: %w: %s", err, kexecOutput)
+	}
+
+	return nil
+}
+
+func kexecBoot(ctx context.Context) error {
+	if output, err := exec.CommandContext(ctx, "systemctl", "kexec").CombinedOutput(); err != nil {
+		return fmt.Errorf("systemctl kexec: %w: %s", err, string(output))
 	}
 
 	return nil

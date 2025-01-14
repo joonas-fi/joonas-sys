@@ -29,7 +29,7 @@ func main() {
 	app.AddCommand(buildEntrypoint())
 	app.AddCommand(flashEFIEntrypoint())
 	app.AddCommand(testInVMEntrypoint())
-	app.AddCommand(restartPrepareCurrentEntrypoint())
+	app.AddCommand(bootEntrypoint())
 	app.AddCommand(versionReportEntrypoint())
 	app.AddCommand(backlight.Entrypoint())
 	app.AddCommand(lowdiskspacechecker.Entrypoint())

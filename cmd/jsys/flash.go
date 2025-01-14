@@ -32,6 +32,7 @@ const (
 func flashEFIEntrypoint() *cobra.Command {
 	writeBootloaderEntry := true
 	sanityCheckBeforeFlash := true
+	bootByKexec := false
 
 	cmd := &cobra.Command{
 		Use:   "flash",
@@ -114,7 +115,19 @@ func flashEFIEntrypoint() *cobra.Command {
 
 				slog.Info("new bootloader now live", "bootloader", bootloaderDestination)
 
-				fmt.Printf("pro-tip:\n  $ %s %s\n", os.Args[0], restartPrepareCurrentEntrypoint().Use)
+				if bootByKexec {
+					if err := kexecLoad(ctx, sysID); err != nil {
+						return err
+					}
+
+					slog.Info("kexec loaded. about to boot - hold on to your butts.")
+
+					if err := kexecBoot(ctx); err != nil {
+						return err
+					}
+				} else {
+					fmt.Printf("pro-tip:\n  $ %s %s\n", os.Args[0], bootEntrypoint().Use)
+				}
 			} else {
 				fmt.Println("pro-tip: (NOTE: take backup of target first)")
 				fmt.Println("  $ cp /tmp/ukifybuild/BOOTx64.efi " + bootloaderDestination)
@@ -126,6 +139,7 @@ func flashEFIEntrypoint() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&writeBootloaderEntry, "write-bootloader", "", writeBootloaderEntry, "Write the bootloader entry, effectively making the change live")
 	cmd.Flags().BoolVarP(&sanityCheckBeforeFlash, "sanity", "", sanityCheckBeforeFlash, "Do sanity check before flash")
+	cmd.Flags().BoolVarP(&bootByKexec, "boot", "", bootByKexec, "Boot right now (using kexec)")
 
 	return cmd
 }
