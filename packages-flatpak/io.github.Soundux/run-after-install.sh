@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
-# flatpak override io.github.Soundux --filesystem=/home/joonas/soundboard
+flatpak override --user io.github.Soundux --filesystem=/sto/id/Jpcl3w1PJlo
 
