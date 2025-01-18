@@ -1,6 +1,6 @@
 module github.com/joonas-fi/joonas-sys
 
-go 1.21
+go 1.22
 
 toolchain go1.23.1
 
@@ -9,7 +9,7 @@ replace github.com/gokrazy/rsync => github.com/joonas-fi/rsync v0.0.0-2022030113
 require (
 	github.com/acobaugh/osrelease v0.0.0-20181218015638-a93a0a55a249
 	github.com/apcera/termtables v0.0.0-20170405184538-bcbc5dc54055
-	github.com/djherbis/times v1.5.0
+	github.com/djherbis/times v1.6.0
 	github.com/esiqveland/notify v0.11.0
 	github.com/function61/gokit v0.0.0-20241219151907-f0ce2a6aac07
 	github.com/function61/tailscale-discovery v0.0.0-20220102130346-5032b0e5a9b8
@@ -22,7 +22,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/noamt/go-cldr v1.0.0
-	github.com/pkg/xattr v0.4.4
+	github.com/pkg/xattr v0.4.9
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/procfs v0.7.3
 	github.com/samber/lo v1.37.0
@@ -31,7 +31,7 @@ require (
 	github.com/sqp/pulseaudio v0.0.0-20180916175200-29ac6bfa231c
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
-	golang.org/x/sys v0.6.0
+	golang.org/x/sys v0.19.0
 	golang.org/x/text v0.3.7
 )
 
@@ -39,15 +39,22 @@ require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
 	github.com/DavidGamba/go-getoptions v0.23.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
+	github.com/diskfs/go-diskfs v1.5.0 // indirect
+	github.com/elliotwutingfeng/asciiset v0.0.0-20230602022725-51bbb787efab // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/lmittmann/tint v1.0.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmcloughlin/md4 v0.1.1 // indirect
+	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.4-0.20230606125235-dd1b4c2e81af // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

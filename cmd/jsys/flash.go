@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/diskfs/go-diskfs"
+	"github.com/diskfs/go-diskfs/backend/file"
+	"github.com/diskfs/go-diskfs/partition/gpt"
 	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/user/userutil"
@@ -141,6 +145,8 @@ func flashEFIEntrypoint() *cobra.Command {
 	cmd.Flags().BoolVarP(&sanityCheckBeforeFlash, "sanity", "", sanityCheckBeforeFlash, "Do sanity check before flash")
 	cmd.Flags().BoolVarP(&bootByKexec, "boot", "", bootByKexec, "Boot right now (using kexec)")
 
+	cmd.AddCommand(assertDiscoverablePartitionsSpecEntrypoint())
+
 	return cmd
 }
 
@@ -186,14 +192,19 @@ func copyBackgroundFromCurrentSystemIfExistsTo(to string) error {
 }
 
 func createKernelCmdline(sysID string) []string {
-	// TODO: discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
-	// specifically SD_GPT_ROOT_X86_64
+	// discover by https://uapi-group.org/specifications/specs/discoverable_partitions_specification/
+	// specifically SD_GPT_ROOT_X86_64 (semantics = root partition for x86-64)
 	//
-	// linux implementation of PARTUUID:
-	//   https://github.com/torvalds/linux/blob/059dd502b263d8a4e2a84809cf1068d6a3905e6f/block/early-lookup.c#L226
-	cmdline := append(createKernelCmdlineWithoutRootDiskOption(sysID), "root=LABEL=persist")
-	// cmdline := append(createKernelCmdlineWithoutRootDiskOption(sysID), "root=PARTUUID="+gpt.LinuxRootX86_64)
-	// import github.com/diskfs/go-diskfs/partition/gpt
+	// Linux kernel implements a few configurable strategies for early boot resolving of the root filesystem:
+	// - "PARTUUID=..." for using GPT part UUID (this is different than GPT part type)
+	// - "PARTLABEL=..." for using GPT part label
+	//   (this is not codified by the discoverable partitions spec but this is the best we can do)
+	//   https://github.com/torvalds/linux/blob/059dd502b263d8a4e2a84809cf1068d6a3905e6f/block/early-lookup.c#L236
+	//
+	// WARN: cannot use quotes in the arg (even though kernel docs mention it being supported), it will break boot.
+	howToResolveRoot := fmt.Sprintf("root=PARTLABEL=%s", rootPartitionGPTLabel)
+
+	cmdline := append(createKernelCmdlineWithoutRootDiskOption(sysID), howToResolveRoot)
 	return cmdline
 }
 
@@ -203,4 +214,53 @@ func createKernelCmdlineWithoutRootDiskOption(sysID string) []string {
 
 func activeSystemVersionPath() string {
 	return filepath.Join(espMountpoint, "active-system-version.txt")
+}
+
+func assertDiscoverablePartitionsSpecEntrypoint() *cobra.Command {
+	return &cobra.Command{
+		Use:   "assert-discoverable-partitions-spec [devPath]",
+		Short: "Check that partitions have correct partition types",
+		Args:  cobra.ExactArgs(1),
+		Run: cli.WrapRun(func(ctx context.Context, args []string) error {
+			if err := assertDiscoverablePartitionsSpec(args[0]); err != nil {
+				return err
+			}
+
+			return nil
+		}),
+	}
+}
+
+const (
+	// GPT labels are not strictly codified in the spec (though it has a name column), it primarily speaks
+	// of using GPT partition type as the "foreign key". also it seems that using PARTLABEL with space
+	// for Linux to boot the support was either broken in the kernel or the initrd (it failed parsing at space's position)
+	// (even though kernel docs indicate space support: https://www.kernel.org/doc/html/v4.14/admin-guide/kernel-parameters.html).
+	//
+	// so let's just use a simple no-frills label.
+	rootPartitionGPTLabel = "root"
+)
+
+func assertDiscoverablePartitionsSpec(devicePath string) error {
+	dev, err := file.OpenFromPath(devicePath, true)
+	if err != nil {
+		return err
+	}
+	defer dev.Close()
+
+	disk, err := diskfs.OpenBackend(dev, diskfs.WithOpenMode(diskfs.ReadOnly))
+	if err != nil {
+		return err
+	}
+
+	partTable := disk.Table.(*gpt.Table)
+
+	if !lo.SomeBy(partTable.Partitions, func(part *gpt.Partition) bool {
+		return part.Type == gpt.LinuxRootX86_64 && part.Name == rootPartitionGPTLabel
+	}) {
+		return errors.New("no partition found matching LinuxRootX86_64 (" + string(gpt.LinuxRootX86_64) + ") and the label " + rootPartitionGPTLabel + "\n  pro-tip: can be changed with gdisk (use type code 8304)")
+	}
+
+	return nil
+
 }
