@@ -49,3 +49,24 @@ flowchart TD
     Initrd2 --> userspaceboot[Userspace boot]
     Resources -. contained in .-> osbootloader
 ```
+
+Troubleshoot
+------------
+
+### Unbootable system: you landed in initrd
+
+If you get this far, you should be dropped into a shell.
+
+You can mount the ESP and recover the previous working installation by taking the backup UKI
+(which has previous-working cmdline, initrd and pointer to checkout) into use:
+
+```shell
+mkdir /boot
+mount <find boot partition from lsblk> /boot
+cd /boot/efi/EFI/BOOT/
+mv BOOTx64.efi.old BOOTx64.efi
+cd /
+umount /boot
+```
+
+Then reboot.

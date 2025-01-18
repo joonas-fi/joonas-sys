@@ -41,6 +41,7 @@ Further documentation
 - [Manual steps to do after updates](docs/manual-steps.md)
 - [Installing on a new system](docs/installing-on-a-new-system.md)
 - [Boot process](docs/boot-process.md)
+	* Includes troubleshooting on boot issues
 
 
 How does it work
