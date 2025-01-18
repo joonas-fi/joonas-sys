@@ -28,6 +28,7 @@ rm /etc/gdm3/custom.conf
 # - gvfs-backends = Samba working in thunar
 # - gvfs-fuse = GVFS files to work in non-GIO (= POSIX) programs
 # - xdg-utils = xdg-mime (for setting default programs for file types)
+# - xclip needed for things like ascii-art.sh and emoji.sh
 DEBIAN_FRONTEND=noninteractive apt install -y \
 	gdm3 \
 	xfce4 \
@@ -39,6 +40,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
 	gvfs-fuse \
 	alsa \
 	compton \
+	xclip \
 	xwallpaper \
 	ttf-ancient-fonts \
 	fonts-firacode \
