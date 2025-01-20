@@ -61,9 +61,10 @@ func PullEntrypoint() *cobra.Command {
 			}
 
 			fmt.Printf(
-				"done. got head:\n  %s %s\n",
+				"done. got head:\n  %s %s\npro-tip:\n  $ %s flash\n",
 				commit.GetTimestamp().Format(time.RFC3339),
-				commit.Subject)
+				commit.Subject,
+				os.Args[0])
 
 			return nil
 		}),
