@@ -6,9 +6,6 @@ source common.sh
 # don't install recommends, because it installs "Ubuntu fan". bring in most of recommended manually
 apt install --no-install-recommends -y docker.io git cgroupfs-mount pigz xz-utils
 
-# TODO: install compose v2 from Docker to rid of Python dependency
-apt install -y docker-compose
-
 # add user to Docker group, so we don't need to "$ sudo ..." all docker commands
 usermod -aG docker "$username"
 
@@ -29,5 +26,10 @@ fi
 
 downloadAndInstallSingleBinaryProgram /usr/lib/docker/cli-plugins/docker-buildx \
 	"https://function61.com/app-dl/api/github.com/docker/buildx/latest_releases_asset/buildx-%2A.linux-amd64"
+
+# `docker-compose` is also available from Apt but it is legacy Python-based tool which even now seems
+# to crash on `$ docker-compose up -d` that worked before.. while the new compose works.
+downloadAndInstallSingleBinaryProgram /usr/lib/docker/cli-plugins/docker-compose \
+	"https://function61.com/app-dl/api/github.com/docker/compose/latest_releases_asset/docker-compose-linux-x86_64"
 
 #versioncommand: docker --version
