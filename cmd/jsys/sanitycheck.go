@@ -26,11 +26,11 @@ func sanityCheckEntrypoint() *cobra.Command {
 
 var (
 	shouldBeSymlink = []string{
-		"/sysroot/apps/SYSTEM_nobackup", // backwards compat
-		"/persist/apps",                 // backwards compat
-		"/persist/work",                 // backwards compat
+		"/persist/apps", // backwards compat
+		"/persist/work", // backwards compat
 	}
 	filesThatShouldNotExist = []string{
+		"/sysroot/apps/SYSTEM_nobackup",      // deprecated
 		"/sysroot/apps/docker/data_nobackup", // deprecated
 		"/sysroot/apps/docker/cli-plugins",   // deprecated
 		"/sysroot/apps/SYSTEM/cpu_temp",      // deprecated
