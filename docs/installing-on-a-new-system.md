@@ -4,7 +4,27 @@ Installing on a new system
 ## Overview
 
 - Install regular Ubuntu on the system
+  * or boot it as live CD and instead partition and format the drive now that it's not directly in use
 - Use the tools provided by Ubuntu to "Infect" the Ubuntu with joonas-sys and then boot into it
+
+## If using live CD, partitioning
+
+Partitions:
+
+| Mount Point | Filesystem | Size       | Partition Code | GPT partition label |
+|-------------|------------|------------|----------------|---------------------|
+| ESP         | FAT32      | 512 MB     | EF00           |                     |
+| root        | ext4       | Remaining  | 8304           | root                |
+
+PROCEED WITH EXTREME CAUTION WHEN FORMATTING as not to format the wrong system (ask me how I know...)
+
+```shell
+sudo mkfs.fat -F32 -n ESP /dev/nvme0n1p1
+
+sudo mkfs.ext4 -O encrypt /dev/nvme0n1p2
+```
+
+
 
 ## Install regular Ubuntu on the system
 
@@ -59,7 +79,7 @@ sudo touch /sysroot/swapfile  # FIXME: invalid, not created with mkswap
 sudo jsys lowdiskspace-checker rule-create root /
 sudo jsys lowdiskspace-checker rule-set-threshold --gb 20 root
 
-sudo curl -fsSL -o /sysroot/apps/SYSTEM/background.png https://github.com/user-attachments/assets/0d22f401-d4be-4d23-89ea-85d1ef789815
+sudo wget --output-file=/sysroot/apps/SYSTEM/background.png https://github.com/user-attachments/assets/0d22f401-d4be-4d23-89ea-85d1ef789815
 
 sudo mkdir /sysroot/apps/{OS-checkout,OS-diff,OS-repo}
 
