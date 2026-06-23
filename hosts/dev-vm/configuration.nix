@@ -64,11 +64,6 @@ let
       machineId = lib.replaceStrings [ "-" ] [ "" ] devVmSlot.machineId;
     in
     {
-      imports = [
-        ../../features/common.nix
-        ../../features/developer-tools.nix
-      ];
-
       boot = {
         loader.grub.enable = false;
 
@@ -102,6 +97,9 @@ let
         useDHCP = false;
         useNetworkd = true;
         nameservers = [ "1.1.1.1" ];
+
+        # don't restrict incoming comms. as this is a dev-vm we don't want to mess around opening ports for each networked app we want to test inside the VM.
+        firewall.enable = false;
       };
 
       systemd.network.networks."10-lan" = {

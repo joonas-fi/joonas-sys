@@ -3,7 +3,10 @@
 
   inputs = {
     # release announcements: https://discourse.nixos.org/c/announcements/nixos-releases/29
+    # most of the system comes from here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # for the few things that need to move faster than the stable released version
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     disko = {
       url = "github:nix-community/disko";
@@ -23,7 +26,9 @@
 
   outputs =
     {
+      self,
       nixpkgs,
+      nixpkgs-unstable,
       nixos-hardware,
       disko,
       home-manager,
@@ -31,20 +36,31 @@
       ...
     }:
     let
-      bedroom-pi = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        modules = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-          nixos-hardware.nixosModules.raspberry-pi-4
-          ./hosts/bedroom-pi/configuration.nix
-        ];
-      };
-
       devVM = import ./hosts/dev-vm/configuration.nix;
+      generateConfigurationsDocumentation = import ./misc/generate-configurations-documentation.nix;
+
+      # list is hardcoded here (as opposed to listing from filesystem) to have a logical column order.
+      featurePaths = map (feature: ./features + "/${feature}.nix") [
+        "common"
+        "common-extended"
+        "developer-tools"
+        "desktop"
+      ];
+
+      # this indirection required for introspection (see "generate configurations documentation")
+      mkNixosSystem =
+        args:
+        (nixpkgs.lib.nixosSystem args)
+        // {
+          architecture = nixpkgs.lib.removeSuffix "-linux" args.system;
+          featureImports = builtins.filter (
+            module: builtins.isPath module && builtins.elem (toString module) (map toString featurePaths)
+          ) args.modules;
+        };
 
       mkDevVm =
         devVmSlot:
-        nixpkgs.lib.nixosSystem {
+        mkNixosSystem {
           system = "x86_64-linux";
           specialArgs = {
             inherit devVmSlot;
@@ -53,14 +69,30 @@
             microvm.nixosModules.microvm
             home-manager.nixosModules.default
             devVM.module
+            ./features/common.nix
+            ./features/common-extended.nix
+            ./features/developer-tools.nix
           ];
+          specialArgs = {
+            # pass this as input for the modules
+            pkgsUnstable = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          };
         };
     in
     {
       nixosConfigurations = {
-        bedroom-pi = bedroom-pi;
+        bedroom-pi = mkNixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+            nixos-hardware.nixosModules.raspberry-pi-4
+            home-manager.nixosModules.default
+            ./hosts/bedroom-pi/configuration.nix
+            ./features/common.nix
+          ];
+        };
 
-        garage = nixpkgs.lib.nixosSystem {
+        garage = mkNixosSystem {
           system = "aarch64-linux";
           modules = [
             "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
@@ -69,41 +101,89 @@
           ];
         };
 
-        mediaplayer = nixpkgs.lib.nixosSystem {
+        mediaplayer = mkNixosSystem {
           system = "aarch64-linux";
           modules = [
             "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-            home-manager.nixosModules.default # this is logic (not content) for processing home-manager directives
+            home-manager.nixosModules.default
             nixos-hardware.nixosModules.raspberry-pi-5
             ./hosts/mediaplayer/configuration.nix
           ];
         };
 
-        old-laptop = nixpkgs.lib.nixosSystem {
+        old-laptop = mkNixosSystem {
           system = "x86_64-linux";
           modules = [
             disko.nixosModules.disko # this is logic (not content) for processing disko directives
             home-manager.nixosModules.default # this is logic (not content) for processing home-manager directives
             ./hosts/old-laptop/configuration.nix
+            ./features/common.nix
+            ./features/common-extended.nix
+            ./features/developer-tools.nix
+            ./features/desktop.nix
           ];
+          specialArgs = {
+            # pass this as input for the modules
+            pkgsUnstable = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          };
         };
 
-        server = nixpkgs.lib.nixosSystem {
+        workworkwork = mkNixosSystem {
           system = "x86_64-linux";
           modules = [
-            disko.nixosModules.disko # this is logic (not content) for processing disko directives
-            home-manager.nixosModules.default # this is logic (not content) for processing home-manager directives
+            home-manager.nixosModules.default
+            ./hosts/workworkwork/configuration.nix
+            ./features/common.nix
+            ./features/common-extended.nix
+            ./features/developer-tools.nix
+            ./features/desktop.nix
+            ./features/sub-features/microvm-host.nix
+          ];
+          specialArgs = {
+            # pass this as input for the modules
+            pkgsUnstable = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          };
+        };
+
+        server = mkNixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            disko.nixosModules.disko
+            home-manager.nixosModules.default
             ./hosts/server/configuration.nix
+            ./features/common.nix
+            ./features/common-extended.nix
+            ./features/developer-tools.nix
           ];
         };
 
-        work = nixpkgs.lib.nixosSystem {
+        "moist-helen.fn61.net" = mkNixosSystem {
           system = "x86_64-linux";
           modules = [
-            # disko.nixosModules.disko # this is logic (not content) for processing disko directives
-            home-manager.nixosModules.default # this is logic (not content) for processing home-manager directives
-            ./hosts/work/configuration.nix
+            disko.nixosModules.disko
+            home-manager.nixosModules.default
+            ./hosts/moist-helen.fn61.net/configuration.nix
+            ./features/common.nix
+            ./features/common-extended.nix
           ];
+        };
+
+        work = mkNixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            # disko.nixosModules.disko
+            home-manager.nixosModules.default
+            ./hosts/work/configuration.nix
+            ./features/common.nix
+            ./features/common-extended.nix
+            ./features/developer-tools.nix
+            ./features/desktop.nix
+            ./features/sub-features/microvm-host.nix
+          ];
+          specialArgs = {
+            # pass this as input for the modules
+            pkgsUnstable = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          };
         };
       }
       // builtins.listToAttrs (
@@ -113,8 +193,19 @@
         }) devVM.slots
       );
 
-      packages.aarch64-linux = {
-        bedroom-pi-sd-image = bedroom-pi.config.system.build.sdImage;
+      configurationsMarkdown = generateConfigurationsDocumentation.markdown self.nixosConfigurations featurePaths;
+
+      apps.x86_64-linux.generate-configurations-documentation = {
+        type = "app";
+        program = "${
+          nixpkgs.legacyPackages.x86_64-linux.writeShellApplication {
+            name = "generate-configurations-documentation";
+            runtimeInputs = [ nixpkgs.legacyPackages.x86_64-linux.nix ];
+            text = ''
+              nix eval --raw .#configurationsMarkdown > configurations.md
+            '';
+          }
+        }/bin/generate-configurations-documentation";
       };
 
       # callable with `$ nix fmt`

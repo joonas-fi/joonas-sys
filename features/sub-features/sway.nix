@@ -1,5 +1,7 @@
 {
+  config,
   pkgs,
+  pkgsUnstable,
   lib,
   ...
 }:
@@ -27,19 +29,44 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${pkgs.tuigreet}/bin/tuigreet --remember --cmd=sway --theme=\"border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red\"";
+          command = "${pkgs.tuigreet}/bin/tuigreet --remember --cmd=sway --theme=\"border=cyan;text=white;prompt=cyan;time=bright-black;action=cyan;button=bright-black;container=black;input=white\"";
           user = "greeter";
         };
       };
     };
   };
 
+  xdg.portal = {
+    enable = true;
+
+    config.common.default = "*";
+
+    # https://kidsan.dev/sway-screen-share/
+    wlr = {
+      enable = true;
+      settings = {
+        screencast = {
+          chooser_type = "dmenu";
+          chooser_cmd = "${pkgs.fuzzel}/bin/fuzzel --dmenu";
+        };
+      };
+    };
+
+    # "Screen sharing on Wayland requires enabling PipeWire and the appropriate XDG Desktop Portals."
+    # https://wiki.nixos.org/wiki/Firefox#Screen_Sharing_under_Wayland
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-wlr # For Sway/wlroots
+      xdg-desktop-portal-gtk # For GNOME
+      # xdg-desktop-portal-kde # For KDE
+    ];
+  };
+
   home-manager = {
     users."joonas" = {
       services.swayidle =
         let
-          screenOffTimeout = 7 * 60; # [s]
-          dimScreenBeforeOff = 30; # [s]
+          screenOffTimeout = 8 * 60; # [s]
+          dimScreenBeforeOff = 45; # [s]
           # Lock command
           # lock = "${pkgs.swaylock}/bin/swaylock --daemonize";
           # TODO: modify "display" function based on your window manager
@@ -83,9 +110,18 @@ in
       wayland.windowManager.sway = {
         enable = true;
 
-        # Remove these two lines if you want Home Manager to install Sway itself.
-        package = null;
-        # checkConfig = false;
+        package = config.programs.sway.package;
+        checkConfig = false; # SwayFX is superset of Sway config syntax, and apparently this `checkConfig` only checks Sway syntax
+
+        extraConfig = ''
+          # SwayFX-specific config
+          blur enable
+          blur_xray disable
+          blur_radius 3
+          blur_passes 2
+
+          bindcode --release 133 exec $menu
+        '';
 
         extraConfigEarly = ''
           # necessary NixOS integration surface
@@ -97,15 +133,19 @@ in
           # `GTK_IM_MODULE` to overcome dead keys (like tilde) not working on GTK: https://github.com/ghostty-org/ghostty/discussions/8899
           set $term env GTK_IM_MODULE=simple ghostty
 
+          set $menu ${pkgs.fuzzel}/bin/fuzzel
+
           seat * hide_cursor 3000
           seat * hide_cursor when-typing enable
         '';
+
+        wrapperFeatures.gtk = true;
 
         config = {
           modifier = mod;
           # don't know why we've to specify the terminal if this isn't anyway usable as variable (without introducing explicit variable)
           terminal = "$term";
-          menu = "fuzzel";
+          menu = "${pkgs.fuzzel}/bin/fuzzel";
 
           input = {
             "*" = {
@@ -197,8 +237,9 @@ in
           keybindings = lib.mkForce {
             "$mod+Return" = "exec $term";
             "$alt+F4" = "kill";
-            "$mod+d" = ''exec "fuzzel"'';
-            "$mod+l" = "exec swaylock --image=${wallpaper}/share/backgrounds/wallpaper.jpg";
+            "$mod+d" = "exec $menu";
+            "$mod+l" =
+              "exec ${pkgs.swaylock}/bin/swaylock --image=${wallpaper}/share/backgrounds/wallpaper.jpg";
 
             "$mod+Left" = "focus left";
             "$mod+Down" = "focus down";
@@ -227,7 +268,8 @@ in
             "$mod+F2" = "exec thunar";
             "$mod+F3" = "exec /usr/bin/password.sh";
 
-            "$mod+n" = "exec i3-input -F 'rename workspace to \"%s\"' -P 'New name: '";
+            "$mod+n" =
+              "exec sh -c 'name=\"$(${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt-only=\"New name: \")\" && [ -n \"$name\" ] && swaymsg rename workspace to \"$name\"'";
 
             "$mod+1" = "workspace number 1";
             "$mod+2" = "workspace number 2";
@@ -278,7 +320,7 @@ in
             "XF86MonBrightnessDown" = "exec brightnessctl set 10%-";
 
             "$mod+space" = "exec jsys backlight keyboard cycle";
-            "Print" = "exec ${pkgs.flameshot}/bin/flameshot gui";
+            "Print" = "exec ${pkgsUnstable.flameshot}/bin/flameshot gui";
             # Kooha otherwise looked good BUT it only supports webm & gif
             "$mod+Print" =
               "exec ${pkgs.wf-recorder}/bin/wf-recorder --filename=record.mp4 --geometry=\"\$(${pkgs.slurp}/bin/slurp)\"";
@@ -332,20 +374,20 @@ in
             }
           ];
 
-          # startup = [
-          #   {
-          #     command = ''setxkbmap -option "nbsp:none"'';
-          #   }
-          # ];
+          startup = [
+            {
+              # notify of volume changes (via desktop notifications)
+              command = "${pkgs.pa-notify}/bin/pa-notify --timeout=2 --urgency=0";
+            }
+            # {
+            #   command = ''setxkbmap -option "nbsp:none"'';
+            # }
+          ];
 
           gaps = {
-            inner = 20;
+            inner = 10;
           };
         };
-
-        extraConfig = ''
-          bindcode --release 133 exec "fuzzel"
-        '';
       };
       programs = {
         # nicer than swaybar
@@ -649,12 +691,10 @@ in
     };
   };
 
-  programs = {
-    # waybar.enable = true;
-    sway = {
-      enable = true;
-      wrapperFeatures.gtk = true;
-    };
+  programs.sway = {
+    enable = true;
+    package = pkgs.swayfx;
+    wrapperFeatures.gtk = true;
   };
 
   environment.systemPackages = with pkgs; [

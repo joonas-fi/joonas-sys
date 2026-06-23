@@ -4,20 +4,33 @@ My personal systems' configuration and installation.
 
 It is a collection of NixOS configurations targeting computers:
 
-| Machine      | Platform | Desktop     |
-|--------------|----------|-------------|
-| Main desktop | x86      | Full        |
-| Work laptop  | x86      | Full        |
-| Old laptop   | x86      | Full        |
-| Server       | x86      |             |
-| garage       | ARM      | Thin client |
-| remote USB   | ARM      |             |
-| mediaplayer  | ARM      | Full        |
-| Bedroom-tv   | ARM      | Thin client |
-| Infra-pi     | ARM      |             |
-| Security-pi  | ARM      |             |
+| Architecture | Configuration | common | common-extended | developer-tools | desktop |
+| --- | --- | --- | --- | --- | --- |
+| aarch64 | bedroom-pi | ✅ |  |  |  |
+| x86_64 | dev-vm-1 | ✅ | ✅ | ✅ |  |
+| x86_64 | dev-vm-2 | ✅ | ✅ | ✅ |  |
+| x86_64 | dev-vm-3 | ✅ | ✅ | ✅ |  |
+| x86_64 | dev-vm-4 | ✅ | ✅ | ✅ |  |
+| x86_64 | dev-vm-5 | ✅ | ✅ | ✅ |  |
+| aarch64 | garage |  |  |  |  |
+| aarch64 | mediaplayer |  |  |  |  |
+| x86_64 | moist-helen.fn61.net | ✅ | ✅ |  |  |
+| x86_64 | old-laptop | ✅ | ✅ | ✅ | ✅ |
+| x86_64 | server | ✅ | ✅ | ✅ |  |
+| x86_64 | work | ✅ | ✅ | ✅ | ✅ |
+| x86_64 | workworkwork | ✅ | ✅ | ✅ | ✅ |
 
-Profiles:
+(update this table by running `$ nix run .#generate-configurations-documentation`)
+
+Features:
+
+| Feature           | Description                                            | Notes |
+| ----------------- | ------------------------------------------------------ | ----- |
+| common            | Network+Tailscale+sshd, user config, base CLI          |       |
+| common-extended   | Docker, Helix, LSPs for Helix                          |       |
+| developer-tools   | Turbo Bob, SSH agent, SSH keys, lazygit, developer CLI |       |
+| desktop           | Sway, Firefox, Flatpak, Varasto client etc.            |       |
+
 
 
 

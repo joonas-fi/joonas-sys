@@ -3,9 +3,6 @@
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    ../../features/common.nix
-    ../../features/developer-tools.nix
-    ../../features/desktop.nix
     ./hardware-configuration.nix
     ./disk-config.nix
   ];

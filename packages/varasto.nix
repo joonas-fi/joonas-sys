@@ -21,11 +21,12 @@ let
   # you then get specified-vs-got hashes. you will then put the new hash to the `sha256`
   containerImages = {
     x86_64-linux = {
-      imageDigest = "sha256:d797adacb7f44e24e9abedcc1a9e2526aa6d0e88b6d3fc666792b207152796de";
-      sha256 = "sha256-bCtHso1gI5ft3b+g/QhBeY9Yl0GX5sILQhUwrypUW50=";
+      imageDigest = "sha256:614f6fcea6b075d8df44a1716697cb74381a36f8d5fd463d69c5fb0317f6828b";
+      sha256 = "sha256-LtSO3BKoELwl6rsNXYxk/eqjJfT5vEaTqnQj54pxQVA=";
       arch = "amd64";
     };
 
+    # WARN: this is not for same version
     aarch64-linux = {
       imageDigest = "sha256:d797adacb7f44e24e9abedcc1a9e2526aa6d0e88b6d3fc666792b207152796de";
       sha256 = "sha256-rV1RglbTQvp/oAfSbVRp7K159Pa5mv3jXoFtAHJvgyM=";

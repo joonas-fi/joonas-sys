@@ -11,7 +11,6 @@
       # filter = "*rpi-4-*.dtb";
     };
     graphics.enable = true;
-    enableRedistributableFirmware = true;
   };
 
   # overcome some bug in nixos-hardware/raspberry-pi/4
@@ -25,43 +24,22 @@
   networking = {
     hostName = "bedroom-pi";
     networkmanager = {
-      enable = true;
       wifi.powersave = true;
     };
   };
 
-  services.openssh = {
-    enable = true;
-    openFirewall = true;
-    settings = {
-      # PasswordAuthentication = true;
-      PermitRootLogin = "no";
-    };
-  };
-
-  services.avahi = {
-    enable = true;
-    nssmdns4 = true;
-    openFirewall = true;
-  };
-
   users.users.joonas = {
-    isNormalUser = true;
-    # initialPassword = "nixos";
     extraGroups = [
-      "networkmanager"
-      "wheel"
-      "input" # moonlight to use input devices in console mode
-      "video" # needed for `/dev/dri/...` access (moonlight uses direct rendering)
-      "render"
-    ];
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID0kw624nwuYMt0rju0MRfkvT6Opmww52kmlnQC71LtB joonas@work"
+      # already come from common
+      # "input" # moonlight to use input devices in console mode
+      # "video" # needed for `/dev/dri/...` access (moonlight uses direct rendering)
+      # "render"
     ];
   };
 
   environment.systemPackages = with pkgs; [
-    # git
+    bluez # for bluetoothctl
+
     vim
     moonlight-qt
     libraspberrypi
@@ -69,20 +47,4 @@
     v4l-utils
     ffmpeg
   ];
-
-  # don't ask for passwords
-  security.sudo.wheelNeedsPassword = false;
-
-  nix.settings = {
-    experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
-    trusted-users = [
-      "root"
-      "@wheel" # otherwise nixos-rebuild switch gives `cannot add path ... because it lacks a signature by a trusted key` errors
-    ];
-  };
-
-  system.stateVersion = "25.11";
 }

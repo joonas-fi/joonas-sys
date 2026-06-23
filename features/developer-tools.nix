@@ -1,4 +1,9 @@
-{ lib, pkgs, ... }:
+{
+  lib,
+  pkgs,
+  pkgsUnstable,
+  ...
+}:
 
 let
   inherit (lib) concatMapStringsSep escapeShellArg optionalString;
@@ -178,14 +183,13 @@ let
         inherit network;
       }
     );
-  turbobob = pkgs.callPackage ../packages/turbobob.nix { };
+  deploy = pkgs.callPackage ../packages/deploy.nix { };
+  ffmpeg-joonas-scripts = pkgs.callPackage ../packages/ffmpeg-joonas-scripts.nix { };
 in
 {
-  # NOTE: virtualization is spelled wrong 😬
-  virtualisation = {
-    docker.enable = true;
-    containerd.enable = true;
-  };
+  imports = [
+    ./sub-features/turbobob.nix
+  ];
 
   programs = {
     ssh = {
@@ -197,7 +201,13 @@ in
     users."joonas" =
       { config, ... }:
       {
-        home.file.".ssh/id_rsa".source = config.lib.file.mkOutOfStoreSymlink "/sto/id/eaPAN6iqlMM/id_rsa";
+        home.file = {
+          ".ssh/id_ed25519".source = config.lib.file.mkOutOfStoreSymlink "/sto/id/eaPAN6iqlMM/id_ed25519";
+
+          ".config/all-the-bits".source = config.lib.file.mkOutOfStoreSymlink "/sysroot/apps/all-the-bits/";
+
+          ".config/turbobob".source = config.lib.file.mkOutOfStoreSymlink "/sysroot/apps/turbobob/";
+        };
 
         programs = {
           lazygit = {
@@ -250,426 +260,432 @@ in
         "docker run --rm -it --network=host -v \"$(pwd):/workspace\" --workdir=/workspace alpine \"$@\"";
       "j" = "just --choose --unsorted";
       "lg" = "lazygit";
-      "pubkey" = "ssh-keygen -y -f ~/.ssh/id_rsa";
+      "pubkey" = "ssh-keygen -y -f ~/.ssh/id_ed25519";
     };
 
     variables = {
       FZF_DEFAULT_OPTS = "--no-mouse --layout=reverse";
     };
 
-    systemPackages = with pkgs; [
-      # lowcharts
-      android-tools # adb
-      bpftrace
-      fzf
-      gdb
-      gum
-      jnv
-      jq
-      just
-      mkcert
-      oras
-      qemu_kvm # qemu-host-cpu-only
-      rclone
-      tcpdump
-      tealdeer
-      turbobob
-      up
-      wireguard-tools
+    systemPackages =
+      (with pkgs; [
+        # lowcharts
+        android-tools # adb
+        bpftrace
+        deploy
+        ffmpeg-joonas-scripts
+        fzf
+        gdb
+        glow
+        gum
+        jnv
+        jq
+        just
+        mkcert
+        oras
+        qemu_kvm # qemu-host-cpu-only
+        rclone
+        tcpdump
+        tealdeer
+        up
+        wireguard-tools
 
-      (mkTool {
-        name = "exiftool";
-        image = "ghcr.io/r-xs-fi/exiftool:latest";
-        mountCurrentDir = true;
-      })
+        (mkTool {
+          name = "exiftool";
+          image = "ghcr.io/r-xs-fi/exiftool:latest";
+          mountCurrentDir = true;
+        })
 
-      (mkTool {
-        name = "convert";
-        image = "ghcr.io/r-xs-fi/imagemagick:latest";
-        command = [ "convert" ];
-        mountCurrentDir = true;
-      })
+        (mkTool {
+          name = "convert";
+          image = "ghcr.io/r-xs-fi/imagemagick:latest";
+          command = [ "convert" ];
+          mountCurrentDir = true;
+        })
 
-      (mkNetworkTool {
-        name = "croc";
-        image = "ghcr.io/r-xs-fi/croc:latest";
-        mountCurrentDir = true;
-      })
+        (mkNetworkTool {
+          name = "croc";
+          image = "ghcr.io/r-xs-fi/croc:latest";
+          mountCurrentDir = true;
+        })
 
-      (mkNetworkTool {
-        name = "nslookup";
-        image = "alpine:latest";
-        command = [ "nslookup" ];
-      })
+        (mkNetworkTool {
+          name = "nslookup";
+          image = "alpine:latest";
+          command = [ "nslookup" ];
+        })
 
-      (mkNetworkTool {
-        name = "dig";
-        image = "ghcr.io/r-xs-fi/dig:latest";
-      })
+        (mkNetworkTool {
+          name = "dig";
+          image = "ghcr.io/r-xs-fi/dig:latest";
+        })
 
-      (mkTool {
-        name = "htop";
-        image = "joonas/htop:latest";
-        pidHost = true;
-        extraDockerArgSetup = ''
-          docker_args+=(-v "$HOME/.config/htop/htoprc:/etc/htoprc:ro")
-          docker_args+=(-v "/etc/passwd:/etc/passwd:ro")
-        '';
-      })
+        (mkTool {
+          name = "htop";
+          image = "joonas/htop:latest";
+          pidHost = true;
+          extraDockerArgSetup = ''
+            docker_args+=(-v "$HOME/.config/htop/htoprc:/etc/htoprc:ro")
+            docker_args+=(-v "/etc/passwd:/etc/passwd:ro")
+          '';
+        })
 
-      (mkTool {
-        name = "iotop";
-        image = "joonas/iotop:latest";
-        privileged = true;
-        pidHost = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "iotop";
+          image = "joonas/iotop:latest";
+          privileged = true;
+          pidHost = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkNetworkTool {
-        name = "nethogs";
-        image = "joonas/nethogs:latest";
-        network = "host";
-        privileged = true;
-        pidHost = true;
-        runAsCurrentUser = false;
-      })
+        (mkNetworkTool {
+          name = "nethogs";
+          image = "joonas/nethogs:latest";
+          network = "host";
+          privileged = true;
+          pidHost = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkNetworkTool {
-        name = "ethtool";
-        image = "ghcr.io/r-xs-fi/ethtool:latest";
-        network = "host";
-      })
+        (mkNetworkTool {
+          name = "ethtool";
+          image = "ghcr.io/r-xs-fi/ethtool:latest";
+          network = "host";
+        })
 
-      (mkTool {
-        name = "pstree";
-        image = "joonas/psmisc:latest";
-        command = [ "pstree" ];
-        pidHost = true;
-      })
+        (mkTool {
+          name = "pstree";
+          image = "joonas/psmisc:latest";
+          command = [ "pstree" ];
+          pidHost = true;
+        })
 
-      (mkTool {
-        name = "killall";
-        image = "joonas/psmisc:latest";
-        command = [ "killall" ];
-        privileged = true;
-        pidHost = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "killall";
+          image = "joonas/psmisc:latest";
+          command = [ "killall" ];
+          privileged = true;
+          pidHost = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "lspci";
-        image = "ghcr.io/r-xs-fi/lspci:latest";
-      })
+        (mkTool {
+          name = "lspci";
+          image = "ghcr.io/r-xs-fi/lspci:latest";
+        })
 
-      (mkTool {
-        name = "fdisk";
-        image = "joonas/fdisk:latest";
-        privileged = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "fdisk";
+          image = "joonas/fdisk:latest";
+          privileged = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "gdisk";
-        image = "joonas/fdisk:latest";
-        entrypoint = "/usr/bin/gdisk";
-        privileged = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "gdisk";
+          image = "joonas/fdisk:latest";
+          entrypoint = "/usr/bin/gdisk";
+          privileged = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "hollywood";
-        image = "bcbcarl/hollywood:latest";
-      })
+        (mkTool {
+          name = "hollywood";
+          image = "bcbcarl/hollywood:latest";
+        })
 
-      (mkTool {
-        name = "asciiquarium";
-        image = "danielkraic/asciiquarium:latest";
-      })
+        (mkTool {
+          name = "asciiquarium";
+          image = "danielkraic/asciiquarium:latest";
+        })
 
-      (mkTool {
-        name = "radeontop";
-        image = "joonas/radeontop:latest";
-        privileged = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "radeontop";
+          image = "joonas/radeontop:latest";
+          privileged = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "pwdgen";
-        image = "joonas/pwdgen:20211113_1928_0fea588c";
-      })
+        (mkTool {
+          name = "pwdgen";
+          image = "joonas/pwdgen:20211113_1928_0fea588c";
+        })
 
-      (mkNetworkTool {
-        name = "nmap";
-        image = "joonas/nmap:latest";
-        network = "host";
-      })
+        (mkNetworkTool {
+          name = "nmap";
+          image = "joonas/nmap:latest";
+          network = "host";
+        })
 
-      (mkTool {
-        name = "stress-ng";
-        image = "joonas/stress-ng:latest";
-      })
+        (mkTool {
+          name = "stress-ng";
+          image = "joonas/stress-ng:latest";
+        })
 
-      (mkNetworkTool {
-        name = "netstat";
-        image = "alpine:latest";
-        command = [ "netstat" ];
-        network = "host";
-      })
+        (mkNetworkTool {
+          name = "netstat";
+          image = "alpine:latest";
+          command = [ "netstat" ];
+          network = "host";
+        })
 
-      (mkNetworkTool {
-        name = "arp";
-        image = "alpine:latest";
-        command = [ "arp" ];
-        network = "host";
-      })
+        (mkNetworkTool {
+          name = "arp";
+          image = "alpine:latest";
+          command = [ "arp" ];
+          network = "host";
+        })
 
-      (mkNetworkTool {
-        name = "iperf";
-        image = "joonas/iperf:latest";
-        network = "host";
-      })
+        (mkNetworkTool {
+          name = "iperf";
+          image = "joonas/iperf:latest";
+          network = "host";
+        })
 
-      (mkTool {
-        name = "file";
-        image = "joonas/file:latest";
-        hostRootReadOnly = true;
-        hostRootWorkdirFromPwd = true;
-      })
+        (mkTool {
+          name = "file";
+          image = "joonas/file:latest";
+          hostRootReadOnly = true;
+          hostRootWorkdirFromPwd = true;
+        })
 
-      (mkTool {
-        name = "rpm2cpio";
-        image = "joonas/rpm2cpio:latest";
-        hostRootReadOnly = true;
-        hostRootWorkdirFromPwd = true;
-      })
+        (mkTool {
+          name = "rpm2cpio";
+          image = "joonas/rpm2cpio:latest";
+          hostRootReadOnly = true;
+          hostRootWorkdirFromPwd = true;
+        })
 
-      (mkTool {
-        name = "smartctl";
-        image = "joonas/smartmontools:latest";
-        privileged = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "smartctl";
+          image = "joonas/smartmontools:latest";
+          privileged = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "qrencode";
-        image = "joonas/qrencode:latest";
-      })
+        (mkTool {
+          name = "qrencode";
+          image = "joonas/qrencode:latest";
+        })
 
-      (mkTool {
-        name = "figlet";
-        image = "ghcr.io/r-xs-fi/figlet:latest";
-      })
+        (mkTool {
+          name = "figlet";
+          image = "ghcr.io/r-xs-fi/figlet:latest";
+        })
 
-      (mkTool {
-        name = "ncdu";
-        image = "ghcr.io/r-xs-fi/ncdu:latest";
-        passEnv = [ "LANG" ];
-        extraDockerArgSetup = ''
-          if [ "$#" -eq 0 ]; then
-            docker_args+=(-v "$PWD:/workspace" --workdir /workspace)
-          else
-            docker_args+=(-v "/:/host:ro")
-          fi
-        '';
-      })
-
-      (mkNetworkTool {
-        name = "awscli";
-        image = "amazon/aws-cli:latest";
-        entrypoint = "";
-        command = [ "bash" ];
-        appendUserArgs = false;
-        readOnlyRoot = false;
-        workdir = "/aws";
-        extraDockerArgSetup = ''
-          docker_args+=(-v "$PWD:/aws")
-        '';
-      })
-
-      (mkNetworkTool {
-        name = "hey";
-        image = "joonas/hey:latest";
-        network = "host";
-      })
-
-      (mkTool {
-        name = "lshw";
-        image = "joonas/lshw:latest";
-        privileged = true;
-        runAsCurrentUser = false;
-      })
-
-      (mkTool {
-        name = "sqlite";
-        image = "joonas/sqlite:latest";
-        mountCurrentDir = true;
-      })
-
-      (mkTool {
-        name = "pdfcpu";
-        image = "ghcr.io/r-xs-fi/pdfcpu:latest";
-        mountCurrentDir = true;
-        env = {
-          HOME = "/workspace";
-        };
-      })
-
-      (mkTool {
-        name = "uuidgen";
-        image = "joonas/uuidgen:latest";
-      })
-
-      (mkTool {
-        name = "cmatrix";
-        image = "ghcr.io/r-xs-fi/cmatrix:latest";
-      })
-
-      (mkNetworkTool {
-        name = "telnet";
-        image = "joonas/telnet:latest";
-      })
-
-      (mkNetworkTool {
-        name = "whois";
-        image = "ghcr.io/r-xs-fi/whois:latest";
-      })
-
-      (mkNetworkTool {
-        name = "mapscii";
-        image = "joonas/telnet:latest";
-        command = [ "mapscii.me" ];
-        appendUserArgs = false;
-      })
-
-      (mkTool {
-        name = "cowsay";
-        image = "ghcr.io/r-xs-fi/cowsay:latest";
-      })
-
-      (mkTool {
-        name = "doge";
-        image = "ghcr.io/r-xs-fi/doge:latest";
-      })
-
-      (mkTool {
-        name = "tokei";
-        image = "ghcr.io/r-xs-fi/tokei:latest";
-        mountCurrentDir = true;
-      })
-
-      (mkTool {
-        name = "neofetch";
-        image = "joonas/neofetch:latest";
-        volumes = [ "/etc/os-release:/etc/os-release:ro" ];
-      })
-
-      (mkTool {
-        name = "ffmpeg";
-        image = "ghcr.io/r-xs-fi/ffmpeg:latest";
-        mountCurrentDir = true;
-      })
-
-      (mkTool {
-        name = "yulelog";
-        image = "joonas/yulelog:latest";
-      })
-
-      (mkTool {
-        name = "pipes.sh";
-        image = "joonas/pipes.sh:latest";
-      })
-
-      (mkTool {
-        name = "go-life";
-        image = "ghcr.io/r-xs-fi/go-life:latest";
-      })
-
-      # The original wrapper used /usr/bin/shelldon. This assumes you provide a matching image.
-      (mkNetworkTool {
-        name = "shelldon";
-        image = "ghcr.io/r-xs-fi/shelldon:latest";
-        readOnlyRoot = false;
-        extraDockerArgs = [
-          "--env-file"
-          "/sto/id/I5CzPYOBxNs/openai.env"
-        ];
-        command = [
-          "sh"
-          "-c"
-          ''
+        (mkTool {
+          name = "ncdu";
+          image = "ghcr.io/r-xs-fi/ncdu:latest";
+          passEnv = [ "LANG" ];
+          extraDockerArgSetup = ''
             if [ "$#" -eq 0 ]; then
-              verb=$(gum choose -- Exec Ask --help)
-              if [ "$verb" = "Exec" ]; then
-                prompt=$(gum input --placeholder='Prompt')
-                exec shelldon exec "$prompt"
-              elif [ "$verb" = "--help" ]; then
-                exec shelldon --help
-              else
-                prompt=$(gum input --placeholder='Prompt')
-                exec shelldon ask "$prompt"
-              fi
+              docker_args+=(-v "$PWD:/workspace" --workdir /workspace)
+            else
+              docker_args+=(-v "/:/host:ro")
             fi
+          '';
+        })
 
-            exec shelldon "$@"
-          ''
-          "shelldon"
-        ];
-      })
+        (mkNetworkTool {
+          name = "awscli";
+          image = "amazon/aws-cli:latest";
+          entrypoint = "";
+          command = [ "bash" ];
+          appendUserArgs = false;
+          readOnlyRoot = false;
+          workdir = "/aws";
+          extraDockerArgSetup = ''
+            docker_args+=(-v "$PWD:/aws")
+          '';
+        })
 
-      (mkTool {
-        name = "lolcat";
-        image = "joonas/lolcat:latest";
-        command = [ "--force" ];
-      })
+        (mkNetworkTool {
+          name = "hey";
+          image = "joonas/hey:latest";
+          network = "host";
+        })
 
-      (mkTool {
-        name = "fortune";
-        image = "ghcr.io/r-xs-fi/fortune:latest";
-      })
+        (mkTool {
+          name = "lshw";
+          image = "joonas/lshw:latest";
+          privileged = true;
+          runAsCurrentUser = false;
+        })
 
-      (mkTool {
-        name = "scooter";
-        image = "ghcr.io/r-xs-fi/scooter:latest";
-        mountCurrentDir = true;
-      })
+        (mkTool {
+          name = "sqlite";
+          image = "joonas/sqlite:latest";
+          mountCurrentDir = true;
+        })
 
-      (mkNetworkTool {
-        name = "codex";
-        image = "ghcr.io/r-xs-fi/codex:latest";
-        entrypoint = "";
-        command = [
-          "sh"
-          "-c"
-          "umask 017; exec codex \"$@\""
-          "codex"
-        ];
-        mountCurrentDir = true;
-        readOnlyRoot = false;
-        runAsCurrentUser = false;
-        env = {
-          HOME = "/root";
-        };
-        extraDockerArgSetup = ''
-          docker_args+=(-v "/persist/apps/codex:/root/.codex")
-          docker_args+=(--user "0:$(id -g)")
-        '';
-      })
+        (mkTool {
+          name = "pdfcpu";
+          image = "ghcr.io/r-xs-fi/pdfcpu:latest";
+          mountCurrentDir = true;
+          env = {
+            HOME = "/workspace";
+          };
+        })
 
-      (mkNetworkTool {
-        name = "torrent";
-        image = "ghcr.io/r-xs-fi/torrent:latest";
-        command = [ "download" ];
-        network = "host";
-        privileged = true;
-        mountCurrentDir = true;
-        runAsCurrentUser = false;
-      })
+        (mkTool {
+          name = "uuidgen";
+          image = "joonas/uuidgen:latest";
+        })
 
-      (mkNetworkTool {
-        name = "onvif";
-        image = "ghcr.io/r-xs-fi/onvif-cli:latest";
-        network = "host";
-      })
-    ];
+        (mkTool {
+          name = "cmatrix";
+          image = "ghcr.io/r-xs-fi/cmatrix:latest";
+        })
+
+        (mkNetworkTool {
+          name = "telnet";
+          image = "joonas/telnet:latest";
+        })
+
+        (mkNetworkTool {
+          name = "whois";
+          image = "ghcr.io/r-xs-fi/whois:latest";
+        })
+
+        (mkNetworkTool {
+          name = "mapscii";
+          image = "joonas/telnet:latest";
+          command = [ "mapscii.me" ];
+          appendUserArgs = false;
+        })
+
+        (mkTool {
+          name = "cowsay";
+          image = "ghcr.io/r-xs-fi/cowsay:latest";
+        })
+
+        (mkTool {
+          name = "doge";
+          image = "ghcr.io/r-xs-fi/doge:latest";
+        })
+
+        (mkTool {
+          name = "tokei";
+          image = "ghcr.io/r-xs-fi/tokei:latest";
+          mountCurrentDir = true;
+        })
+
+        (mkTool {
+          name = "neofetch";
+          image = "joonas/neofetch:latest";
+          volumes = [ "/etc/os-release:/etc/os-release:ro" ];
+        })
+
+        (mkTool {
+          name = "ffmpeg";
+          image = "ghcr.io/r-xs-fi/ffmpeg:latest";
+          mountCurrentDir = true;
+        })
+
+        (mkTool {
+          name = "yulelog";
+          image = "joonas/yulelog:latest";
+        })
+
+        (mkTool {
+          name = "pipes.sh";
+          image = "joonas/pipes.sh:latest";
+        })
+
+        (mkTool {
+          name = "go-life";
+          image = "ghcr.io/r-xs-fi/go-life:latest";
+        })
+
+        # The original wrapper used /usr/bin/shelldon. This assumes you provide a matching image.
+        (mkNetworkTool {
+          name = "shelldon";
+          image = "ghcr.io/r-xs-fi/shelldon:latest";
+          readOnlyRoot = false;
+          extraDockerArgs = [
+            "--env-file"
+            "/sto/id/I5CzPYOBxNs/openai.env"
+          ];
+          command = [
+            "sh"
+            "-c"
+            ''
+              if [ "$#" -eq 0 ]; then
+                verb=$(gum choose -- Exec Ask --help)
+                if [ "$verb" = "Exec" ]; then
+                  prompt=$(gum input --placeholder='Prompt')
+                  exec shelldon exec "$prompt"
+                elif [ "$verb" = "--help" ]; then
+                  exec shelldon --help
+                else
+                  prompt=$(gum input --placeholder='Prompt')
+                  exec shelldon ask "$prompt"
+                fi
+              fi
+
+              exec shelldon "$@"
+            ''
+            "shelldon"
+          ];
+        })
+
+        (mkTool {
+          name = "lolcat";
+          image = "joonas/lolcat:latest";
+          command = [ "--force" ];
+        })
+
+        (mkTool {
+          name = "fortune";
+          image = "ghcr.io/r-xs-fi/fortune:latest";
+        })
+
+        (mkTool {
+          name = "scooter";
+          image = "ghcr.io/r-xs-fi/scooter:latest";
+          mountCurrentDir = true;
+        })
+
+        # (mkNetworkTool {
+        #   name = "codex";
+        #   image = "ghcr.io/r-xs-fi/codex:latest";
+        #   entrypoint = "";
+        #   command = [
+        #     "sh"
+        #     "-c"
+        #     "umask 017; exec codex \"$@\""
+        #     "codex"
+        #   ];
+        #   mountCurrentDir = true;
+        #   readOnlyRoot = false;
+        #   runAsCurrentUser = false;
+        #   env = {
+        #     HOME = "/root";
+        #   };
+        #   extraDockerArgSetup = ''
+        #     docker_args+=(-v "/persist/apps/codex:/root/.codex")
+        #     docker_args+=(--user "0:$(id -g)")
+        #   '';
+        # })
+
+        (mkNetworkTool {
+          name = "torrent";
+          image = "ghcr.io/r-xs-fi/torrent:latest";
+          command = [ "download" ];
+          network = "host";
+          privileged = true;
+          mountCurrentDir = true;
+          runAsCurrentUser = false;
+        })
+
+        (mkNetworkTool {
+          name = "onvif";
+          image = "ghcr.io/r-xs-fi/onvif-cli:latest";
+          network = "host";
+        })
+      ])
+      ++ [
+        pkgsUnstable.codex
+      ];
   };
 }

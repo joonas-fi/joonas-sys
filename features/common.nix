@@ -1,9 +1,5 @@
 { pkgs, config, ... }:
 {
-  imports = [
-    ./sub-features/helix.nix
-  ];
-
   # add allow-items here if updating nixpkgs channel tells you that a package is insecure and if you're unable to update to newer NixOS version
   nixpkgs.config.permittedInsecurePackages = [
     # "docker-28.5.2"
@@ -46,6 +42,11 @@
       };
     };
 
+    tailscale = {
+      enable = true;
+      openFirewall = true;
+    };
+
     # FIXME: commented out because it seems to crash for some reason
     # avahi = {
     #   enable = true;
@@ -63,7 +64,6 @@
       "input" # moonlight to use input devices in console mode
       "video" # needed for `/dev/dri/...` access (moonlight uses direct rendering)
       "render"
-      "docker"
     ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID0kw624nwuYMt0rju0MRfkvT6Opmww52kmlnQC71LtB joonas@work"
@@ -74,8 +74,31 @@
     useGlobalPkgs = true;
     users."joonas" = {
       programs = {
+        git = {
+          enable = true;
+        };
+
         yazi = {
           enable = true;
+
+          # show in status bar the currently hovered item's modification date.
+          # status bar customization: https://yazi-rs.github.io/docs/tips/#symlink-in-status
+          initLua = ''
+            Status:children_add(function()
+              local h = cx.active.current.hovered
+              if not h or not h.cha.mtime then
+                return ""
+              end
+
+              local mtime = math.floor(h.cha.mtime)
+
+              return ui.Line {
+                ui.Span("Modified: "):fg("cyan"),
+                ui.Span(os.date("%Y-%m-%d %H:%M", mtime)):fg("blue"),
+                ui.Span(" "),
+              }
+            end, 500, Status.RIGHT)
+          '';
 
           settings = {
             mgr = {

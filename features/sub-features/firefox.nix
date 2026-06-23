@@ -13,6 +13,9 @@
 
         profiles.default = {
           settings = {
+            # open previous windows/tabs on startup
+            "browser.startup.page" = 3;
+
             # https://bsky.app/profile/rag.pub/post/3mmsc56fqhk27
             "gfx.font_rendering.freetype.enhanced_contrast" = 100;
             "gfx.font_rendering.freetype.gamma" = 0;
