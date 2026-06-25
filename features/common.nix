@@ -4,6 +4,11 @@
     ./sub-features/helix.nix
   ];
 
+  # add allow-items here if updating nixpkgs channel tells you that a package is insecure and if you're unable to update to newer NixOS version
+  nixpkgs.config.permittedInsecurePackages = [
+    # "docker-28.5.2"
+  ];
+
   hardware = {
     enableRedistributableFirmware = true;
   };

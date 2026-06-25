@@ -3,7 +3,7 @@
 
   inputs = {
     # release announcements: https://discourse.nixos.org/c/announcements/nixos-releases/29
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     disko = {
       url = "github:nix-community/disko";
@@ -12,7 +12,7 @@
     };
     home-manager = {
       # NOTE: home-manager version needs to match NixOS version. I tried newer here and it errored.
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     microvm = {
